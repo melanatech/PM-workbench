@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Write(./outputs/**)",
+      "Write(./registers/**)",
+      "Write(./state/**)",
+      "Write(./logs/**)",
+      "Write(./learning/**)",
+      "Write(./reference/user-research/**)",
+      "Edit(./outputs/**)",
+      "Edit(./registers/**)",
+      "Bash(python3 scripts/*)",
+      "Bash(bash scripts/*)",
+      "Bash(ls*)",
+      "Bash(cat*)",
+      "Bash(mkdir*)",
+      "Bash(mv inbox*)",
+      "Bash(mv ./inbox*)",
+      "WebSearch",
+      "WebFetch",
+      "mcp__browser-bridge__browser_snapshot",
+      "mcp__browser-bridge__browser_navigate",
+      "mcp__browser-bridge__browser_tab_list"
+    ],
+    "deny": [
+      "mcp__browser-bridge__browser_click",
+      "mcp__browser-bridge__browser_type",
+      "mcp__browser-bridge__browser_file_upload"
+    ]
+  }
+}

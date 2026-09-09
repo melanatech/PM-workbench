@@ -2,13 +2,11 @@
 
 A product management workspace for analytics and value realization initiatives.
 
-Published with GitHub Pages:
+**Course site (GitHub Pages):** https://melanatech.github.io/PM-workbench/
 
-https://melanatech.github.io/PM-workbench/
+## What’s in this repo
 
-## Files
+- `docs/` — Published GitHub Pages site. The homepage is the revised PM Workbench course.
+- `pm-workbench/` — Workbench kit (commands, agents, docs, scripts). This folder is in the repo but is not the Pages site.
 
-- `index.html` — Site entry point (placeholder until the final HTML is added)
-- `.nojekyll` — Lets GitHub Pages serve the HTML as-is
-
-Drop replacement HTML into this folder (keep `index.html` as the homepage). GitHub Pages will pick it up after a push to `main`.
+The original zip is kept locally and is not committed.

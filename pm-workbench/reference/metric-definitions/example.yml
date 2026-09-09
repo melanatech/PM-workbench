@@ -1,0 +1,12 @@
+# One file like this per OKR metric. The dashboard has ALREADY calculated
+# this number — this file just tells Claude where to find it and how to
+# sanity-check it. Nothing here computes anything.
+metric: onboarding_completion          # rename to your real metric
+source: quicksight                      # quicksight | fullstory | experiment_tool
+source_url: "[BOOKMARKED DASHBOARD URL]"
+what_to_read: "The 'Activation Rate' KPI card at the top of the dashboard — read the displayed percentage as-is, do not recompute it."
+also_capture: [platform, customer_segment]   # any breakdowns shown alongside the headline number
+target: 0.45
+max_data_age_days: 3     # flag if the dashboard's own "as of" date is older than this
+flag_if_change_exceeds: 0.10   # flag (don't block) if it moved >10% vs. last logged value — for a second look, not proof of error
+owner: me

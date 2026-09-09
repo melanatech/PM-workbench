@@ -1,0 +1,13 @@
+# Sensitive working data — never version-control raw captures or exports.
+# System logic (commands, agents, docs, templates) IS safe to commit.
+inbox/
+archive/
+state/
+logs/
+*.csv
+*.xlsx
+*.pdf
+browser-profiles/
+.env
+# Registers are working data too — back them up via approved company storage, not git
+registers/

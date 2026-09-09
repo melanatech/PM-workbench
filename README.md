@@ -2,15 +2,22 @@
 
 A product management workspace for analytics and value realization initiatives.
 
-## Setup
+This site is published with [GitHub Pages](https://pages.github.com/). After the public repo is live, the pages URL will look like:
 
-This repo is configured for GitHub Pages. Add your HTML files to the root directory and they'll be accessible via GitHub Pages.
+`https://<your-github-username>.github.io/PM-workbench/`
 
 ## Files
 
-- `index.html` — Main entry point
-- Additional pages will be added here
+- `index.html` — Landing page
+- `course.html` — Interactive PM Workbench course
+- `.nojekyll` — Lets GitHub Pages serve the HTML as-is
 
----
+## Local preview
 
-Built with Claude.
+Open `index.html` in a browser, or from this folder run:
+
+```bash
+python3 -m http.server 8000
+```
+
+Then visit `http://localhost:8000`.

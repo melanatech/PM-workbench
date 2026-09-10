@@ -1,17 +1,18 @@
 ---
 description: Turn a feature or question into a research plan - screening criteria, an outreach strategy with message drafts, and a research/interview guide
 argument-hint: [feature or discovery question to research]
-execution_mode: standard   # fast=0 reviewers, standard=1-2, deep=full panel (see CLAUDE.md)
 ---
+
+Execution mode: **standard** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
 Research target: $ARGUMENTS
 
-We have an internal CRM that finds the actual people — so this does NOT try to be a user-lookup tool. It produces the thinking around research: who to talk to, how to reach them, and what to ask. Three parts, as one package to `outputs/research/[topic]/`:
+This system has no customer directory and no CRM access, and it must never invent one: it does NOT try to be a user-lookup tool and never outputs names of specific people. A name this workflow produced would be a fabrication in the exact format of a real query result. It produces the thinking around research: who to talk to, how to reach them, and what to ask. Three parts, as one package to `outputs/research/[topic]/`:
 
 **1. Screening criteria** — grounded in the feature and the evidence behind it (pull from `/discovery` / `registers/evidence.csv`):
    - Who qualifies: the behaviors, segment, role, and recency that make someone a relevant voice (e.g. "admins at multi-location accounts who ran a scheduled export in the last 30 days")
    - Who to exclude and why (recently interviewed; in an active escalation; internal test accounts)
-   - A diversity guard: the criteria that keep the slate from being five near-identical customers (segment mix, tenure mix, an anti-happy-path quota) — hand these to whoever runs the CRM query.
+   - A diversity guard: the criteria that keep the slate from being five near-identical customers (segment mix, tenure mix, an anti-happy-path quota) — hand these to whoever can query your customer records (the account team, an analyst, or you with an export).
 
 **2. Outreach strategy + drafts** — the sequence (who reaches out — you, the CSM, the account manager — and in what order), timing, incentive if any, and per-segment message drafts that reference the specific problem without leading the witness. Drafts only; sending is yours, and account owners get a heads-up first.
 

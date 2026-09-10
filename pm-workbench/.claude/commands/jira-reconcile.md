@@ -1,11 +1,12 @@
 ---
 description: Reconcile the Jira board against reality - snapshot diff plus proposed change set
-execution_mode: fast   # fast=0 reviewers, standard=1-2, deep=full panel (see CLAUDE.md)
 ---
+
+Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
 1. **Get current state:** pull my active board/epics — via the internal tool (I'll paste the output if you can't reach it) or by reading my bookmarked Jira view through the browser. Save a timestamped snapshot to `state/jira-snapshots/[date].json` (or .md if structure is loose).
 2. **Diff against the previous snapshot** in `state/jira-snapshots/` — what changed, what didn't move.
-3. **Cross-reference** against `registers/decisions.csv`, `registers/commitments.csv`, recent `outputs/daily/*-meeting.md`, recent evidence in `registers/evidence.csv`, and — if a specific discrepancy needs checking against a decision doc that lives outside Jira/Confluence — dispatch `internal-docs-reader` for SharePoint or file-browser sources rather than reading them inline.
+3. **Cross-reference** against `registers/decisions.csv`, `registers/commitments.csv`, recent `outputs/daily/*-meeting.md`, recent evidence in `registers/evidence.csv`, and — if a specific discrepancy needs checking against a decision doc that lives outside Jira/Confluence — dispatch `internal-docs-reader` for the shared drive or file-browser sources rather than reading them inline.
 4. **Cross-check against `registers/initiatives.csv`** — where a ticket maps to a known initiative, use that link to catch PRD-vs-Jira scope drift systematically rather than ad hoc; where it doesn't, that's worth asking whether the ticket should be linked to one.
 5. Flag, per ticket where applicable:
    - No update in 7+/14+ days

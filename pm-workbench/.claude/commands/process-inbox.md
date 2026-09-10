@@ -2,6 +2,8 @@
 description: Process all new raw captures in inbox/ into structured records and registers
 ---
 
+**Step 0 — pull browser clips.** Run `python3 scripts/pull_clips.py` so anything saved with the Workbench Clipper (`tools/workbench-clipper/`) lands in `inbox/<category>/` first. Each clip's frontmatter carries `source_url` and `access_path` — cite them as the source for any row it produces.
+
 Work through every unprocessed file in `inbox/` (check `state/processed-files.txt` for what's already done).
 
 For each file:

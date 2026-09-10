@@ -1,12 +1,13 @@
 ---
 description: Close out a meeting - decisions, commitments, and risks flow into the registers
 argument-hint: [paste notes/transcript, or filename in inbox/meetings/]
-execution_mode: fast   # fast=0 reviewers, standard=1-2, deep=full panel (see CLAUDE.md)
 ---
+
+Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
 Meeting input: $ARGUMENTS
 
-(This can be typed notes, a downloaded Teams transcript/AI summary if you organized the meeting, a Copilot-generated summary if you didn't, or a dictated voice memo transcript — treat all of them the same way below.)
+(This can be typed notes, a downloaded meeting transcript/AI summary (Teams, Zoom, Meet) if you organized the meeting, whatever your meeting tool's AI summary produces if you didn't, or a dictated voice memo transcript — treat all of them the same way below.)
 
 1. Extract: decisions, commitments (owner + due date), risks, assumptions stated, unresolved questions, and anything that changed a prior decision.
 2. **Reconcile against current state:** compare extracted items with `registers/decisions.csv`, `registers/commitments.csv`, and (if provided or fetchable) relevant Jira tickets. Flag conflicts explicitly — e.g., "meeting moved readiness to Aug 19 but ticket still says Aug 5."

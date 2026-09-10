@@ -1,7 +1,8 @@
 ---
 description: Draft the weekly leadership update from maintained state, not memory
-execution_mode: fast   # fast=0 reviewers, standard=1-2, deep=full panel (see CLAUDE.md)
 ---
+
+Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
 **Step 0 — reconcile before generating** (per CLAUDE.md rule 2): refresh current Jira status via the bookmarked view; check whether local decisions/commitments are older than what Jira/Confluence now shows; list any conflicts or gaps and ask ONLY for genuinely missing inputs ("I have Jira, decisions, risks; I'm missing this week's OKR values and Tuesday's leadership notes — add now, or proceed with those sections marked incomplete?"). Never generate a polished update from unverified state.
 
@@ -25,6 +26,6 @@ Structure — leading with change, never repeating background:
 
 Then two checks against last week's update: strip any repeated background, and **flag any commitment mentioned last week that this draft doesn't address** — silently dropped promises are exactly what this system exists to prevent.
 
-Produce an email version and a Confluence-format version. Save to `outputs/weekly/[date]-leadership-update.md`. If browser drafting is available and I approve interactively, pre-fill the Outlook draft or Confluence page — and stop before send/publish.
+Produce an email version and a wiki-format version. Save to `outputs/weekly/[date]-leadership-update.md`. If browser drafting is available and I approve interactively, pre-fill the email draft or wiki page — and stop before send/publish.
 
 **If living context is blank** (`current-priorities.md`): note it rather than silently generating unframed output — a one-line "no stated priorities this week" is honest; fabricated framing is not.

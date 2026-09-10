@@ -855,7 +855,7 @@ body>header .brand{font:700 16px var(--body);letter-spacing:-.03em}
   <div class="mbody" id="mbody"></div></div>
 </div>
 
-<script>window.EMBEDDED_ASSETS={"/assets/hero-workbench-collage.png":"assets/embed-01.png","/assets/lesson7-source-ingestion.png":"assets/embed-02.png","/assets/lesson7-prd-prototype-outputs.png":"assets/embed-03.png","/assets/lesson-art/finale.webp":"assets/embed-04.webp","/assets/lesson-art/lesson-00.webp":"assets/embed-05.webp","/assets/lesson-art/lesson-01.webp":"assets/embed-06.webp","/assets/lesson-art/lesson-02.webp":"assets/embed-07.webp","/assets/lesson-art/lesson-03.webp":"assets/embed-08.webp","/assets/lesson-art/lesson-04.webp":"assets/embed-09.webp","/assets/lesson-art/lesson-05.webp":"assets/embed-10.webp","/assets/lesson-art/lesson-06.webp":"assets/embed-11.webp","/assets/lesson-art/lesson-07.webp":"assets/embed-12.webp","/assets/lesson-art/lesson-08.webp":"assets/embed-13.webp","/assets/lesson-art/lesson-09.webp":"assets/embed-14.webp","/assets/lesson-art/lesson-10.webp":"assets/embed-15.webp","/assets/lesson-art/lesson-11.webp":"assets/embed-16.webp"};document.addEventListener("DOMContentLoaded",()=>document.querySelectorAll('img[src^="/assets/"]').forEach(img=>{img.src=window.EMBEDDED_ASSETS[img.getAttribute("src")]||img.getAttribute("src")}));</script>
+<script>window.EMBEDDED_ASSETS={"/assets/hero-workbench-collage.png":"assets/embed-01.png","/assets/lesson-art/finale.webp":"assets/embed-02.webp","/assets/lesson-art/lesson-00.webp":"assets/embed-03.webp","/assets/lesson-art/lesson-01.webp":"assets/embed-04.webp","/assets/lesson-art/lesson-02.webp":"assets/embed-05.webp","/assets/lesson-art/lesson-03.webp":"assets/embed-06.webp","/assets/lesson-art/lesson-04.webp":"assets/embed-07.webp","/assets/lesson-art/lesson-05.webp":"assets/embed-08.webp","/assets/lesson-art/lesson-06.webp":"assets/embed-09.webp","/assets/lesson-art/lesson-07.webp":"assets/embed-10.webp","/assets/lesson-art/lesson-08.webp":"assets/embed-11.webp","/assets/lesson-art/lesson-09.webp":"assets/embed-12.webp","/assets/lesson-art/lesson-10.webp":"assets/embed-13.webp","/assets/lesson-art/lesson-11.webp":"assets/embed-14.webp"};document.addEventListener("DOMContentLoaded",()=>document.querySelectorAll('img[src^="/assets/"]').forEach(img=>{img.src=window.EMBEDDED_ASSETS[img.getAttribute("src")]||img.getAttribute("src")}));</script>
 <script>
 /* ================= SEEDED WORKSPACE ================= */
 const FILES={
@@ -933,6 +933,12 @@ captured: 2026-07-16 09:14 · via paste
 ---
 Dana mentioned the permissions service change might land closer to 3 weeks
 than 2 if the auth team's freeze happens. Not committed — just a heads up.`,
+
+"registers/evidence.csv":`id,date,observation,source,severity
+EV-211,2026-07-17,"Scheduled scorecard exports failing silently at multi-location enterprise accounts (Fernwood x2, Harbor Dental); presented three-week-old numbers without knowing","inbox/exports/slack-search-export.txt; inbox/exports/support-case-8841.txt",high`,
+
+"registers/risks.csv":`id,risk,severity,status,source
+RISK-008,"Permissions service change may take ~3 wks instead of 2 if the auth team's freeze happens (phase-2 dependency)",medium,watch,inbox/captures/capture-2026-07-16.md`,
 
 "roadmap/roadmap.csv":`feature,column,target,owner
 Manager Scorecards ph1,Now,2026-08,you
@@ -1100,26 +1106,6 @@ LIKELY QUESTIONS
 
 ESCALATE ONLY IF an ADMIN at an ENTERPRISE account cannot see the feature.`,
 
-"outputs/research/2026-07-18-candidates.md":`# Research slate — silent export failures
-Criteria: multi-location accounts that hit the failure; nobody contacted
-in the last 90 days. Sources: the support case + Slack export on file, plus
-the account list you pasted.
-
-1. Fernwood Fitness — ops manager · score 87/100
-   (problem relevance 38/40 · segment 22/25 · recency 18/20 · diversity 6 · feasibility 3)
-   CAUTION: open billing escalation — check with the account owner first.
-2. Harbor Dental — practice admin · score 79/100
-3. Cassidy Home Services — regional lead · score 64/100
-   (adds a mid-market voice — top two are both enterprise; slate would be
-   biased without it)
-
-Drafted outreach per candidate below — nothing sent; sending is yours.
----
-Draft (Fernwood): "Hi — I'm the PM for reporting at Lumenly. I understand
-your Monday export failed twice this month; that shouldn't happen silently
-and we're working on it. Would 20 minutes this week help me make sure the
-fix matches how your regional review actually runs?"`,
-
 "outputs/experiments/export-notify/design.md":`# Experiment — failure notifications for scheduled exports
 DECISION THIS INFORMS: build full notification center vs. simple email
 alert vs. nothing (each outcome mapped below — including null).
@@ -1170,7 +1156,8 @@ const REQS={home:[],l0:['nodecheck','install','help'],l1:['ctx'],l2:['quickclose
 l4:['closeout','yourmeeting','jira','weekly'],l5:['discovery','okr'],l6:['codedive'],l7:['prd','proto'],
 l8:['research','experiment'],l9:['roadmap'],l10:['launch','competitive','strategy','recover'],
 l11:['trouble','schedule'],fin:['q1','q2','q3','q4','q5']};
-const TIMES={quickclose:3,closeout:22,yourmeeting:15,jira:25,weekly:55,discovery:40,okr:40,codedive:35,prd:90,proto:15,launch:35,ask:5,recover:30,paste:5,research:45,experiment:60,roadmap:40,help:2,ctx:5,competitive:20,strategy:50,trouble:8,schedule:10};
+// Rough, unmeasured estimates of retyping/reconciling minutes a hand-run of the same step would cost. Not measured; not a productivity claim.
+const TIMES={quickclose:2,closeout:12,yourmeeting:8,jira:10,weekly:25,discovery:15,okr:10,codedive:15,prd:40,proto:10,launch:20,ask:2,recover:10,paste:1,research:20,experiment:25,roadmap:20,help:0,ctx:2,competitive:10,strategy:25,trouble:2,schedule:3};
 const updated=new Set();
 function setOS(os){state.os=os;document.body.className=os;
  document.getElementById('osM').classList.toggle('active',os==='mac');
@@ -1191,7 +1178,7 @@ function openFile(p){
   const mb=document.getElementById('mbody');
   document.getElementById('mpath').textContent=p;
   if(p==='prototypes/manager-scorecards/index.html'){mb.className='mbody render';mb.innerHTML=PROTO_HTML;wireProto()}
-  else{mb.className='mbody';mb.textContent=FILES[p]||'(empty)'}
+  else{mb.className='mbody';mb.textContent=(p in FILES)?FILES[p]:'Not created yet. This file is produced when you run the lesson that makes it — nothing here is shown as done before it is.'}
   document.getElementById('modal').classList.add('open')}
 function closeFile(){document.getElementById('modal').classList.remove('open')}
 function toggleWS(){document.getElementById('ws').classList.toggle('open')}
@@ -1296,16 +1283,16 @@ help:{cmd:'/',
   {t:'plain',x:'/meeting-prep       walk into a meeting already caught up'},
   {t:'plain',x:'/jira-reconcile     board vs. reality, with a proposed fix list'},
   {t:'plain',x:'/weekly-update      Friday update assembled from the week\u2019s state'},
-  {t:'plain',x:'/discovery-delta    what\u2019s new in customer signals since last run'},
+  {t:'plain',x:'/discovery          ask the evidence, add to it, see what\u2019s new, map opportunities'},
   {t:'plain',x:'/okr-refresh        pull the official numbers, draft all destinations'},
   {t:'plain',x:'/prd-package        problem + goal + audience → full PRD package'},
   {t:'plain',x:'/prototype-build    contract → clickable prototype'},
-  {t:'plain',x:'/find-users         scored research slate from your sources'},
+  {t:'plain',x:'/research-plan      who to learn from, how to reach them, what to ask'},
   {t:'plain',x:'/experiment-package test design with a decision for every outcome'},
   {t:'plain',x:'/roadmap-update     one change, every surface the roadmap lives on'},
   {t:'plain',x:'/launch-package     drift check first, then every launch doc'},
-  {t:'plain',x:'  …and 9 more. Plain language works too — "close out this meeting"'},
-  {t:'plain',x:'  routes to the right one without remembering any name.'}]},
+  {t:'plain',x:'  …and 11 more (24 commands + the prototype-build skill). Plain language works too —'},
+  {t:'plain',x:'  "close out this meeting" routes to the right one without remembering any name.'}]},
 
 ctx:{cmd:t=>t||'set up my context: I own reporting & analytics; my updates go to VP Product and eng leads; keep my writing direct and brief',
  script:t=>{
@@ -1409,6 +1396,7 @@ jira:{cmd:'/jira-reconcile',
   {t:'spacer'},
   {t:'flag',x:'Status changes need your approval:'}],
  choice:[['approve LUM-423 change',[
+   {t:'fn',x:()=>{state.jiraApplied=true}},
    {t:'log',x:'Applied. Re-read the ticket to verify:'},
    {t:'del',x:'LUM-423 · In Progress · target 2026-Q3'},
    {t:'ins',x:'LUM-423 · Backlog · comment posted (verbatim from the draft)'},
@@ -1491,7 +1479,7 @@ discovery:{cmd:t=>t&&t.trim()?t:'what do we know about export reliability proble
    {t:'plain',x:'What we know about export reliability:'},
    {t:'plain',x:'\u2022 Direct evidence (strong): 2 enterprise accounts hit silent scheduled-export failures this month \u2014 Fernwood (twice, case #8841), Harbor Dental. Exact words: "presented three-week-old numbers without knowing." [EV-211]'},
    {t:'plain',x:'\u2022 Behavioral: export job logs show timeout at 04:12, no retry attempted. [support-case-8841]'},
-   {t:'plain',x:'\u2022 Stakeholder opinion (weaker, flagged as such): an AM believes this is "probably widespread" \u2014 no data behind it yet.'},
+   {t:'plain',x:'\u2022 Inference (weaker, flagged as such): the CSM\u2019s "Fernwood Fitness again" [slack-search-export] implies a pattern beyond these two reports \u2014 one person\u2019s read, not data.'},
    {t:'flag',x:'Confidence: solid that it\u2019s real and painful for multi-location enterprise accounts; UNKNOWN how widespread beyond them \u2014 all evidence is from 40+ and 12-location accounts, none from small ones. That sampling gap is itself the finding.'},
    {t:'spacer'},
    {t:'plain',x:'Ask a different question, paste an interview to add evidence, say "what\u2019s new", or "map opportunities" \u2014 same command, four modes.'}
@@ -1503,7 +1491,7 @@ okr:{cmd:'/okr-refresh',
   {t:'flag',x:'First run — where does "weekly active admins" live? Paste the dashboard link, or the current value directly.'}],
  choice:[['paste the dashboard link',[
    {t:'plain',x:'Saved to reference/metric-definitions/ — never asked again.'},
-   {t:'dim',x:'Retrieval: the browser bridge (Lesson 3, Path 4) reads the displayed value from the approved dashboard link. Without the bridge, the run requests a pasted value or an export.'},
+   {t:'dim',x:'Retrieval: an automated browser read (Lesson 3, Path 4B/C) of the approved dashboard link, or a clip you saved from the dashboard with the Workbench Clipper. Without either, the run requests a pasted value or an export.'},
    {t:'log',x:'weekly_active_admins: 41.2% · target 45% · +1.8pp · data through Jul 15',reg:['okr','2026-07-18,weekly_active_admins,41.2%,2026-07-15,dashboard']},
    {t:'dim',x:'Stale, unreachable, or conflicting sources produce a labeled stop and a request for verification.'},
    {t:'plain',x:'Weekly update refreshed — metrics section now filled:'},
@@ -1543,7 +1531,7 @@ prd:{cmd:'/prd-package manager scorecards — problem: owners can\u2019t see per
   {t:'file',path:'outputs/prds/manager-scorecards/prd.md'},
   {t:'file',path:'outputs/prds/manager-scorecards/contract.md'},
   {t:'file',path:'outputs/prds/manager-scorecards/exec-onepager.md'},
-  {t:'flag',x:'Pre-review (5 angles): 4 pass, 1 condition — scorecard_exported event unverified in prod. Stakeholder approval remains required. Review order: Dana on the service estimate, then the VP one-pager, then group review.'},
+  {t:'flag',x:'Pre-review (Standard mode: 2 angles — eng feasibility, business/revenue; the full five-reviewer panel is Deep mode only): 1 pass, 1 condition — scorecard_exported event unverified in prod. Labeled "AI pre-review, not validated by any stakeholder." Review order: Dana on the service estimate, then the VP one-pager, then group review.'},
   {t:'spacer'},
   {t:'plain',x:'Refine anything?'}],
  choice:[['tighten the problem section',[
@@ -1578,16 +1566,17 @@ proto:{cmd:'/prototype-build manager scorecards',
   {t:'spacer'},
   {t:'flag',x:'Contract gap: bulk export appears in the prototype but is absent from the Feature Contract. Select a resolution:'}],
  choice:[['promote to real requirement',[
+   {t:'fn',x:()=>{state.protoChoice='promote'}},
    {t:'log',x:'Contract updated — scope grew, flagged for stakeholder eyes:',reg:['dec','DEC-016,2026-07-18,bulk-export added to scope,you,prototype sync,Manager Scorecards']},
    {t:'file',path:'outputs/prds/manager-scorecards/contract.md',body:OUT['outputs/prds/manager-scorecards/contract.md'].replace('scope: admin-visible per-manager scorecards + comparison view','scope: admin-visible per-manager scorecards + comparison view + bulk-export (ADDED Jul 18 via prototype — scope grew, flag for review)')}]],
-  ['mark exploratory',[{t:'log',x:'Labeled exploratory in the contract — testable in sessions, committed nowhere.'}]],
-  ['remove it',[{t:'log',x:'Removed from the prototype; contract unchanged.'}]]]},
+  ['mark exploratory',[{t:'fn',x:()=>{state.protoChoice='exploratory'}},{t:'log',x:'Labeled exploratory in the contract — testable in sessions, committed nowhere.'}]],
+  ['remove it',[{t:'fn',x:()=>{state.protoChoice='remove'}},{t:'log',x:'Removed from the prototype; contract unchanged.'}]]]},
 
 research:{cmd:t=>'/research-plan silent export failures'+(t&&t.trim()?' — focus: '+t.slice(0,50):''),
  script:t=>[
-  {t:'dim',x:'The internal CRM supplies participant records. This workflow builds the research plan from EV-211 and the two support cases.'},
+  {t:'dim',x:'This workflow never names specific people to contact — it has no customer directory and will not invent one. It builds the research plan from EV-211 and the two support cases; whoever owns your customer records applies the criteria.'},
   {t:'spacer'},
-  {t:'plain',x:'1 — SCREENING CRITERIA (hand these to whoever runs the CRM query):'},
+  {t:'plain',x:'1 — SCREENING CRITERIA (hand these to whoever can query your customer records):'},
   {t:'plain',x:'   Qualify: account admins at multi-location accounts (5+ locations) who ran a scheduled export in the last 30 days'},
   {t:'plain',x:'   Exclude: contacted in the last 90 days · in an active billing/support escalation · internal test accounts'},
   {t:'flag',x:'   Diversity guard: don\u2019t let the slate be 5 enterprise lookalikes — include ≥2 mid-market, ≥1 who has NOT reported the problem (to avoid only hearing from the angry). This guard is the part teams skip.'},
@@ -1602,21 +1591,22 @@ research:{cmd:t=>'/research-plan silent export failures'+(t&&t.trim()?' — focu
   {t:'plain',x:'   • past-behavior, not hypothetical — no "would you like notifications?"'},
   {t:'flag',x:'   Decision rule, pre-registered: if ≥4 of 6 recover with an alert, ship the simple alert and defer the notification center. Written before sessions so the conclusion can\u2019t drift.'},
   {t:'file',path:'outputs/research/2026-07-18-plan.md',body:'# Research plan — silent export failures\n\n## Screening criteria\nQualify: admins at multi-location accounts (5+ loc) with a scheduled export\nin the last 30 days.\nExclude: contacted <90 days ago; active escalation; internal test accounts.\nDiversity guard: >=2 mid-market, >=1 non-reporter of the problem.\n\n## Outreach\nCSM first, PM follows to schedule. Account owner notified first.\n[per-segment drafts included]\n\n## Research design\nDecision: notification center vs. simple alert vs. nothing.\nGuide: past-behavior questions on discovery, recovery, and workaround.\nPre-registered rule: >=4/6 recover with an alert alone -> ship the alert,\nskip the notification build.'},
-  {t:'plain',x:'Deliverable: participant criteria for the CRM, outreach drafts, interview questions, and pre-registered decision rules.'}]},
+  {t:'plain',x:'Deliverable: participant criteria (for whoever runs the lookup), outreach drafts, interview questions, and pre-registered decision rules. No names — a name this system produced would be a guess wearing a fact\u2019s clothes.'}]},
 
 experiment:{cmd:'/experiment-package failure notifications for scheduled exports',
  script:[
   {t:'dim',x:'Grounding: EV-211, the job-log baseline (11% repeat-export after failure), the Export Reliability scope.'},
+  {t:'plain',x:'Uncertainty triage first: this decides whether to build a notification center — a causal question with real build cost, so it earns the full adversarial panel. A usability question would have been routed to research instead.'},
   {t:'log',x:'Design gate passed — including the check most experiments fail: every outcome maps to a decision, INCLUDING null.'},
   {t:'file',path:'outputs/experiments/export-notify/design.md'},
   {t:'flag',x:'Review the "IF null" rule: a null result must still produce a decision. Pre-review condition: support needs the reply template before launch. Priya\u2019s analytics review remains required before tracker submission.'}]},
 
 roadmap:{cmd:'/roadmap-update scorecards ph2 slips one sprint (permissions est. now 3 wks, auth freeze); add Export Reliability to Next (case #8841, retry + failure alerts)',
- script:[
+ script:()=>[
   {t:'dim',x:'Two separate features in one input — handled as two change sets so nothing blurs:'},
   {t:'spacer'},
   {t:'plain',x:'CHANGE SET 1 — Manager Scorecards ph2 (existing, linked to DEC-015/RISK-008):'},
-  {t:'plain',x:'  Jira: LUM-423 target 2026-Q4 → +1 sprint · roadmap sheet row updated'},
+  {t:'plain',x:()=>state.jiraApplied?'  Jira: LUM-423 (Backlog since Lesson 4, per DEC-015) — phase-2 target re-dated +1 sprint · roadmap sheet row updated':'  Jira: LUM-423 is STILL In Progress / target Q3 — you skipped the Lesson 4 reconcile. Re-flagging that conflict; the +1 sprint re-date is proposed on top of it'},
   {t:'plain',x:'CHANGE SET 2 — Export Reliability (new initiative, from EV-211 + LUM-437):'},
   {t:'plain',x:'  Jira: new epic proposed · added to Next on the sheet'},
   {t:'spacer'},
@@ -1689,11 +1679,18 @@ launch:{cmd:'/launch-package manager scorecards',
    {t:'dim',x:'Announcement email prepared as an Outlook draft for approval. Monitoring watches weekly_active_admins: the metric this feature exists to move.'}]]]},
 
 recover:{cmd:'I haven\u2019t touched the workbench in ten days — what went stale?',
- script:[
+ script:()=>{
+  const pc=state.protoChoice;
+  const bulk=pc==='promote'?'bulk-export is in the contract (DEC-016) but the PRD was never regenerated — the PRD is stale, not the prototype'
+    :pc==='exploratory'?'bulk-export is still in the prototype, labeled exploratory — absent from the PRD by design, nothing to fix'
+    :pc==='remove'?'bulk-export was removed in Lesson 7 — prototype and contract agree, nothing drifted there'
+    :'bulk-export appears in the prototype and is absent from the Feature Contract — you have not resolved this (Lesson 7)';
+  return [
   {t:'dim',x:'Refreshing every live source, comparing against local state…'},
-  {t:'plain',x:'Reality moved: LUM-431 completed · LUM-423 re-dated · Maya\u2019s PRD landed (scope now excludes mobile) · prototype gained a bulk-export flow.'},
-  {t:'flag',x:'Local state now stale: contract still includes mobile · bulk-export in prototype, absent from PRD.'},
-  {t:'plain',x:'Current-state refresh complete. Review the two surfaced contract-versus-prototype choices.'}]},
+  {t:'plain',x:'Reality moved: LUM-431 completed · '+(state.jiraApplied?'LUM-423 sits in Backlog as approved':'LUM-423 still In Progress — the Lesson 4 conflict was never applied')+' · Maya\u2019s PRD audience update landed and added a scheduled scorecard email to phase 1.'},
+  {t:'flag',x:'Local state now stale: the Feature Contract still lists scheduled email as OUT of scope — PRD and contract disagree. That is a decision, not a merge: promote, mark exploratory, or remove.'},
+  {t:'flag',x:'Prototype check: '+bulk+'.'},
+  {t:'plain',x:'Current-state refresh complete. Nothing was auto-fixed; the surfaced choices are yours.'}]}},
 
 ask:{cmd:'what did we decide about scorecards permissions?',
  script:[
@@ -1702,13 +1699,13 @@ ask:{cmd:'what did we decide about scorecards permissions?',
 
 schedule:{cmd:'set up scheduling for my workbench',
  script:[
-  {t:'plain',x:'Four ways things can run \u2014 and the discipline that keeps them from becoming noise:'},
+  {t:'plain',x:'Scheduling lives in Claude Code Desktop: Routines \u2192 New routine \u2192 Local, this folder, pick a time. No cron, no admin, same on macOS and Windows; missed runs catch up when the laptop wakes. Four ways things can run \u2014 and the discipline that keeps them from becoming noise:'},
   {t:'plain',x:'\u2022 EVENT-BASED: a new transcript/export lands \u2192 it OFFERS the matching workflow (never runs it unasked).'},
   {t:'plain',x:'\u2022 CADENCE-BASED: Thursday PM \u2192 generate a weekly-update draft for Friday review.'},
   {t:'plain',x:'\u2022 CONDITION-BASED: alert only when something crosses a line \u2014 a stale ticket, a PRD/prototype conflict, a metric that can\u2019t be retrieved.'},
   {t:'flag',x:'\u2022 SUPPRESSION: when nothing material changed, it stays silent. A brief that\u2019s quiet when quiet is true stays trustworthy.'},
   {t:'spacer'},
-  {t:'flag',x:'Scheduling gate: complete 2\u20133 reliable manual runs first. Scheduled runs remain blocked from sending or publishing external work.'}]},
+  {t:'flag',x:'Scheduling gate: complete 2\u20133 reliable manual runs first. Scheduled runs use the settings.json allow-list only \u2014 no browser interaction tools, no sending or publishing.'}]},
 
 trouble:{cmd:t=>({
    session:'/weekly-update  (browser session expired mid-run)',
@@ -1747,6 +1744,7 @@ trouble:{cmd:t=>({
    consistency (A=hand-drawn marker line, B=flat vector figures, C=geometric/abstract
    shapes), but never the same drawing reused — that was the earlier bug. Static art,
    gentle entrance motion only, no completion/celebration animation. */
+function asset(p){return (window.EMBEDDED_ASSETS&&window.EMBEDDED_ASSETS[p])||p}
 function illo(key){
   const assets={
     l0:['/assets/lesson-art/lesson-00.webp','Setup system'],
@@ -1763,118 +1761,7 @@ function illo(key){
     l11:['/assets/lesson-art/lesson-11.webp','Recovery diagnostics'],
     fin:['/assets/lesson-art/finale.webp','Accumulated workbench']
   };
-  if(assets[key])return `<figure class="illo-wrap"><img class="lesson-art" src="${assets[key][0]}" alt="${assets[key][1]} editorial system diagram"><figcaption class="lesson-art-caption">${assets[key][1]}</figcaption></figure>`;
-  const svgs = {
-    // L0 — setup: two shapes clicking together, "getting the machine running"
-    l0: `<svg class="illo illo-c" viewBox="0 0 150 150">
-      <rect x="30" y="55" width="42" height="42" rx="10" fill="#e3f0e9"/>
-      <rect x="78" y="55" width="42" height="42" rx="10" fill="none" stroke="#1e6b4e" stroke-width="2.5" stroke-dasharray="5 7" class="illo-ring"/>
-      <circle cx="51" cy="76" r="7" fill="#1e6b4e"/>
-      <circle cx="99" cy="76" r="7" fill="#b57116"/>
-      <path d="M72 76 H78" stroke="#17221c" stroke-width="3" stroke-linecap="round"/>
-    </svg>`,
-    // L1 — context: a figure with a small nametag, "teach it who you are"
-    l1: `<svg class="illo illo-b" viewBox="0 0 150 150">
-      <circle cx="75" cy="58" r="20" fill="#1e6b4e"/>
-      <path d="M45 118 Q45 90 75 90 Q105 90 105 118Z" fill="#17221c"/>
-      <rect x="58" y="100" width="34" height="16" rx="3" fill="#f7ecdb" stroke="#b57116" stroke-width="2"/>
-      <path d="M62 108 H88" stroke="#b57116" stroke-width="2" stroke-linecap="round"/>
-    </svg>`,
-    // L2 — quick-close: a hand jotting a sticky note fast
-    l2: `<svg class="illo illo-a" viewBox="0 0 150 150" fill="none" stroke="#17221c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-      <rect class="d1" x="55" y="45" width="46" height="42" rx="3" fill="#f7ecdb" stroke="#b57116"/>
-      <path class="d2" d="M63 60 H90"/><path class="d2" d="M63 72 H82"/>
-      <path class="d3" d="M100 95 L118 108 L108 122 L92 110Z" fill="#e3f0e9" stroke="#1e6b4e"/>
-      <path class="d4" d="M100 95 L112 82" stroke="#1e6b4e"/>
-    </svg>`,
-    // L3 — data sources: four distinct shapes funneling into one point
-    l3: `<svg class="illo illo-c" viewBox="0 0 150 150">
-      <rect x="24" y="30" width="20" height="20" rx="5" fill="#e3f0e9"/>
-      <circle cx="75" cy="34" r="11" fill="#b57116"/>
-      <path d="M110 24 L124 24 L124 40 L110 40Z" fill="#d9714e" opacity=".85"/>
-      <rect x="24" y="60" width="18" height="18" rx="9" fill="#1e6b4e"/>
-      <path d="M40 45 Q75 70 75 100" stroke="#1e6b4e" stroke-width="2" fill="none" class="illo-ring"/>
-      <path d="M75 45 Q75 70 75 100" stroke="#b57116" stroke-width="2" fill="none"/>
-      <path d="M110 32 Q95 70 75 100" stroke="#d9714e" stroke-width="2" fill="none"/>
-      <path d="M33 70 Q55 88 75 100" stroke="#1e6b4e" stroke-width="2" fill="none"/>
-      <circle cx="75" cy="112" r="14" fill="#17221c"/>
-    </svg>`,
-    // L4 — meeting to execution: a notepad with a checkmark becoming a ticket
-    l4: `<svg class="illo illo-a" viewBox="0 0 150 150" fill="none" stroke="#17221c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-      <rect class="d1" x="30" y="40" width="50" height="62" rx="4" fill="#fff" stroke="#17221c"/>
-      <path class="d1" d="M40 55 H70"/><path class="d2" d="M40 67 L46 73 L58 59" stroke="#1e6b4e"/>
-      <path class="d2" d="M40 85 H62"/>
-      <path class="d3" d="M85 78 H105" stroke="#b57116"/>
-      <rect class="d4" x="95" y="60" width="28" height="34" rx="4" fill="#e3f0e9" stroke="#1e6b4e"/>
-      <path class="d4" d="M101 72 H117"/><path class="d4" d="M101 82 H111"/>
-    </svg>`,
-    // L5 — evidence & metrics: a magnifying glass over a small bar chart
-    l5: `<svg class="illo illo-c" viewBox="0 0 150 150">
-      <rect x="45" y="80" width="14" height="30" fill="#e3f0e9"/>
-      <rect x="65" y="65" width="14" height="45" fill="#1e6b4e"/>
-      <rect x="85" y="90" width="14" height="20" fill="#b57116"/>
-      <circle class="illo-ring" cx="78" cy="55" r="26" fill="none" stroke="#17221c" stroke-width="3"/>
-      <path d="M97 74 L114 91" stroke="#17221c" stroke-width="5" stroke-linecap="round"/>
-    </svg>`,
-    // L6 — code dive: a code bracket with a small question/search mark
-    l6: `<svg class="illo illo-c" viewBox="0 0 150 150">
-      <path d="M55 45 L34 75 L55 105" stroke="#1e6b4e" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M95 45 L116 75 L95 105" stroke="#1e6b4e" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle class="illo-ring" cx="75" cy="75" r="12" fill="none" stroke="#b57116" stroke-width="2.5" stroke-dasharray="4 5"/>
-      <circle cx="75" cy="75" r="5" fill="#17221c"/>
-    </svg>`,
-    // L7 — define the product: two figures reviewing a shared document
-    l7: `<svg class="illo illo-b" viewBox="0 0 150 150">
-      <circle cx="45" cy="55" r="14" fill="#1e6b4e"/>
-      <path d="M25 100 Q25 80 45 80 Q65 80 65 100Z" fill="#17221c"/>
-      <circle cx="105" cy="55" r="14" fill="#b57116"/>
-      <path d="M85 100 Q85 80 105 80 Q125 80 125 100Z" fill="#17221c"/>
-      <rect x="58" y="95" width="34" height="24" rx="3" fill="#fff" stroke="#e3f0e9" stroke-width="2"/>
-      <path d="M64 103 H86" stroke="#1e6b4e" stroke-width="2" stroke-linecap="round"/>
-      <path d="M64 111 H80" stroke="#1e6b4e" stroke-width="2" stroke-linecap="round"/>
-    </svg>`,
-    // L8 — research loop: one figure interviewing another, speech bubble
-    l8: `<svg class="illo illo-b" viewBox="0 0 150 150">
-      <circle cx="50" cy="70" r="16" fill="#1e6b4e"/>
-      <path d="M28 118 Q28 95 50 95 Q72 95 72 118Z" fill="#17221c"/>
-      <circle cx="105" cy="65" r="14" fill="#dde3dc"/>
-      <path d="M85 108 Q85 88 105 88 Q125 88 125 108Z" fill="#4a5850"/>
-      <path d="M62 48 Q75 38 90 46 Q94 52 88 56 L92 62 L80 56 Q66 56 62 48Z" fill="#f7ecdb" stroke="#b57116" stroke-width="2"/>
-    </svg>`,
-    // L9 — roadmap coherence: a route connecting several waypoints
-    l9: `<svg class="illo illo-c" viewBox="0 0 150 150">
-      <path d="M30 110 Q55 60 75 85 Q95 110 120 50" stroke="#dde3dc" stroke-width="4" fill="none" stroke-linecap="round" class="illo-ring"/>
-      <circle cx="30" cy="110" r="8" fill="#1e6b4e"/>
-      <circle cx="75" cy="85" r="8" fill="#b57116"/>
-      <circle cx="120" cy="50" r="10" fill="#d9714e"/>
-    </svg>`,
-    // L10 — close delivery into strategy: a flag planted on a small rise
-    l10: `<svg class="illo illo-c" viewBox="0 0 150 150">
-      <path d="M30 115 Q75 70 120 115Z" fill="#e3f0e9" class="illo-blob"/>
-      <path d="M75 115 V50" stroke="#17221c" stroke-width="3" stroke-linecap="round"/>
-      <path d="M75 50 L100 58 L75 66Z" fill="#1e6b4e"/>
-      <circle cx="45" cy="105" r="6" fill="#b57116"/>
-      <circle cx="105" cy="105" r="6" fill="#d9714e" opacity=".85"/>
-    </svg>`,
-    // L11 — troubleshooting: a wrench crossing a small warning triangle
-    l11: `<svg class="illo illo-c" viewBox="0 0 150 150">
-      <path d="M75 40 L112 105 H38Z" fill="none" stroke="#b57116" stroke-width="3.5" stroke-linejoin="round" class="illo-ring"/>
-      <path d="M75 65 V85" stroke="#b57116" stroke-width="4" stroke-linecap="round"/>
-      <circle cx="75" cy="95" r="2.5" fill="#b57116"/>
-      <path d="M50 100 L70 80 Q76 74 82 80 L62 100Z" fill="#1e6b4e"/>
-      <circle cx="86" cy="76" r="6" fill="none" stroke="#1e6b4e" stroke-width="3"/>
-    </svg>`,
-    // fin — finale: a figure with a small completed checklist (no celebration burst)
-    fin: `<svg class="illo illo-b" viewBox="0 0 150 150">
-      <circle cx="60" cy="55" r="18" fill="#1e6b4e"/>
-      <path d="M35 105 Q35 82 60 82 Q85 82 85 105Z" fill="#17221c"/>
-      <rect x="88" y="70" width="36" height="46" rx="3" fill="#fff" stroke="#dde3dc" stroke-width="2"/>
-      <path d="M95 82 L100 87 L108 78" stroke="#1e6b4e" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M95 96 L100 101 L108 92" stroke="#1e6b4e" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M95 108 H112" stroke="#dde3dc" stroke-width="3" stroke-linecap="round"/>
-    </svg>`
-  };
-  return `<div class="illo-wrap">${svgs[key]||''}</div>`;
+  return `<figure class="illo-wrap"><img class="lesson-art" src="${asset(assets[key][0])}" alt="${assets[key][1]} editorial system diagram"><figcaption class="lesson-art-caption">${assets[key][1]}</figcaption></figure>`;
 }
 
 function term(sim,model,suggest,edit){
@@ -1891,13 +1778,13 @@ const V={};
 V.home=`<section class="home-hero">
 <div class="home-wordmark" aria-hidden="true">WORK<span>BENCH</span></div>
 <div class="home-hero-grid"><div class="home-hero-copy">
-<div class="eyebrow">Interactive · ~40 min · a seeded, inspectable workspace</div>
+<div class="eyebrow">Interactive · ~60 min · a seeded, inspectable workspace</div>
 <h1>Learn it by running it.</h1>
 <p class="lede">Feed the system real evidence. Run the workflow. Inspect every source and output. Make the judgment call yourself.</p>
 <p class="lede detail">This working simulation uses the real workflow. Type commands or paste your own material, then inspect the resulting documents, prototype, and roadmap changes.</p>
-<div class="scen"><b>Your seeded workspace:</b> Lumenly’s Manager Scorecards project, with a Teams transcript, Jira export, Slack results, support case, metrics, and an unfinished <code>CLAUDE.md</code>.</div>
+<div class="scen"><b>Your seeded workspace:</b> Lumenly’s Manager Scorecards project, with a Teams transcript, Jira export, Slack results, support case, two register rows already on file (EV-211, RISK-008), metrics, and an unfinished <code>CLAUDE.md</code>.</div>
 <div class="home-actions"><button onclick="goto(1)">Start lesson 00 →</button><button onclick="toggleWS()">Inspect workspace</button></div>
-</div><figure class="home-hero-art"><img src="/assets/hero-workbench-collage.png" alt="Editorial collage of source material moving through the PM workbench"><figcaption>Sources enter. Files change. Judgment remains yours.</figcaption></figure></div>
+</div><figure class="home-hero-art"><img src="${asset('/assets/hero-workbench-collage.png')}" alt="Editorial collage of source material moving through the PM workbench"><figcaption>Sources enter. Files change. Judgment remains yours.</figcaption></figure></div>
 </section>
 <section class="home-system-section"><div class="home-section-head"><div class="eyebrow">How the system works</div><h2>Sources in. Inspectable files through. Reviewed work out.</h2><p>The workbench routes evidence into durable artifacts while the PM retains judgment and approval over anything external.</p></div>
 <div class="sysdiag"><svg viewBox="0 0 640 170">
@@ -1936,17 +1823,17 @@ V.home=`<section class="home-hero">
 </div></div></section>`;
 
 V.l0=`<div class="eyebrow">Lesson 0</div><h1>Get the actual workbench running on your machine</h1>${illo('l0')}
-<div class="lesson-orientation"><p>Launch the existing system on macOS or Windows, choose the working surface that fits you, and discover installed commands without memorizing them.</p></div>
+<div class="lesson-orientation"><p>Launch the existing system on macOS or Windows, choose the working surface that fits you, and discover installed commands without memorizing them. Install steps here are current as of September 2026 — check <code>code.claude.com/docs</code> if a command has changed.</p></div>
 
-<div class="step"><div class="shead"><span class="snum">STEP 1</span><span class="stitle">Check for Node.js — the engine Claude Code runs on</span></div>
+<div class="step"><div class="shead"><span class="snum">STEP 1</span><span class="stitle">Check for Node.js — needed for the browser bridge and prototypes</span></div>
 <p><span data-os="mac">Open <b>Terminal</b> (⌘-space, type "terminal", Enter).</span><span data-os="win">Open <b>PowerShell</b> (Start, type "powershell", Enter).</span> Type this and press Enter:</p>
 <pre class="snip">node --version</pre>
 <div class="branch"><button onclick="branch(this,'b-ok','nodecheck')">It printed v18/v20/v22…</button><button onclick="branch(this,'b-no','nodecheck')">"command not found" / "not recognized"</button></div>
 <div class="branchout" id="b-ok"><b>You're set — go to Step 2.</b></div>
 <div class="branchout" id="b-no"><b>Install it (3 min):</b> go to <b>nodejs.org</b> → click the green <b>LTS</b> button (the stable release) → run the installer and accept the defaults → <b>close and reopen</b> <span data-os="mac">Terminal</span><span data-os="win">PowerShell</span> so it can detect Node → run <code>node --version</code> again.<span data-os="mac"><br><span class="note">The nodejs.org installer provides a direct graphical installation. Homebrew is optional.</span></span></div></div>
 <div class="step"><div class="shead"><span class="snum">STEP 2</span><span class="stitle">Install Claude Code and sign in</span></div>
-<pre class="snip">npm install -g @anthropic-ai/claude-code</pre>
-<p>(npm came with Node; <code>-g</code> makes it available everywhere.) Verify with <code>claude --version</code>, then type <code>claude</code> once — a browser tab opens to sign in with your work account. One time only.</p></div>
+<pre class="snip"><span data-os="mac">curl -fsSL https://claude.ai/install.sh | bash</span><span data-os="win">irm https://claude.ai/install.ps1 | iex</span></pre>
+<p>(This is Anthropic's native installer — Claude Code no longer needs Node or npm to run. If your company already installs it another way, use that.) Verify with <code>claude --version</code>, then type <code>claude</code> once — a browser tab opens to sign in with your work account. One time only.</p></div>
 <div class="step"><div class="shead"><span class="snum">STEP 3</span><span class="stitle">Pick your cockpit</span></div>
 <div class="tabs"><button class="active" onclick="tab(this,'t-cur')">Cursor — recommended</button><button onclick="tab(this,'t-cli')">Terminal only</button></div>
 <div class="tabpanes"><div class="active" id="t-cur"><p>The chat panel, file tree, and visual diffs keep the workspace visible in one place. Download from <b>cursor.com</b>, install<span data-os="mac"> (drag to Applications)</span><span data-os="win"> (run the .exe with the defaults)</span>, then choose <b>File → Open Folder</b> → <code>pm-workbench</code>. Accept the Claude Code extension prompt (or Extensions → search "Claude Code" → Install). In the sidebar chat panel, type <code>hello</code> and verify that it responds.</p></div>
@@ -1975,28 +1862,23 @@ ${term('quickclose','haiku','decided w/ Dana — Scorecards phase 1 admin-only, 
 
 V.l3=`<div class="eyebrow">Lesson 3</div><h1>Where the information comes from</h1>${illo('l3')}
 
-<div class="lesson-orientation"><p>Choose an available ingestion path and name it honestly. The system can use approved connections, exports, pasted material, durable links, or an optional browser bridge—but it never implies access you did not grant.</p></div>
+<div class="lesson-orientation"><p>Choose an available ingestion path and name it honestly. The system can use exports, pasted material, durable links, a one-click browser clipper, or an optional automated browser read—but it never implies access you did not grant.</p></div>
 <div class="why"><b>Access is granted, not assumed.</b> An export remains a legitimate source. The important distinction is whether the system can name what it actually read.</div>
-<div class="step"><div class="shead"><span class="snum">PATH 1</span><span class="stitle">Jira, Confluence, GitHub — through whatever access your company grants</span></div>
-<p>Claude Code runs on <i>your</i> machine with <i>your</i> credentials. Atlassian access follows one of three company-approved paths: <b>(a)</b> an IT-enabled integration/MCP connection, <b>(b)</b> a personal API token from your Atlassian profile, or <b>(c)</b> exported files through Path 2. Access remains limited to the permissions you grant.</p></div>
+<div class="step"><div class="shead"><span class="snum">PATH 1</span><span class="stitle">Your ticketing, wiki and code tools — through whatever access your company grants</span></div>
+<p>Claude Code runs on <i>your</i> machine with <i>your</i> credentials. Access to Jira, Confluence or their equivalents follows one of three company-approved paths: <b>(a)</b> an IT-enabled integration/MCP connection, <b>(b)</b> a personal API token from your Atlassian profile, or <b>(c)</b> exported files through Path 2. Access remains limited to the permissions you grant.</p></div>
 <div class="step"><div class="shead"><span class="snum">PATH 2</span><span class="stitle">Export → drop in inbox/</span></div>
 <p>Any tool exports CSV/PDF. Download → drag into <code>inbox/exports/</code>. Your workspace already has three seeded ones — a Jira board export, a Slack search export, a support case. Lessons 4-5 read <i>those exact files</i> and say so.</p></div>
 <div class="step"><div class="shead"><span class="snum">PATH 3</span><span class="stitle">Paste from any source</span></div>
 <p>Copy anything — a Slack thread, an email, a stray thought — and paste it into the chat. It gets classified, filed with a timestamp, and processed like everything else. Try it (editable — paste anything real):</p>
 ${term('paste','haiku','From #cs-escalations: Harbor Dental asked if scorecard exports can go to a shared drive instead of email. Second account asking this month.','area')}
 <p class="note">Pasted text requires no special integration. When Cursor is closed, a one-click OS shortcut (a <span data-os="mac">macOS Quick Action in the right-click menu</span><span data-os="win">right-click "Send to" entry</span>) moves the current clipboard into <code>inbox/</code>.</p></div>
-<div class="step"><div class="shead"><span class="snum">PATH 4</span><span class="stitle">The browser bridge — live reads of your logged-in tools (~15 min, once, optional)</span></div>
-<p>How "reading a dashboard" becomes literal: Claude reads pages in a Chrome window <b>you're signed into</b> — read-only; clicking/typing/submitting is blocked at the permission layer.</p>
-<p><b>1.</b> <code>npm install -g @playwright/mcp</code>&nbsp;&nbsp;<b>2.</b> Launch a dedicated Chrome profile (save as a shortcut):</p>
-<pre class="snip"><span data-os="mac">/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome \\
-  --remote-debugging-port=9222 --user-data-dir="$HOME/chrome-claude-profile"</span><span data-os="win">"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" ^
-  --remote-debugging-port=9222 --user-data-dir="%USERPROFILE%\\chrome-claude-profile"</span></pre>
-<p><b>3.</b> Log into Slack/dashboards/SharePoint in that window once — sessions persist.&nbsp;&nbsp;<b>4.</b> Create <code>.mcp.json</code> in the workbench folder:</p>
-<pre class="snip">{ "mcpServers": { "browser-bridge": { "command": "npx",
-  "args": ["@playwright/mcp@latest","--cdp-endpoint","http://localhost:9222"] } } }</pre>
-<p><b>5.</b> Test: "using the browser-bridge, list my open tabs." Blocked by corporate policy? Paths 1-3 cover this entire course.</p></div>
+<div class="step"><div class="shead"><span class="snum">PATH 4</span><span class="stitle">Browser, three jobs, in order — capture first, automation last (none needs admin approval)</span></div>
+<p><b>A · Capture what you're looking at (most days):</b> the <b>Workbench Clipper</b> in <code>tools/workbench-clipper/</code>. <span data-os="mac">Chrome → <code>chrome://extensions</code></span><span data-os="win">Chrome or Edge → <code>chrome://extensions</code></span> → Developer mode → Load unpacked → that folder (2 minutes). Right-click any page or selection → <i>Send to PM Workbench</i> → pick a category → it lands in <code>Downloads/pm-workbench-inbox/</code> with URL, title, and timestamp in the frontmatter; <code>/process-inbox</code> pulls it in. You clicked, so there is no automation to govern.</p>
+<p><b>B · Let Claude read pages for you (discovery scans, OKR pulls, Jira views):</b> install Anthropic's <b>Claude in Chrome</b> extension, sign in, then type <code>/chrome</code> in Claude Code (or launch <code>claude --chrome</code>). Test: "in read-only mode, tell me what's on my current tab; don't click or type." Beta, Chrome/Edge only, needs a claude.ai login; an org can disable the extension — then use C.</p>
+<p><b>C · Fallback only — Playwright MCP over a debug Chrome profile.</b> Same reads, but you own the plumbing (a profile that must be open, an SSO that expires, a deny list you maintain). The kit's <code>settings.json</code> denies every Playwright interaction tool and allows only navigate/snapshot/tabs/screenshot; in a scheduled run an unlisted tool is refused, interactively it prompts. Setup is in <code>SETUP.md</code> Part 1.</p>
+<p class="note">No browser at all is also fine: every command runs on exports and pastes, labeled as such.</p></div>
 <h2>Log durable links</h2>
-<p>For reachable Confluence or SharePoint resources—templates, wiki pages, and dashboards—log the link once so the workflow retrieves the current source. Editable—use one of your real links:</p>
+<p>For reachable wiki or shared-drive resources—templates, wiki pages, and dashboards—log the link once so the workflow retrieves the current source. Editable—use one of your real links:</p>
 ${term('links','haiku','log our PRD template link: https://lumenly.atlassian.net/wiki/spaces/PROD/pages/1123/prd-template','line')}
 <div class="branch"><button onclick="markDone(this,'datain')">I know how all four paths work</button></div>`;
 
@@ -2004,7 +1886,7 @@ V.l4=`<div class="eyebrow">Lesson 4</div><h1>One meeting, every follow-through</
 
 <div class="lesson-orientation"><p>Trace decisions to the meeting source and coordinate every downstream update without relying on memory. The transcript remains the source; state compounds across workflows.</p></div>
 <h3>Close out the seeded roadmap review</h3>
-<p>You organized it in Teams, so the transcript exists. Open <code>inbox/meetings/2026-07-14-roadmap-review.txt</code> first, then trace every extraction to a source line. A Copilot summary or typed notes follow the same workflow.</p>
+<p>You organized the meeting, so a transcript exists (Teams, Zoom, Meet — whichever your company records). Open <code>inbox/meetings/2026-07-14-roadmap-review.txt</code> first, then trace every extraction to a source line. An AI meeting summary or typed notes follow the same workflow.</p>
 ${term('closeout','sonnet','<b>/meeting-closeout</b> inbox/meetings/2026-07-14-roadmap-review.txt')}
 <h3>Close out notes from your own meeting</h3>
 <p>The seeded transcript proves nothing if it only works on seeded files. Paste notes from a real meeting of yours (or edit the sample) — same parsing, cumulative rows:</p>
@@ -2058,11 +1940,11 @@ ${term('proto','sonnet','<b>/prototype-build</b> manager scorecards')}
 V.l8=`<div class="eyebrow">Lesson 8</div><h1>Run a research and experiment loop before committing the build</h1>${illo('l8')}
 
 <div class="lesson-orientation"><p>Identify who is worth learning from, design research that can change a product decision, and pre-register what positive, negative, and null experiment outcomes will mean.</p></div>
-<p>The system produces research criteria, a participant slate, outreach and interview materials, and an experiment package with decision rules for positive, negative, and null outcomes.</p>
+<p>The system produces research criteria, outreach and interview materials, and an experiment package with decision rules for positive, negative, and null outcomes.</p>
 <h3>Turn a feature into a research plan</h3>
-<p>The internal CRM supplies participant records. This workflow builds the research plan: screening criteria with a diversity guard, an outreach strategy with drafts, and an interview guide with decision rules written <i>before</i> sessions. Edit the field to narrow the focus:</p>
+<p>This workflow never produces a list of people. It builds the research plan: screening criteria with a diversity guard, an outreach strategy with drafts, and an interview guide with decision rules written <i>before</i> sessions. Edit the field to narrow the focus:</p>
 ${term('research','sonnet','recovery workflow after a failed export','line')}
-<div class="why"><b>Participant criteria:</b> the PM defines <i>who</i> is worth learning from, <i>how</i> to reach them without leading the witness, and <i>which</i> past-behavior questions test the assumption. The CRM applies those criteria to participant records.</div>
+<div class="why"><b>Participant criteria:</b> the PM defines <i>who</i> is worth learning from, <i>how</i> to reach them without leading the witness, and <i>which</i> past-behavior questions test the assumption. Whoever owns your customer records applies those criteria — the workbench hands over criteria, never names.</div>
 <h3>Design the test before anyone builds anything</h3>
 ${term('experiment','opus','<b>/experiment-package</b> failure notifications for scheduled exports')}
 <div class="why"><b>The critical line is "IF null →".</b> Every experiment must define the decision produced by a null result. The design gate blocks tests that leave the original decision unchanged.</div>`;
@@ -2129,15 +2011,15 @@ V.l11=`<div class="eyebrow">Lesson 11</div><h1>Handle failure by stopping, namin
 </div>
 ${term('trouble','sonnet','session','line')}
 <h3>Scheduling — automate only earned workflows</h3>
-<p>Once a workflow is boringly reliable by hand, you can schedule it. Four modes, and the discipline that keeps scheduling from becoming a second inbox:</p>
+<p>Once a workflow is boringly reliable by hand, you can schedule it as a local routine in the Desktop app (a form, a Run-now button, a run history). Four modes, and the discipline that keeps scheduling from becoming a second inbox:</p>
 ${term('schedule','haiku','set up scheduling for my workbench')}
 <div class="why"><b>Trust model:</b> uncertainty remains labeled, failures stop visibly, and fallbacks preserve verified work. Unsupported confidence is never presented as a completed result.</div>`;
 
 V.fin=`<div class="eyebrow">Finale</div><h1>Operate the workbench independently</h1>${illo('fin')}
 <div class="lesson-orientation"><p>Select the right workflow or plain-language request, inspect the right evidence, make the judgment call, and recover safely when the system is incomplete.</p></div>
-<p class="lede">Open the Workspace one last time — every ● updated file and register row came from the last 40 minutes, and Lesson 10 answered a question purely from them. That accumulation is the entire idea.</p>
+<p class="lede">Open the Workspace one last time — every ● updated file and register row came from the last hour, and Lesson 10 answered a question purely from them. That accumulation is the entire idea.</p>
 <div class="finale-stats"><div class="fstat"><div class="fv" id="stRows">0</div><div class="fl">register rows created</div></div>
-<div class="fstat"><div class="fv" id="stMins">0h</div><div class="fl">est. manual work replaced — retyping &amp; reconciling, not judgment</div></div>
+<div class="fstat"><div class="fv" id="stMins">0 min</div><div class="fl">estimated retyping &amp; reconciling you didn't do by hand — a rough estimate, not a measurement, and not the metric that matters (review time is)</div></div>
 <div class="fstat"><div class="fv" id="stFiles">0</div><div class="fl">documents &amp; prototypes produced, all inspectable</div></div></div>
 <h2>Readiness check</h2>
 <p class="note">This self-check measures whether you can select the right workflow, inspect the relevant evidence, evaluate the output, and recover safely from incomplete work.</p>
@@ -2318,7 +2200,7 @@ function refresh(){
   document.getElementById('plab').textContent=done+'/'+total;
   const sr=document.getElementById('stRows');
   if(sr){sr.textContent=state.rows;
-    document.getElementById('stMins').textContent=(state.mins/60).toFixed(1)+'h';
+    document.getElementById('stMins').textContent=state.mins<60?state.mins+' min':(state.mins/60).toFixed(1)+' h';
     document.getElementById('stFiles').textContent=Math.max(0,Object.keys(FILES).length-SEEDCOUNT)}
   if(state.quiz.size===5){const rw=document.getElementById('ratewrap');if(rw)rw.style.display='block'}}
 function markDone(btn,key){btn.classList.add('picked');btn.textContent='✓ '+btn.textContent.replace(/^✓ /,'');

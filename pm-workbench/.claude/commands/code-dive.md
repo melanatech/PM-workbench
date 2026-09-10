@@ -1,8 +1,9 @@
 ---
-description: Understand a feature at code level via read-only GitHub clones
-argument-hint: [feature/area] [repo if known]
-execution_mode: standard   # fast=0 reviewers, standard=1-2, deep=full panel (see CLAUDE.md)
+description: "Understand a feature at code level via read-only GitHub clones"
+argument-hint: "[feature/area] [repo if known]"
 ---
+
+Execution mode: **standard** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
 Code-level understanding of: $ARGUMENTS
 

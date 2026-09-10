@@ -2,8 +2,9 @@
 description: Experiment design with adversarial review gate
 model: opus
 argument-hint: [what we want to test / opportunity id]
-execution_mode: standard   # fast=0 reviewers, standard=1-2, deep=full panel (see CLAUDE.md)
 ---
+
+Execution mode: **standard** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
 ## Uncertainty triage — run this BEFORE designing anything
 

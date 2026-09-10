@@ -1,0 +1,13 @@
+SLACK SEARCH EXPORT — "export" in #customer-feedback, #support-escalations — last 7 days
+File added: Jul 17 (newer than the last discovery run)
+
+#customer-feedback · Jul 15 · @t.okafor (CSM)
+"Fernwood Fitness again — their scheduled scorecard export just… didn't run.
+No error, no email, nothing. Second time this month."
+
+#customer-feedback · Jul 16 · @j.reyes (AM)
+"Different account (Harbor Dental, 12 locations) reporting the same thing —
+scheduled export silently skipped. They only noticed at their Monday review."
+
+#support-escalations · Jul 17 · @support-bot
+Case #8841 escalated: Fernwood Fitness — scheduled exports failing silently

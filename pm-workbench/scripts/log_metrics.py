@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 log_metrics.py — logs metric values that are ALREADY CALCULATED by their
-source dashboards (QuickSight, FullStory, the experiment tool). This script
+source dashboards (your OKR dashboard, behavior-analytics tool, experiment tool). This script
 never computes, derives, or re-derives a metric from raw rows. Its only jobs:
 
   1. Append {metric, value, as_of_date, retrieved_date, source} to

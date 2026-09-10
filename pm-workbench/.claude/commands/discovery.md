@@ -1,8 +1,9 @@
 ---
 description: Your discovery workbench - ask what the evidence says, add new inputs, see what changed, or map the opportunity space
 argument-hint: [a question, notes to add, "what's new", or "map opportunities"]
-execution_mode: fast   # fast=0 reviewers, standard=1-2, deep=full panel (see CLAUDE.md)
 ---
+
+Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
 Request: $ARGUMENTS
 

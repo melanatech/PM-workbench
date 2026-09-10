@@ -1,8 +1,9 @@
 ---
 description: Apply a roadmap change across every surface it lives on - Jira board, Slack update, tracking spreadsheet, leadership deck - handling multiple features in one pass
 argument-hint: [what changed, plain language - can cover several features at once]
-execution_mode: standard   # fast=0 reviewers, standard=1-2, deep=full panel (see CLAUDE.md)
 ---
+
+Execution mode: **standard** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
 Roadmap changes: $ARGUMENTS
 

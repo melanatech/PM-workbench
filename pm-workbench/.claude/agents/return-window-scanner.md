@@ -5,7 +5,7 @@ tools: Read, Grep, Glob, mcp__browser-bridge__browser_navigate, mcp__browser-bri
 model: sonnet
 ---
 
-You are given raw material (or browser-read content handed to you) spanning a specific date range: Slack search results, Jira ticket history, Confluence doc revisions, and any SharePoint/file-browser documents (leadership decks, org announcements, strategy docs) relevant to the window, for one product area.
+You are given raw material (or browser-read content handed to you) spanning a specific date range: Slack search results, Jira ticket history, Confluence doc revisions, and any shared-drive/file-browser documents (leadership decks, org announcements, strategy docs) relevant to the window, for one product area.
 
 Extract, with source + date for each: decisions that changed, features shipped/delayed/cancelled/rescoped, OKR changes, new technical constraints, customer escalations, people/role changes, and anything stated as settled before the window that this material contradicts.
 

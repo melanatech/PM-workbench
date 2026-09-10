@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copy anything (Slack desktop, Outlook, a doc), double-click this, pick a category.
+# Copy anything (chat, email, a doc), double-click this, pick a category.
 # It lands as a timestamped file in the right inbox folder, with source metadata.
 cd "$(dirname "$0")"
 CONTENT="$(pbpaste)"

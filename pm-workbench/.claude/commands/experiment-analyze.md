@@ -1,6 +1,6 @@
 ---
-description: Analyze experiment results against the pre-registered design
-argument-hint: [results export path] [experiment name]
+description: "Analyze experiment results against the pre-registered design"
+argument-hint: "[results export path] [experiment name]"
 ---
 
 Read the results at the given path against `outputs/experiments/[name]/` (card + analysis template).

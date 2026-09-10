@@ -2,12 +2,13 @@
 description: PRD package - grounded context, readiness gate, stakeholder pre-review, and prototype reconciliation
 model: opus
 argument-hint: [feature or problem]
-execution_mode: standard   # fast=0 reviewers, standard=1-2, deep=full panel (see CLAUDE.md)
 ---
+
+Execution mode: **standard** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
 Build the PRD package for: $ARGUMENTS
 
-**Step 0 — dispatch to `prd-context-gatherer`, and in parallel to `internal-docs-reader`.** The first reads evidence, code findings, OKR baseline, competitive log, and prior decisions/risks for this feature; the second checks SharePoint, Confluence research pages, and `reference/user-research/` for anything relevant that isn't already reflected in those registers. Everything below works from both briefs instead of re-reading files from scratch.
+**Step 0 — dispatch to `prd-context-gatherer`, and in parallel to `internal-docs-reader`.** The first reads evidence, code findings, OKR baseline, competitive log, and prior decisions/risks for this feature; the second checks the shared drive, wiki research pages, and `reference/user-research/` for anything relevant that isn't already reflected in those registers. Everything below works from both briefs instead of re-reading files from scratch.
 
 **Step 1 — readiness report**, using that brief: evidence strength (with citations), problem clarity, target-user clarity, baseline metric availability, unresolved technical questions, dependencies, revenue/retention hypothesis, measurement readiness, and the gaps the gatherer flagged. **If evidence is thin or there's no baseline, say "not ready" and list what's needed — a polished PRD on a weak foundation is a trap, and this gate is what keeps your docs credible.**
 
@@ -21,7 +22,7 @@ Build the PRD package for: $ARGUMENTS
 5. Scope options: minimum / recommended / expanded, with tradeoff table
 6. Proposed Jira epic + child structure, drafted for the internal tool
 
-**Step 3 — dispatch the near-final draft to five stakeholder reviewers in parallel.** Run this panel ONCE, when the draft is close to shareable — not on every revision loop; five isolated reviews per iteration is real latency and token cost for diminishing returns. Reviewers: `eng-feasibility-reviewer`, `design-ux-reviewer`, `data-instrumentation-reviewer`, `business-revenue-reviewer`, `customer-facing-reviewer` — the same panel `/prototype-build` uses. Each sees only the PRD, not each other. This isn't a hard gate the way the experiment panel is — a PRD is allowed to go to real stakeholders imperfect — but every FAIL or CONDITION becomes an entry in the PRD's **Anticipated objections and responses** section. **Label the panel's output "AI pre-review — not validated by any stakeholder"** — these are model calls sharing one context and one set of blind spots, useful for completeness, never a substitute for your real engineering lead's feasibility read or actual leadership alignment.
+**Step 3 — stakeholder pre-review, bounded by execution mode.** In **Standard** (the default): pick the **1–2 reviewers whose angle this PRD most needs** — say which and why (default: `eng-feasibility-reviewer` + `business-revenue-reviewer`; swap in `design-ux-reviewer`, `data-instrumentation-reviewer`, or `customer-facing-reviewer` when the feature is UI-, instrumentation-, or support-heavy). The full five-reviewer panel runs only in **Deep** mode or when I ask for it. Run the review ONCE, when the draft is close to shareable — not on every revision loop. Whichever reviewers run: the same agents `/prototype-build` uses. Each sees only the PRD, not each other. This isn't a hard gate the way the experiment panel is — a PRD is allowed to go to real stakeholders imperfect — but every FAIL or CONDITION becomes an entry in the PRD's **Anticipated objections and responses** section. **Label the panel's output "AI pre-review — not validated by any stakeholder"** — these are model calls sharing one context and one set of blind spots, useful for completeness, never a substitute for your real engineering lead's feasibility read or actual leadership alignment.
 
 **Step 3.5 — stakeholder buy-in plan.** Alongside the package, produce: who must validate (eng/design/analytics/CS/leadership), a pre-wire sequence (validate technical assumptions privately with eng BEFORE the group review; leadership gets the one-pager before the meeting), the likely objection from each stakeholder given what the pre-review surfaced, and the specific decisions the review meeting must produce. The AI prepares the influence work; the relationships and the room are yours.
 

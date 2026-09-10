@@ -1,0 +1,5 @@
+key,summary,status,assignee,target,last_updated
+LUM-423,Scorecards per-location scoping,In Progress,Dana,2026-Q3,2026-07-02
+LUM-431,Scorecards empty state,Done,Maya,2026-Q3,2026-07-11
+LUM-437,Report export retry logic,In Progress,(unassigned),,2026-06-19
+LUM-440,Scorecards admin visibility,In Progress,Dana,2026-08,2026-07-13

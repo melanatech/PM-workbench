@@ -1,0 +1,2 @@
+id,date_raised,risk,severity,mitigation,status,source
+RISK-008,2026-07-16,"Permissions service change may take ~3 wks instead of 2 if the auth team's freeze happens (phase-2 dependency)",medium,"confirm with Dana before committing a date",watch,inbox/captures/capture-2026-07-16.md

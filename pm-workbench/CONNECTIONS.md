@@ -4,7 +4,7 @@ Almost nothing in this kit runs in isolation. This is the map — what each comm
 
 ## The reference layer: `reference/links.csv`
 
-A lightweight bookmark list, not a register — logged links to templates, policy docs, and dashboards that live in Confluence/SharePoint and can be fetched live rather than downloaded and processed. Checked by `internal-docs-reader` before it goes looking for a local copy. See `reference/LINKS-README.md`.
+A lightweight bookmark list, not a register — logged links to templates, policy docs, and dashboards that live in your wiki or shared drive and can be fetched live rather than downloaded and processed. Checked by `internal-docs-reader` before it goes looking for a local copy. See `reference/LINKS-README.md`.
 
 ## The hub: `registers/initiatives.csv`
 
@@ -14,12 +14,12 @@ One row per feature, tracking its stage and links to every artifact about it. St
 
 | Command | Writes to | Reads / cross-checks against |
 |---|---|---|
-| `/return-brief` | `registers/decisions.csv`, `registers/risks.csv`, `registers/commitments.csv` (seeds them) | Slack/Jira/Confluence/SharePoint (via `return-window-scanner`) |
+| `/return-brief` | `registers/decisions.csv`, `registers/risks.csv`, `registers/commitments.csv` (seeds them) | chat/Jira/wiki/shared-drive (via `return-window-scanner`) |
 | `/meeting-closeout` | `registers/decisions.csv`, `registers/commitments.csv`, `registers/risks.csv` | Same registers (conflict check) + `registers/initiatives.csv` (downstream flag) + Jira |
 | `/jira-reconcile` | `state/jira-snapshots/`, proposed Jira writes | `registers/decisions.csv`, `commitments.csv`, `evidence.csv`, `initiatives.csv`, recent meeting outputs |
-| `/discovery` | `registers/evidence.csv` | Slack/support/FullStory (`discovery-source-reader`) + internal docs (`internal-docs-reader`) + `registers/initiatives.csv` (relevance flag) |
+| `/discovery` | `registers/evidence.csv` | chat/support/behavior-analytics (`discovery-source-reader`) + internal docs (`internal-docs-reader`) + `registers/initiatives.csv` (relevance flag) |
 | `/okr-refresh` | `state/okr-history.csv` | Dashboard values + `registers/initiatives.csv` (which initiative this metric belongs to) |
-| `/research-plan` | `outputs/research/[date]-candidates.md`, (later) `registers/research-participants.csv` | QuickSight/FullStory/Jira + internal docs (personas/prior research) |
+| `/research-plan` | `outputs/research/[topic]/plan.md` (criteria, outreach drafts, guide, decision rules — never names), (later) `registers/research-participants.csv` | dashboards/behavior analytics/Jira + internal docs (personas/prior research) |
 | `/prd-package` | `outputs/prds/[feature]/`, `registers/initiatives.csv` (creates/updates) | `evidence.csv`, `learning/`, `okr-history.csv`, competitive log, `decisions.csv`/`risks.csv` (via `prd-context-gatherer` + `internal-docs-reader`) + `prototypes/[feature]/` if it exists |
 | `/prototype-build` | `prototypes/[feature]/`, `registers/initiatives.csv` (updates) | `learning/`, repo patterns (`code-repo-explorer`) + `outputs/prds/[feature]/` if it exists |
 | `/prd-prototype-sync` | (report only, no writes) | Both `outputs/prds/[feature]/` and `prototypes/[feature]/` directly |

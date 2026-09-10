@@ -1,0 +1,10 @@
+SUPPORT CASE #8841 — Fernwood Fitness (40 locations, enterprise)
+Opened: Jul 17 · Severity: High · Status: Escalated
+File added: Jul 17 (newer than the last discovery run)
+
+Customer: "Our Monday scorecard export has failed twice this month with no
+notification. We run our regional review off that file. The second time, we
+presented three-week-old numbers without knowing."
+
+Support notes: no error surfaced. Export job log shows timeout at 04:12, no
+retry attempted. Related ticket: LUM-437 (retry logic, In Progress, unassigned).

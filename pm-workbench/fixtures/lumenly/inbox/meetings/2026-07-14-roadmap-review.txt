@@ -1,0 +1,13 @@
+TEAMS TRANSCRIPT — Scorecards roadmap review — Jul 14, 31 min
+Attendees: you, Dana (eng lead), Maya (design), Priya (analytics)
+
+Dana: The permissions service can't scope scorecards per-location today.
+Supporting that means a service change — I'd estimate two weeks, maybe more.
+You: If we hold the August date, what ships?
+Dana: Admin-only visibility. Location managers wait for phase two.
+You: OK — decision: phase 1 is admin-only, per-location moves to phase 2.
+Maya: Then the PRD needs the audience section rewritten. I can have the
+design side updated by Wednesday.
+Priya: One thing — I heard the mobile team might deprioritize their half
+this quarter. Not confirmed, just something I heard.
+You: Noted. Let's watch that one.

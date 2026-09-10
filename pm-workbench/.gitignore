@@ -1,13 +1,17 @@
-# Sensitive working data — never version-control raw captures or exports.
+# Sensitive working data — never version-control raw captures, exports, or registers.
 # System logic (commands, agents, docs, templates) IS safe to commit.
-inbox/
-archive/
-state/
-logs/
-*.csv
-*.xlsx
-*.pdf
+inbox/**
+archive/**
+state/**
+logs/**
+registers/**
+repos/**
+outputs/**
+!outputs/.gitkeep
 browser-profiles/
 .env
-# Registers are working data too — back them up via approved company storage, not git
-registers/
+*.xlsx
+*.pdf
+*.docx
+*.pptx
+# Config CSVs that SHOULD be committed stay tracked: reference/links.csv, roadmap/*.csv

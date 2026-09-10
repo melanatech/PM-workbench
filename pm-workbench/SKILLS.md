@@ -12,7 +12,7 @@ The kit ships as commands deliberately. Weeks 1-3 are for tuning prompts — edi
 
 ## Converting one (it's just a file move)
 ```
-mkdir -p .claude/skills/okr-pull
+mkdir -p .claude/skills/okr-refresh
 mv .claude/commands/okr-refresh.md .claude/skills/okr-refresh/SKILL.md
 ```
 Then add a `description:` line to the frontmatter if it doesn't have one — that's what Claude reads to decide when to auto-invoke. Make it describe the *situation* ("Pull current OKR metrics from dashboards and draft the weekly numbers update") rather than just naming the command.

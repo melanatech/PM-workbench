@@ -1,6 +1,14 @@
 # START HERE — PM Workbench
 
-One system, three moving parts: **capture** (browser automation, one-click clipboard, or dropped documents) → **process** (Claude turns raw material into structured registers and durable research summaries) → **generate** (updates, PRDs, reports produced from maintained state instead of your memory). The registers — decisions, commitments, risks, evidence, participants — are the connective tissue; meetings feed them, and everything you publish reads from them. **Internal documents** (SharePoint, other Confluence pages, Teams/Copilot meeting summaries, anything in the file browser) are a fourth input alongside Slack/Jira/QuickSight/FullStory — see SETUP.md and `reference/user-research/`. For anything durable-but-fetchable (templates, policy docs, dashboards), `reference/links.csv` is usually faster than saving a copy. And plenty of value needs no command at all — you can just ask questions directly ("what did we decide about X") and get answers read straight from the registers.
+One system, three moving parts: **capture** (browser automation, one-click clipboard, or dropped documents) → **process** (Claude turns raw material into structured registers and durable research summaries) → **generate** (updates, PRDs, reports produced from maintained state instead of your memory). The registers — decisions, commitments, risks, evidence, participants — are the connective tissue; meetings feed them, and everything you publish reads from them. **Internal documents** (the shared drive, other wiki pages, meeting-tool AI summaries, anything in the file browser) are a fourth input alongside chat/Jira/dashboards/behavior analytics — see SETUP.md and `reference/user-research/`. For anything durable-but-fetchable (templates, policy docs, dashboards), `reference/links.csv` is usually faster than saving a copy. And plenty of value needs no command at all — you can just ask questions directly ("what did we decide about X") and get answers read straight from the registers.
+
+## Prove it works before you trust it (10 minutes, once)
+```
+python3 scripts/load_fixture.py lumenly      # a small fictional workspace with known right answers
+/meeting-closeout inbox/meetings/2026-07-14-roadmap-review.txt
+python3 scripts/check_run.py                 # FAIL/WARN/OK on what the run actually did
+```
+`fixtures/lumenly/README.md` says what a correct run produces. Three hooks (SETUP.md Part 4) run the same kind of checks on every real run, silently.
 
 ## Files to read, in order
 1. **SETUP.md** — browser access (test `claude --chrome` first; Playwright fallback; clipboard-capture floor) + scoped permissions + bookmarked views
@@ -17,7 +25,7 @@ One system, three moving parts: **capture** (browser automation, one-click clipb
 
 Also available:
 - **"Run PM Workflow.command"** — double-click, pick a number, done. (First open: right-click → Open to pass Gatekeeper.)
-- **"Capture Clipboard.command"** — copy anything in Slack desktop/Outlook/wherever, double-click, pick a category. It's filed with a timestamp and processed at the nightly inbox run.
+- **"Capture Clipboard.command"** — copy anything in your chat client/email/wherever, double-click, pick a category. It's filed with a timestamp and processed at the nightly inbox run.
 - **Scheduled runs** — no interface at all; results land in `outputs/` for you to read in Cursor like documents.
 
 The command line only appears twice in your life: the one-time SETUP.md steps and the one-time SCHEDULING.md crontab paste — and for both, you can open the file in Cursor and ask the chat panel to run the steps for you.
@@ -26,10 +34,10 @@ The command line only appears twice in your life: the one-time SETUP.md steps an
 | Duty | Workflow(s) |
 |---|---|
 | Learning platform/flows/data | `/learn-product-flow` + `/code-dive` |
-| Discovery → documented strategy input | `/discovery` (Slack/support/FullStory + user research docs, in parallel) |
-| Finding & recruiting users | `/research-plan` (QuickSight/FullStory/Jira + existing persona/research docs — no CRM) |
-| PRDs + leadership/tech buy-in | `/prd-package` (grounded context → readiness gate → draft → 5-angle stakeholder pre-review → prototype reconciliation) |
-| Prototypes + testing | `/prototype-build` (same 5-angle review + PRD reconciliation) + `/research-package`; `/prd-prototype-sync` anytime the two need a manual re-check |
+| Discovery → documented strategy input | `/discovery` (chat/support/behavior-analytics + user research docs, in parallel) |
+| Finding & recruiting users | `/research-plan` (dashboards/behavior analytics/Jira + existing persona/research docs — produces criteria and questions, never a list of people) |
+| PRDs + leadership/tech buy-in | `/prd-package` (grounded context → readiness gate → draft → bounded stakeholder pre-review: 1–2 angles in Standard, all five in Deep → prototype reconciliation) |
+| Prototypes + testing | `/prototype-build` (same bounded review + real browser QA + PRD reconciliation) + `/research-package`; `/prd-prototype-sync` anytime the two need a manual re-check |
 | OKR gathering/monitoring/reporting | `/okr-refresh` (retrieves already-calculated dashboard values, logs and validates freshness, drafts 3 destinations — never recomputes a metric itself) |
 | Docs, release notes, launch coordination | `/launch-package` (drift report first, then all audience docs) |
 | Experiments | `/experiment-package` (adversarial gate) + `/experiment-analyze` |
@@ -38,10 +46,11 @@ The command line only appears twice in your life: the one-time SETUP.md steps an
 | Weekly leadership updates | `/weekly-update` (generated from registers) |
 | Strategy/innovation/revenue docs | `/strategy-refresh` (change report first; revenue ideas get real models) |
 | Week one back | `/return-brief` (one-time) |
+| Is the system itself working for me | `/workbench-health` (reads the run log; proposes pruning) |
 
 ## Day one: everything works. Setup happens while you work.
 
-There is no ramp-up phase and nothing is deferred. All 22 commands are live the moment you install Claude Code and open this folder — use whichever one the day demands. What makes that possible: **every command self-configures on first use** (CLAUDE.md rule 17). The first time a command needs a dashboard URL, a Slack search, or a template it doesn't have, it asks you inline, finishes the real work with your answer, and saves it so it never asks again. Setup isn't a phase you complete before using the system — it's a side effect of the first week of actually using it.
+There is no ramp-up phase and nothing is deferred. All 25 commands (plus the `prototype-build` skill) are live — six are in front, the rest are one name away (see CLAUDE.md "Start with six") the moment you install Claude Code and open this folder — use whichever one the day demands. What makes that possible: **every command self-configures on first use** (CLAUDE.md rule 17). The first time a command needs a dashboard URL, a Slack search, or a template it doesn't have, it asks you inline, finishes the real work with your answer, and saves it so it never asks again. Setup isn't a phase you complete before using the system — it's a side effect of the first week of actually using it.
 
 **The only true one-time step:** the browser bridge test in SETUP.md (~15 min). Do it when you first need a command that browses (discovery, OKR, Jira views). Until then, every command runs on paste-ins and the clipboard capture — a labeled fallback, not a blocker.
 
@@ -53,8 +62,8 @@ There is no ramp-up phase and nothing is deferred. All 22 commands are live the 
 
 **Tinker as you go** (this is where your "tweak and tinker" time goes, whenever it exists): fill CLAUDE.md brackets as you notice a wrong assumption, drop past PRDs/updates into templates when convenient, wire SCHEDULING.md once a command has run manually enough times to be boring, and log every annoyance in BACKLOG.md — that friction log is what makes the tinkering targeted instead of guesswork. None of it gates anything.
 
-## The receipts log (do not skip this)
-Keep `outputs/receipts.md`, one entry per week: outcomes influenced, decisions accelerated, risks surfaced before impact, insights generated, hours of recurring work eliminated, and the acceptance rate of Claude's proposed changes (how often you accept vs. correct — it's both your quality check on the system and your evidence that your judgment is the driver). This is your performance-review evidence, framed as business impact rather than "I used AI a lot." And say it out loud in your first 1:1 back: the always-current board and on-time updates are a system you built. Don't let it be invisible.
+## The evidence you'll want later (do not skip this)
+`logs/run-log.csv` is written automatically by every workflow (CLAUDE.md rule 19) — that is where time-on-task and reliability numbers come from, not from a diary. On top of it, keep `outputs/receipts.md` short and weekly: outcomes influenced, decisions accelerated, risks surfaced before impact, and the acceptance rate of Claude's proposed changes (how often you accept vs. correct — your quality check on the system and your evidence that your judgment is the driver). Frame it as business impact, not "I used AI a lot" — and be careful with "hours saved": if review and reconciliation time climbs alongside output, that is not saving. Say it out loud in your next 1:1: the always-current board and on-time updates are a system you built. Don't let it be invisible.
 
 ## What Claude will never do here
-Send, submit, publish, or change any external system without your explicit approval in the moment. Scheduled runs are mechanically blocked from clicking/typing in the browser at all. OKR metric values are retrieved from what the dashboard already calculated, logged and freshness-checked — never recomputed by the model. Raw captures are never edited. Sources are always cited. When something fails (SSO expired, Chrome closed), it says so plainly instead of improvising.
+Send, submit, publish, or change any external system without your explicit approval in the moment. Scheduled runs use only the allow-list in `.claude/settings.json` — no browser interaction tools (click/type/fill/key/evaluate/run-code) are allowed, and in headless mode an unlisted tool is refused rather than prompted. Read that file; it is a list, not a guarantee. OKR metric values are retrieved from what the dashboard already calculated, logged and freshness-checked — never recomputed by the model. Raw captures are never edited. Sources are always cited. When something fails (SSO expired, Chrome closed), it says so plainly instead of improvising.

@@ -1,7 +1,8 @@
 ---
 description: Retrieve OKR metrics (already calculated by their dashboards), log them, draft the three destinations
-execution_mode: fast   # fast=0 reviewers, standard=1-2, deep=full panel (see CLAUDE.md)
 ---
+
+Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
 **No preconditions — first run configures itself.** If no metric YAMLs exist yet in `reference/metric-definitions/`, ask me: which metrics, where each lives (I'll paste the dashboard URL or the current value directly), and the target — then do this run with those answers AND write the YAML(s) so next time is automatic. If `log_metrics.py` is still a stub, append the history row yourself with proper CSV quoting; the script is a later optimization, not a dependency.
 

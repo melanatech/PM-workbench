@@ -1,0 +1,85 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Write(./outputs/**)",
+      "Write(./registers/**)",
+      "Write(./state/**)",
+      "Write(./logs/**)",
+      "Write(./learning/**)",
+      "Write(./reference/user-research/**)",
+      "Write(./reference/metric-definitions/**)",
+      "Edit(./outputs/**)",
+      "Edit(./registers/**)",
+      "Bash(python3 scripts/:*)",
+      "Bash(bash scripts/:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv inbox:*)",
+      "Bash(mv ./inbox:*)",
+      "WebSearch",
+      "WebFetch",
+      "mcp__browser-bridge__browser_snapshot",
+      "mcp__browser-bridge__browser_navigate",
+      "mcp__browser-bridge__browser_navigate_back",
+      "mcp__browser-bridge__browser_tabs",
+      "mcp__browser-bridge__browser_take_screenshot",
+      "mcp__browser-bridge__browser_wait_for",
+      "mcp__browser-bridge__browser_console_messages"
+    ],
+    "deny": [
+      "mcp__browser-bridge__browser_click",
+      "mcp__browser-bridge__browser_type",
+      "mcp__browser-bridge__browser_fill_form",
+      "mcp__browser-bridge__browser_select_option",
+      "mcp__browser-bridge__browser_press_key",
+      "mcp__browser-bridge__browser_drag",
+      "mcp__browser-bridge__browser_hover",
+      "mcp__browser-bridge__browser_file_upload",
+      "mcp__browser-bridge__browser_evaluate",
+      "mcp__browser-bridge__browser_run_code",
+      "mcp__browser-bridge__browser_handle_dialog",
+      "mcp__browser-bridge__browser_install",
+      "Bash(git push:*)",
+      "Bash(rm -rf:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PY=$(command -v python3 || command -v python); \"$PY\" \"$CLAUDE_PROJECT_DIR/.claude/hooks/validate_register_write.py\"",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PY=$(command -v python3 || command -v python); \"$PY\" \"$CLAUDE_PROJECT_DIR/.claude/hooks/check_output_provenance.py\"",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PY=$(command -v python3 || command -v python); \"$PY\" \"$CLAUDE_PROJECT_DIR/.claude/hooks/log_run.py\"",
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}

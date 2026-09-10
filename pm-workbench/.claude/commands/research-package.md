@@ -1,12 +1,13 @@
 ---
 description: Full research package for a prototype or concept test
 argument-hint: [what's being tested, with whom]
-execution_mode: standard   # fast=0 reviewers, standard=1-2, deep=full panel (see CLAUDE.md)
 ---
+
+Execution mode: **standard** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
 Research package for: $ARGUMENTS
 
-**Before designing anything, dispatch `internal-docs-reader`** to check `reference/user-research/` and SharePoint/Confluence for prior research on this same question — no point re-running a study that already exists, and prior findings sharpen the screener and moderator guide. Then → `outputs/research/[name]/`:
+**Before designing anything, dispatch `internal-docs-reader`** to check `reference/user-research/` and the shared drive/wiki for prior research on this same question — no point re-running a study that already exists, and prior findings sharpen the screener and moderator guide. Then → `outputs/research/[name]/`:
 
 Objective; participant criteria + screener; moderator guide (tasks in order, what each is meant to learn, follow-up probes); survey variant for scale; consent placeholder; observation sheet; analysis framework; **decision rules written before any session runs**.
 

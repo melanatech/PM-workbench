@@ -7,7 +7,7 @@ Registers and local files are an INDEX and working memory — never the ultimate
 | Current delivery status | Jira | Meeting notes/Slack are leads to verify against Jira, not overrides |
 | Approved product scope | Approved Confluence PRD + a recorded decision with a named owner | A newer Slack message does NOT override an approved scope — it's a signal that a decision may be pending |
 | Implemented behavior | Verified product behavior + current code | Code is evidence of implementation, not proof of deployment or intent |
-| Official metrics | QuickSight / FullStory / experiment tool / OKR site | Never recalculate; a stale export loses to the live dashboard |
+| Official metrics | OKR dashboard / behavior analytics / experiment tool / OKR site | Never recalculate; a stale export loses to the live dashboard |
 | Support history | Jira support cases | |
 | Launch commitments | The approved launch record | Slack cannot override |
 | Customer problems | Direct research + support evidence + observed behavior | A stakeholder's opinion is input, not evidence |

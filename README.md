@@ -1,6 +1,6 @@
 # PM Workbench
 
-A product management workspace for analytics and value realization initiatives.
+A product management workspace for productivity initiatives.
 
 **Course site (GitHub Pages):** https://melanatech.github.io/PM-workbench/
 

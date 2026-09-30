@@ -5,3 +5,6 @@ channel = "stable-25_05"
 
 [agent]
 expertMode = true
+
+[postMerge]
+path = "pm-workbench/scripts/post-merge.sh"

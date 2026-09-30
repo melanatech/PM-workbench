@@ -252,7 +252,10 @@ body::before{
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.26'/%3E%3C/svg%3E")
 }
 ::selection{background:var(--lime);color:var(--ink)}
-button:focus-visible,[role=button]:focus-visible,a:focus-visible{outline:3px solid var(--coral)!important;outline-offset:3px}
+button:focus-visible,[role=button]:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--coral)!important;outline-offset:3px}
+.brand{border:0;background:none;padding:0;color:inherit;text-align:left}
+.ftree button.fitem,.filecard{width:100%;text-align:left}
+.filecard{font:inherit;font-size:12.5px}
 code{color:var(--blue);background:rgba(197,236,39,.48);padding:2px 5px;font-weight:600}
 
 header{
@@ -837,14 +840,14 @@ body>header .brand{font:700 16px var(--body);letter-spacing:-.03em}
 </head>
 <body class="mac">
 <header><div class="hwrap">
-  <div class="brand" onclick="goto(0)">PM<span>Workbench</span></div>
+  <button type="button" class="brand" onclick="goto(0)">PM<span>Workbench</span></button>
   <nav class="top-switch" aria-label="Course view">
     <button id="topHome" class="active" onclick="goto(0)">Home</button>
     <button id="topCourse" onclick="goto(cur===0?1:cur)">Course</button>
   </nav>
   <div class="pbar"><div id="pfill"></div></div><span class="plab" id="plab">0/11</span>
-  <div class="os-toggle"><button id="osM" class="active" onclick="setOS('mac')">macOS</button><button id="osW" onclick="setOS('win')">Windows</button></div>
-  <button class="wsbtn" onclick="toggleWS()">Workspace <span class="badge" id="wsbadge">10</span></button>
+  <div class="os-toggle" role="group" aria-label="Instructions for operating system"><button id="osM" class="active" aria-pressed="true" onclick="setOS('mac')">macOS</button><button id="osW" aria-pressed="false" onclick="setOS('win')">Windows</button></div>
+  <button class="wsbtn" aria-controls="ws" aria-expanded="false" onclick="toggleWS()">Workspace <span class="badge" id="wsbadge">10</span></button>
 </div></header>
 <main id="host"></main>
 <footer class="site-footer" aria-label="More about PM Workbench">
@@ -853,13 +856,13 @@ body>header .brand{font:700 16px var(--body);letter-spacing:-.03em}
   <a href="https://github.com/melanatech/PM-workbench" target="_blank" rel="noopener">View the course and workbench on GitHub</a>
 </footer>
 
-<div class="drawer" id="ws">
-  <div class="dr-head"><h3 class="sg">Lumenly workspace — live files</h3><button class="x" onclick="toggleWS()">×</button></div>
+<div class="drawer" id="ws" aria-label="Lumenly workspace — live files" inert>
+  <div class="dr-head"><h3 class="sg">Lumenly workspace — live files</h3><button class="x" aria-label="Close workspace" onclick="toggleWS()">×</button></div>
   <div class="dr-body"><div id="wsFiles" class="ftree"></div></div>
 </div>
 
-<div class="modal" id="modal" onclick="if(event.target===this)closeFile()">
-  <div class="mwin"><div class="mhead"><span class="mpath" id="mpath"></span><button class="x" onclick="closeFile()">×</button></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mpath" onclick="if(event.target===this)closeFile()">
+  <div class="mwin"><div class="mhead"><span class="mpath" id="mpath"></span><button class="x" aria-label="Close file" onclick="closeFile()">×</button></div>
   <div class="mbody" id="mbody"></div></div>
 </div>
 
@@ -1169,27 +1172,67 @@ const TIMES={quickclose:2,closeout:12,yourmeeting:8,jira:10,weekly:25,discovery:
 const updated=new Set();
 function setOS(os){state.os=os;document.body.className=os;
  document.getElementById('osM').classList.toggle('active',os==='mac');
- document.getElementById('osW').classList.toggle('active',os==='win')}
+ document.getElementById('osW').classList.toggle('active',os==='win');
+ document.getElementById('osM').setAttribute('aria-pressed',os==='mac');
+ document.getElementById('osW').setAttribute('aria-pressed',os==='win')}
 function cssid(p){return p.replace(/[^a-z0-9]/gi,'_')}
 function renderTree(){
   const groups={};
   Object.keys(FILES).forEach(p=>{const g=p.includes('/')?p.split('/').slice(0,-1).join('/'):'(root)';(groups[g]=groups[g]||[]).push(p)});
   document.getElementById('wsFiles').innerHTML=Object.keys(groups).sort().map(g=>
     `<div class="fgroup">${g}/</div>`+groups[g].map(p=>
-      `<div class="fitem" id="fi-${cssid(p)}" onclick="openFile('${p}')"><span>📄</span><span>${p.split('/').pop()}</span>${updated.has(p)?'<span class="upd">● updated</span>':''}</div>`).join('')).join('');
+      `<button type="button" class="fitem" id="fi-${cssid(p)}" onclick="openFile('${p}')"><span aria-hidden="true">📄</span><span>${p.split('/').pop()}</span>${updated.has(p)?'<span class="upd">● updated</span>':''}</button>`).join('')).join('');
   document.getElementById('wsbadge').textContent=Object.keys(FILES).length;
 }
 function setFile(p,body,flash=true){const isNew=!(p in FILES);FILES[p]=body;if(!isNew)updated.add(p);renderTree();
  if(flash){const b=document.getElementById('wsbadge');b.classList.add('pop');setTimeout(()=>b.classList.remove('pop'),350);
   const el=document.getElementById('fi-'+cssid(p));if(el){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),1800)}}}
+let fileOpener=null,workspaceOpener=null;
 function openFile(p){
+  if(!document.getElementById('modal').classList.contains('open'))fileOpener=document.activeElement;
   const mb=document.getElementById('mbody');
   document.getElementById('mpath').textContent=p;
   if(p==='prototypes/manager-scorecards/index.html'){mb.className='mbody render';mb.innerHTML=PROTO_HTML;wireProto()}
   else{mb.className='mbody';mb.textContent=(p in FILES)?FILES[p]:'Not created yet. This file is produced when you run the lesson that makes it — nothing here is shown as done before it is.'}
-  document.getElementById('modal').classList.add('open')}
-function closeFile(){document.getElementById('modal').classList.remove('open')}
-function toggleWS(){document.getElementById('ws').classList.toggle('open')}
+  document.getElementById('modal').classList.add('open');
+  document.querySelector('body > header').inert=true;
+  document.getElementById('host').inert=true;
+  document.getElementById('ws').inert=true;
+  document.querySelector('#modal .x').focus()}
+function closeFile(){
+  const modal=document.getElementById('modal');
+  if(!modal.classList.contains('open'))return;
+  modal.classList.remove('open');
+  document.querySelector('body > header').inert=false;
+  document.getElementById('host').inert=false;
+  document.getElementById('ws').inert=!document.getElementById('ws').classList.contains('open');
+  if(fileOpener?.isConnected)fileOpener.focus();
+  else document.querySelector('.wsbtn').focus();
+  fileOpener=null}
+function toggleWS(){
+  const ws=document.getElementById('ws'),open=!ws.classList.contains('open');
+  if(open)workspaceOpener=document.activeElement;
+  ws.classList.toggle('open',open);
+  ws.inert=!open;
+  document.querySelector('.wsbtn').setAttribute('aria-expanded',open);
+  if(open)ws.querySelector('.x').focus();
+  else{if(workspaceOpener?.isConnected)workspaceOpener.focus();workspaceOpener=null}}
+document.addEventListener('keydown',event=>{
+  const modal=document.getElementById('modal');
+  if(modal.classList.contains('open')){
+    if(event.key==='Escape'){event.preventDefault();closeFile()}
+    if(event.key==='Tab'){
+      const controls=[...modal.querySelectorAll('button:not(:disabled),a[href],input:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])')]
+        .filter(el=>el.getClientRects().length);
+      if(!controls.length)return;
+      const first=controls[0],last=controls[controls.length-1];
+      if(event.shiftKey&&(document.activeElement===first||!modal.contains(document.activeElement))){event.preventDefault();last.focus()}
+      else if(!event.shiftKey&&(document.activeElement===last||!modal.contains(document.activeElement))){event.preventDefault();first.focus()}
+    }
+  }else if(event.key==='Escape'&&document.getElementById('ws').classList.contains('open')){
+    event.preventDefault();toggleWS()
+  }
+});
 function regRow(group,csvline){
   const map={dec:'registers/decisions.csv',com:'registers/commitments.csv',risk:'registers/risks.csv',ev:'registers/evidence.csv',init:'registers/initiatives.csv',okr:'registers/okr-history.csv'};
   const head={dec:'id,date,decision,made_by,source,affects',com:'id,description,owner,due,status',risk:'id,risk,severity,status,source',ev:'id,date,observation,source,severity',init:'id,name,stage,linked',okr:'date,metric,value,as_of,source'}[group];
@@ -1201,9 +1244,9 @@ function regRow(group,csvline){
 const PROTO_HTML=`<div class="proto-app">
 <div class="pa-top"><span class="pa-logo">Lumenly</span><span class="pa-nav">Reports ▸ Scorecards</span></div>
 <div class="pa-title">Manager Scorecards</div>
-<div class="pa-states">
-<button class="on" data-st="loaded">Loaded</button><button data-st="empty">Empty (&lt;14 days)</button>
-<button data-st="denied">Non-admin view</button><button data-st="compare">Comparison</button></div>
+<div class="pa-states" role="group" aria-label="Scorecard preview state">
+<button class="on" aria-pressed="true" data-st="loaded">Loaded</button><button aria-pressed="false" data-st="empty">Empty (&lt;14 days)</button>
+<button aria-pressed="false" data-st="denied">Non-admin view</button><button aria-pressed="false" data-st="compare">Comparison</button></div>
 <div class="pa-panel" id="paPanel"></div>
 <div class="pa-instr"><span>instrumentation: scorecard_viewed</span><span>comparison_opened</span><span>scorecard_exported</span></div>
 </div>`;
@@ -1219,8 +1262,8 @@ compare:`<div class="pa-row"><div class="pa-name" style="min-width:90px">Usage</
 <div class="pa-row"><div class="pa-name" style="min-width:90px">Exports</div><div class="pa-bar"><div style="width:55%"></div></div><div class="pa-val">AK 55</div><div class="pa-bar"><div style="width:30%;background:#b57116"></div></div><div class="pa-val">RJ 30</div></div>`};
 function wireProto(){const panel=document.getElementById('paPanel');panel.innerHTML=PA.loaded;
   document.querySelectorAll('.pa-states button').forEach(b=>b.onclick=()=>{
-    document.querySelectorAll('.pa-states button').forEach(x=>x.classList.remove('on'));
-    b.classList.add('on');panel.innerHTML=PA[b.dataset.st]})}
+    document.querySelectorAll('.pa-states button').forEach(x=>{x.classList.remove('on');x.setAttribute('aria-pressed','false')});
+    b.classList.add('on');b.setAttribute('aria-pressed','true');panel.innerHTML=PA[b.dataset.st]})}
 
 /* ================= SIM ENGINE ================= */
 function typeLine(body,cls,text){return new Promise(res=>{
@@ -1233,8 +1276,8 @@ async function playScript(body,script){
   for(const L of script){
     if(L.t==='file'){const nb=L.body!==undefined&&L.body!==null?L.body:(OUT[L.path]!==undefined?OUT[L.path]:FILES[L.path]);setFile(L.path,nb);
       const proto=L.path.startsWith('prototypes/');
-      const card=document.createElement('div');card.className='filecard'+(proto?' proto':'');card.onclick=()=>openFile(L.path);
-      card.innerHTML=`<span class="fico">${proto?'▶':'📄'}</span><span>${L.path}</span><span class="fview">${proto?'OPEN PROTOTYPE ▸':'VIEW ▸'}</span>`;
+      const card=document.createElement('button');card.type='button';card.className='filecard'+(proto?' proto':'');card.onclick=()=>openFile(L.path);
+      card.innerHTML=`<span class="fico" aria-hidden="true">${proto?'▶':'📄'}</span><span>${L.path}</span><span class="fview" aria-hidden="true">${proto?'OPEN PROTOTYPE ▸':'VIEW ▸'}</span>`;
       body.appendChild(card);body.scrollTop=body.scrollHeight;
       await new Promise(r=>setTimeout(r,240));continue}
     if(L.t==='fn'){L.x();continue}
@@ -2086,7 +2129,7 @@ function applyPreservedVisualShell(section,id,orderIndex){
   const objective=section.querySelector(':scope > .lesson-orientation');
   const rail=document.createElement('nav');
   rail.className='preserved-rail';rail.setAttribute('aria-label','All course lessons');
-  rail.innerHTML=LESSON_SHORT.map((name,i)=>`<button class="${i===courseIndex?'active':''}" onclick="goto(${i+1})">${i===12?'FIN':String(i).padStart(2,'0')}<br>${name}</button>`).join('');
+  rail.innerHTML=LESSON_SHORT.map((name,i)=>`<button class="${i===courseIndex?'active':''}" ${i===courseIndex?'aria-current="page"':''} onclick="goto(${i+1})">${i===12?'FIN':String(i).padStart(2,'0')}<br>${name}</button>`).join('');
   const hero=document.createElement('header');hero.className='preserved-lab-hero';
   const poster=document.createElement('div');poster.className='preserved-lab-poster';poster.setAttribute('aria-hidden','true');poster.textContent=LESSON_POSTERS[courseIndex]||'WORKBENCH';
   const intro=document.createElement('div');intro.className='preserved-lab-intro';
@@ -2139,7 +2182,8 @@ function structurePreservedBody(body,lessonTitle,lessonId){
     lessonStage.classList.toggle('copy-only',!lessonStage.querySelector('.term'));
     lessonStage.classList.toggle('active',index===0);
     lessonStage.id='stage-'+lessonId+'-'+index;
-    const button=document.createElement('button');button.className='preserved-stage-button'+(index===0?' active':'');button.type='button';button.dataset.stageTarget=lessonStage.id;
+    const button=document.createElement('button');button.className='preserved-stage-button'+(index===0?' active':'');button.type='button';button.dataset.stageTarget=lessonStage.id;button.setAttribute('aria-controls',lessonStage.id);button.setAttribute('aria-expanded',index===0?'true':'false');
+    lessonStage.setAttribute('aria-hidden',index===0?'false':'true');
     const number=document.createElement('b');number.textContent=String(index+1);
     const copy=document.createElement('span');copy.textContent=label;
     button.append(number,copy);
@@ -2152,8 +2196,10 @@ function structurePreservedBody(body,lessonTitle,lessonId){
 function selectPreservedStage(stage){
   if(!stage)return;
   const body=stage.closest('.preserved-lesson-body');
-  body?.querySelectorAll('.preserved-stage-button').forEach(button=>button.classList.toggle('active',button.dataset.stageTarget===stage.id));
-  body?.querySelectorAll('.preserved-stage').forEach(panel=>panel.classList.toggle('active',panel===stage))
+  const focusedInHiddenStage=body?.querySelector('.preserved-stage.active')?.contains(document.activeElement);
+  body?.querySelectorAll('.preserved-stage-button').forEach(button=>{const active=button.dataset.stageTarget===stage.id;button.classList.toggle('active',active);button.setAttribute('aria-expanded',active)});
+  body?.querySelectorAll('.preserved-stage').forEach(panel=>{panel.classList.toggle('active',panel===stage);panel.setAttribute('aria-hidden',panel===stage?'false':'true')});
+  if(focusedInHiddenStage){const heading=stage.querySelector('h2,h3');if(heading){heading.tabIndex=-1;heading.focus()}}
 }
 function stageRequirementKeys(stage){
   const lessonId=stage?.closest('.view')?.id.replace('v-','');
@@ -2177,6 +2223,10 @@ function render(){
   ORDER.forEach((id,i)=>{const s=document.createElement('section');s.className='view'+(i===cur?' active':'');s.id='v-'+id;
     s.innerHTML=V[id]+navHTML(i);applyPreservedVisualShell(s,id,i);host.appendChild(s)});
   document.querySelectorAll('.term').forEach(wireTerm);
+  document.querySelectorAll('.branch button,.tabs button,.rate button,.picker button,.preserved-stage-button').forEach(button=>{
+    if(!button.hasAttribute('aria-pressed')&&!button.classList.contains('preserved-stage-button'))
+      button.setAttribute('aria-pressed',button.matches('.picked,.active,.sel'));
+  });
   wireQuiz();renderMap();refresh();window.scrollTo({top:0})}
 function navHTML(i){
   return `<div class="footer-nav">
@@ -2186,15 +2236,19 @@ function navHTML(i){
 function goto(i){if(i<0||i>=ORDER.length)return;cur=i;
   document.querySelectorAll('.view').forEach((v,x)=>v.classList.toggle('active',x===i));
   window.scrollTo({top:0});refresh();
+  const heading=document.querySelector('.view.active h1');
+  if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true})}
   requestAnimationFrame(()=>document.querySelector('.view.active .preserved-rail button.active')?.scrollIntoView({block:'nearest',inline:'center'}))}
 function renderMap(){
   const m=document.getElementById('cmap');if(!m)return;
-  m.innerHTML=MAPMETA.map((x,i)=>`<a onclick="goto(${i+1})" id="map-${ORDER[i+1]}"><span class="mico"><span class="map-num">${i<12?String(i).padStart(2,'0'):'✓'}</span><span class="map-icon">${x[0]}</span></span><span class="map-copy"><div class="mtitle">${x[1]}</div><div class="msub">${x[2]}</div></span><span class="mdone">✓</span></a>`).join('')}
+  m.innerHTML=MAPMETA.map((x,i)=>`<a href="#v-${ORDER[i+1]}" onclick="goto(${i+1});return false" id="map-${ORDER[i+1]}"><span class="mico"><span class="map-num">${i<12?String(i).padStart(2,'0'):'✓'}</span><span class="map-icon" aria-hidden="true">${x[0]}</span></span><span class="map-copy"><div class="mtitle">${x[1]}</div><div class="msub">${x[2]}</div></span><span class="mdone" aria-hidden="true">✓</span></a>`).join('')}
 function refresh(){
   let done=0;
   const topHome=document.getElementById('topHome'),topCourse=document.getElementById('topCourse');
   if(topHome)topHome.classList.toggle('active',cur===0);
   if(topCourse)topCourse.classList.toggle('active',cur!==0);
+  topHome?.setAttribute('aria-current',cur===0?'page':'false');
+  topCourse?.setAttribute('aria-current',cur!==0?'page':'false');
   ORDER.forEach(id=>{
     const req=REQS[id];const ok=req.length&&req.every(r=>state.simsDone.has(r));
     if(ok)done++;
@@ -2211,24 +2265,24 @@ function refresh(){
     document.getElementById('stMins').textContent=state.mins<60?state.mins+' min':(state.mins/60).toFixed(1)+' h';
     document.getElementById('stFiles').textContent=Math.max(0,Object.keys(FILES).length-SEEDCOUNT)}
   if(state.quiz.size===5){const rw=document.getElementById('ratewrap');if(rw)rw.style.display='block'}}
-function markDone(btn,key){btn.classList.add('picked');btn.textContent='✓ '+btn.textContent.replace(/^✓ /,'');
+function markDone(btn,key){btn.classList.add('picked');btn.setAttribute('aria-pressed','true');btn.textContent='✓ '+btn.textContent.replace(/^✓ /,'');
   if(!state.simsDone.has(key)){state.simsDone.add(key);refresh()}maybeAdvanceStage(btn.closest('.preserved-stage'))}
 function branch(btn,outId,key){
-  btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('picked'));btn.classList.add('picked');
+  btn.parentElement.querySelectorAll('button').forEach(b=>{b.classList.remove('picked');b.setAttribute('aria-pressed','false')});btn.classList.add('picked');btn.setAttribute('aria-pressed','true');
   btn.closest('.step').querySelectorAll('.branchout').forEach(o=>o.classList.remove('show'));
   document.getElementById(outId).classList.add('show');
   if(key&&!state.simsDone.has(key)){state.simsDone.add(key);refresh()}maybeAdvanceStage(btn.closest('.preserved-stage'))}
-function tab(btn,paneId){const t=btn.parentElement;t.querySelectorAll('button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+function tab(btn,paneId){const t=btn.parentElement;t.querySelectorAll('button').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false')});btn.classList.add('active');btn.setAttribute('aria-pressed','true');
   const panes=t.nextElementSibling;panes.querySelectorAll(':scope>div').forEach(p=>p.classList.remove('active'));
   document.getElementById(paneId).classList.add('active')}
 function rateReady(n){
-  document.querySelectorAll('#rateBtns button').forEach((b,i)=>{b.classList.toggle('sel',i===n-1)});
+  document.querySelectorAll('#rateBtns button').forEach((b,i)=>{b.classList.toggle('sel',i===n-1);b.setAttribute('aria-pressed',i===n-1)});
   const h=document.getElementById('homework');if(h)h.style.display='block';
   h&&h.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 function pickTrouble(key,btn){
-  document.querySelectorAll('#troublePicker button').forEach(b=>b.classList.remove('sel'));
-  btn.classList.add('sel');
+  document.querySelectorAll('#troublePicker button').forEach(b=>{b.classList.remove('sel');b.setAttribute('aria-pressed','false')});
+  btn.classList.add('sel');btn.setAttribute('aria-pressed','true');
   const term=document.querySelector('.term[data-sim="trouble"]');
   if(!term)return;
   const inp=term.querySelector('.suggest-in');

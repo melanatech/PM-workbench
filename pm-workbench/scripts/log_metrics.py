@@ -21,16 +21,14 @@ Usage (called by /okr-refresh, not run standalone):
   python3 scripts/log_metrics.py --metric onboarding_completion \
       --value 0.412 --as-of 2026-07-15 --source quicksight
 
-FIRST-TIME SETUP: open in Cursor and ask Claude to implement the argument
-parsing + CSV append + threshold checks per this docstring, reading each
-metric's max_data_age_days and flag_if_change_exceeds from its YAML in
-reference/metric-definitions/.
+STUB: this script exits with an error; it does not append rows or check thresholds.
+Until it is implemented and tested, use an approved source and manually append a
+CSV-quoted row to state/okr-history.csv with the columns above. Compare configured
+freshness/change thresholds manually and note that automated checks did not run.
 """
 
 import sys
 
 if __name__ == "__main__":
-    print("log_metrics.py is a stub — ask Claude (in Cursor or Claude Code) "
-          "to implement it per the docstring above, once you have your "
-          "first metric YAML defined in reference/metric-definitions/.")
+    print("log_metrics.py is a stub — no metric was recorded and no thresholds were checked.")
     sys.exit(1)

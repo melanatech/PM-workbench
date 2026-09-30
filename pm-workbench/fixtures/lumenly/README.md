@@ -10,12 +10,27 @@ A small, fictional workspace state you can run any command against and know what
 - `registers/evidence.csv` (EV-211), `registers/risks.csv` (RISK-008) — two rows already on file
 - `roadmap/roadmap.csv`, `reference/context/current-priorities.md`
 
-**Load it** (copies into the live folders; refuses to overwrite non-empty registers unless `--force`):
+**Safest: load it into a separate workbench copy.** This copies the kit's
+versioned logic, excludes root-level working data/raw captures, and loads the
+fictional fixture in the new folder:
 ```
-python3 scripts/load_fixture.py lumenly
+python3 scripts/load_fixture.py lumenly --isolate /tmp/pm-workbench-lumenly
+cd /tmp/pm-workbench-lumenly
 ```
+Open that folder in Claude Code before running any slash command. The source
+workbench is not modified. When finished, remove only the isolated directory
+you selected, after confirming its exact path; the loader does not clean it up.
 
-**Then run a command and check the run:**
+Loading directly into the current workbench is also supported, but is
+all-or-nothing: the loader first checks every fixture target, then refuses the
+entire load if any existing file differs. Preview with
+`python3 scripts/load_fixture.py lumenly --dry-run`. `--overwrite` replaces
+conflicting target files and is intended only for disposable/fictitious data;
+it can replace an inbox file or context file, so do not use it against real
+work.
+
+**Then run a command and check the run** from the isolated or explicitly loaded
+workbench root:
 ```
 /meeting-closeout inbox/meetings/2026-07-14-roadmap-review.txt
 python3 scripts/check_run.py

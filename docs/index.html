@@ -830,6 +830,9 @@ body>header .brand{font:700 16px var(--body);letter-spacing:-.03em}
   .register-key,.lesson-principles{grid-template-columns:1fr}
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+.site-footer{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;padding:18px 20px 24px;border-top:1px solid var(--ink);background:var(--paper2);font:600 12px/1.5 var(--mono);text-align:center}
+.site-footer a{color:var(--ink);text-underline-offset:3px}
+.site-footer a:hover{color:var(--blue)}
 </style>
 </head>
 <body class="mac">
@@ -844,6 +847,11 @@ body>header .brand{font:700 16px var(--body);letter-spacing:-.03em}
   <button class="wsbtn" onclick="toggleWS()">Workspace <span class="badge" id="wsbadge">10</span></button>
 </div></header>
 <main id="host"></main>
+<footer class="site-footer" aria-label="More about PM Workbench">
+  <a href="blog/ai-system-worked/" target="_blank" rel="noopener">Read the essay</a>
+  <span aria-hidden="true">·</span>
+  <a href="https://github.com/melanatech/PM-workbench" target="_blank" rel="noopener">View the course and workbench on GitHub</a>
+</footer>
 
 <div class="drawer" id="ws">
   <div class="dr-head"><h3 class="sg">Lumenly workspace — live files</h3><button class="x" onclick="toggleWS()">×</button></div>

@@ -9,6 +9,8 @@ import sys, os, csv, io
 sys.path.insert(0, os.path.dirname(__file__))
 from _common import payload, root, rel, block, warn
 
+CURRENT_STATE_REGISTERS = {'commitments.csv', 'risks.csv', 'initiatives.csv'}
+
 try:
     p = payload()
     ti = p.get('tool_input', {}) or {}
@@ -30,13 +32,21 @@ try:
         sys.exit(0)
     hdr = rows[0]
     if existing.strip():
-        old_hdr = next(csv.reader(io.StringIO(existing)))
+        old_rows = list(csv.reader(io.StringIO(existing)))
+        old_hdr = old_rows[0]
         if hdr != old_hdr:
-            block(f"REGISTER HEADER CHANGED in {r}. Registers are append-only (rule 7); keep the header exactly: {','.join(old_hdr)}")
-        old_count = len([x for x in csv.reader(io.StringIO(existing)) if any(c.strip() for c in x)])
-        new_count = len([x for x in rows if any(c.strip() for c in x)])
+            block(f"REGISTER HEADER CHANGED in {r}. Keep the header exactly: {','.join(old_hdr)}")
+        old_records = [x for x in old_rows[1:] if any(c.strip() for c in x)]
+        new_records = [x for x in rows[1:] if any(c.strip() for c in x)]
+        old_count, new_count = len(old_records), len(new_records)
         if new_count < old_count:
-            block(f"{r} would lose rows ({old_count} -> {new_count}). Registers are append-only (rule 7). Append, never rewrite.")
+            block(f"{r} would lose rows ({old_count} -> {new_count}). Keep existing records and append new rows.")
+        old_ids = [x[0].strip() if x else '' for x in old_records]
+        new_ids = [x[0].strip() if x else '' for x in new_records]
+        if new_ids[:len(old_ids)] != old_ids:
+            block(f"{r} would delete, reorder, or change an existing record ID. Keep existing IDs in order.")
+        if os.path.basename(r) not in CURRENT_STATE_REGISTERS and new_records[:len(old_records)] != old_records:
+            block(f"{r} contains immutable history. Do not edit prior rows; append a correction or new event instead.")
     ids = set()
     for i, row in enumerate(rows[1:], start=2):
         if not any(c.strip() for c in row):

@@ -26,15 +26,28 @@ Checks
                           "submitted", "applied" is flagged unless it also says
                           "draft", "not posted", "awaiting approval" or "verified".
 
+Coverage limits
+  This is a heuristic local check, not a semantic review or a security boundary.
+  It uses file modification times (so deleted files and edits with preserved/old
+  timestamps are not detected), checks only the patterns above, and does not
+  verify external systems or whether cited sources are truthful. Register
+  integrity is checked across registers/*.csv when the check window contains a
+  changed file; provenance is checked only for changed outputs, drafts,
+  registers, and learning files. A no-change shortcut skips all checks; use
+  --all for a full runtime-workspace pass. A run-log check confirms a new row
+  relative to the last successful baseline, but cannot prove that the row
+  accurately describes the run. Hooks remain a separate, fail-open check.
+
 Usage
   python3 scripts/check_run.py                # everything changed since the last check (or fixture load)
   python3 scripts/check_run.py --since 120    # last 2 hours
   python3 scripts/check_run.py --lenient      # fact provenance as warnings
-  python3 scripts/check_run.py --all          # ignore timestamps, check the whole workspace
+  python3 scripts/check_run.py --all          # ignore timestamps, check the runtime workspace
 
 Exit code: 1 if any FAIL, else 0. No network, no model, stdlib only.
 """
 import sys, os, re, csv, io, time, glob
+import json
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(ROOT)
@@ -45,22 +58,62 @@ SINCE_MIN = 30
 if '--since' in ARGS:
     SINCE_MIN = float(ARGS[ARGS.index('--since') + 1])
 MARK = os.path.join(ROOT, 'state', '.last-check')
+if os.path.islink(os.path.dirname(MARK)) or os.path.islink(MARK) or (
+    os.path.lexists(MARK)
+    and (not os.path.isfile(MARK) or os.stat(MARK).st_nlink > 1)
+):
+    print("Unsafe state/.last-check path; refusing to read or write the checker baseline.", file=sys.stderr)
+    sys.exit(2)
+BASELINE_RUN_LOG_ROWS = None
+BASELINE_CUTOFF = None
+if os.path.exists(MARK):
+    try:
+        with open(MARK, encoding='utf-8') as baseline_file:
+            baseline = json.load(baseline_file)
+        if isinstance(baseline.get('cutoff'), (int, float)):
+            BASELINE_CUTOFF = float(baseline['cutoff'])
+        if isinstance(baseline.get('run_log_rows'), int):
+            BASELINE_RUN_LOG_ROWS = baseline['run_log_rows']
+    except (OSError, ValueError, AttributeError):
+        # Older installations used free text here; its modification time is
+        # retained as the baseline until a successful check upgrades the marker.
+        BASELINE_CUTOFF = os.path.getmtime(MARK)
+    if BASELINE_CUTOFF is None:
+        BASELINE_CUTOFF = os.path.getmtime(MARK)
 if ALL:
     CUTOFF = 0
 elif '--since' in ARGS:
     CUTOFF = time.time() - SINCE_MIN * 60
-elif os.path.exists(MARK):
-    CUTOFF = os.path.getmtime(MARK)          # everything since the last check / fixture load
+elif BASELINE_CUTOFF is not None:
+    CUTOFF = BASELINE_CUTOFF
 else:
     CUTOFF = time.time() - SINCE_MIN * 60
-def mark():
+
+def mark(cutoff=None, run_log_rows=None):
     os.makedirs(os.path.dirname(MARK), exist_ok=True)
-    open(MARK, 'w').write(time.strftime('%Y-%m-%dT%H:%M:%S'))
+    with open(MARK, 'w', encoding='utf-8') as marker:
+        json.dump({'checked_at': time.strftime('%Y-%m-%dT%H:%M:%S'),
+                   'cutoff': time.time() if cutoff is None else cutoff,
+                   'run_log_rows': run_log_row_count() if run_log_rows is None else run_log_rows}, marker)
+
+def retain_failed_baseline():
+    # A first failed check has no prior marker to retain. Save its cutoff and
+    # run-log count without advancing them so later checks repeat the same scan.
+    # An explicit broader scan may widen the retained window, never narrow it.
+    if BASELINE_CUTOFF is None or CUTOFF < BASELINE_CUTOFF:
+        mark(cutoff=CUTOFF,
+             run_log_rows=BASELINE_RUN_LOG_ROWS if BASELINE_RUN_LOG_ROWS is not None
+             else run_log_row_count())
 
 ALLOWED_DIRS = ('inbox/', 'archive/', 'outputs/', 'registers/', 'state/', 'logs/',
                 'learning/', 'reference/', 'prototypes/', 'drafts/', 'repos/', 'roadmap/')
 INPUT_DIRS = ('inbox/', 'archive/', 'registers/', 'reference/', 'state/', 'fixtures/')
-SKIP = ('.git/', 'node_modules/', '.claude/', 'fixtures/', 'scripts/', 'tools/')
+SKIP = ('.git/', 'node_modules/', '.claude/', 'fixtures/', 'scripts/', 'tools/', 'tests/')
+PROJECT_FILES = {
+    'AGENTS.md', 'CLAUDE.md', 'CONNECTIONS.md', 'EVOLVING.md', 'SCHEDULING.md',
+    'SETUP.md', 'SKILLS.md', 'SOURCE-POLICY.md', 'START HERE.md', 'STATE-BACKUP.md',
+    'Capture Clipboard.command', 'Run PM Workflow.command', '.gitignore',
+}
 
 fails, warns, oks = [], [], []
 def FAIL(m): fails.append(m)
@@ -74,6 +127,10 @@ def walk(prefixes=None):
         if any(rel.startswith(s) for s in SKIP): continue
         for f in files:
             p = rel + f
+            if p == 'state/.last-check':
+                continue
+            if rel == '' and p in PROJECT_FILES:
+                continue
             if prefixes and not p.startswith(prefixes): continue
             yield p
 
@@ -82,12 +139,19 @@ def read(p):
         with open(p, encoding='utf-8', errors='replace') as fh: return fh.read()
     except Exception: return ''
 
+def run_log_row_count():
+    try:
+        with open('logs/run-log.csv', newline='', encoding='utf-8') as handle:
+            return max(0, sum(1 for row in csv.reader(handle) if row) - 1)
+    except (OSError, csv.Error):
+        return 0
+
 # ---------- what changed ----------
 changed = [p for p in walk() if os.path.getmtime(p) >= CUTOFF]
 changed = [p for p in changed if not p.endswith(('.png', '.jpg', '.webp', '.pdf', '.docx', '.pptx', '.xlsx'))]
 if not changed:
     print("Nothing changed since the last check (use --since N or --all).")
-    mark(); sys.exit(0)
+    sys.exit(0)
 
 # ---------- 4. write scope ----------
 outside = [p for p in changed if not p.startswith(ALLOWED_DIRS) and p not in ('BACKLOG.md',)]
@@ -167,16 +231,29 @@ rl = 'logs/run-log.csv'
 ran = any(p.startswith(('outputs/', 'registers/', 'drafts/', 'learning/')) for p in changed)
 if not ran:
     OK("no outputs or registers changed — no workflow run to log (fixture load or inbox drop only)")
-elif os.path.exists(rl) and os.path.getmtime(rl) >= CUTOFF:
+elif os.path.exists(rl) and (ALL or os.path.getmtime(rl) >= CUTOFF):
     lines = [l for l in read(rl).splitlines() if l.strip()]
-    OK(f"run log has {len(lines) - 1} line(s); last: {lines[-1][:100] if len(lines) > 1 else '(header only)'}")
+    row_count = run_log_row_count()
+    if len(lines) < 2 or row_count < 1:
+        FAIL("logs/run-log.csv has no data row for this run")
+    elif not ALL and '--since' not in ARGS and BASELINE_RUN_LOG_ROWS is not None and row_count <= BASELINE_RUN_LOG_ROWS:
+        FAIL("logs/run-log.csv did not gain a data row since the last successful check")
+    else:
+        OK(f"run log has {row_count} data row(s); latest: {lines[-1][:100]}")
 else:
-    FAIL("logs/run-log.csv did not gain a line — rule 19 not honored (or the run-log hook is not installed)")
+    if os.path.exists(rl) and BASELINE_RUN_LOG_ROWS is not None and run_log_row_count() <= BASELINE_RUN_LOG_ROWS:
+        FAIL("logs/run-log.csv did not gain a data row since the last successful check")
+    else:
+        FAIL("logs/run-log.csv was not updated after the check window — rule 19 not honored (or the run-log hook is not installed)")
 
 # ---------- report ----------
 for m in fails: print("FAIL ", m)
 for m in warns: print("WARN ", m)
 for m in oks:   print("OK   ", m)
 print(f"\n{len(fails)} fail · {len(warns)} warn · {len(oks)} ok")
-mark()
+if fails:
+    print("Check baseline retained because failures remain; fix them and rerun to check the same files.")
+    retain_failed_baseline()
+else:
+    mark()
 sys.exit(1 if fails else 0)

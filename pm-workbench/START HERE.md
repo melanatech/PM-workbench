@@ -1,18 +1,54 @@
 # START HERE — PM Workbench
 
-One system, three moving parts: **capture** (browser automation, one-click clipboard, or dropped documents) → **process** (Claude turns raw material into structured registers and durable research summaries) → **generate** (updates, PRDs, reports produced from maintained state instead of your memory). The registers — decisions, commitments, risks, evidence, participants — are the connective tissue; meetings feed them, and everything you publish reads from them. **Internal documents** (the shared drive, other wiki pages, meeting-tool AI summaries, anything in the file browser) are a fourth input alongside chat/Jira/dashboards/behavior analytics — see SETUP.md and `reference/user-research/`. For anything durable-but-fetchable (templates, policy docs, dashboards), `reference/links.csv` is usually faster than saving a copy. And plenty of value needs no command at all — you can just ask questions directly ("what did we decide about X") and get answers read straight from the registers.
+PM Workbench is a set of Claude Code prompts, local scripts, and operating
+guidance for capturing inputs, maintaining registers, and drafting work
+products. The included command files are scaffolding; they do not connect to
+company tools or prove that a workflow is reliable. Start with the fictional
+fixture below, then use pasted or exported material until any real access path
+has been approved and tested. See the readiness table before relying on a
+workflow.
 
-## Prove it works before you trust it (10 minutes, once)
+## First run: verify the kit with fictional data
+
+The fixture is fictional. Keep it separate from real work: this command creates
+a code-only copy in the path you choose, loads the fixture there, and leaves the
+source workbench unchanged.
 ```
-python3 scripts/load_fixture.py lumenly      # a small fictional workspace with known right answers
+python3 scripts/load_fixture.py lumenly --isolate /tmp/pm-workbench-lumenly
+cd /tmp/pm-workbench-lumenly
+```
+Open that isolated folder in Claude Code, then run:
+```
 /meeting-closeout inbox/meetings/2026-07-14-roadmap-review.txt
-python3 scripts/check_run.py                 # FAIL/WARN/OK on what the run actually did
+python3 scripts/check_run.py
 ```
-`fixtures/lumenly/README.md` says what a correct run produces. Three hooks (SETUP.md Part 4) run the same kind of checks on every real run, silently.
+`fixtures/lumenly/README.md` describes expected results. To discard the test,
+remove only the isolated directory after checking its exact path. The checker
+is a local heuristic, not proof that every fact is correct; its coverage and
+limits are documented in `scripts/check_run.py`.
+
+To exercise the safety checks without Claude Code or any external account:
+```
+python3 -m unittest discover -s tests -v
+```
+
+## What is ready, configurable, and still a stub
+
+| Status | What this means |
+|---|---|
+| **Ready to try locally** | `scripts/load_fixture.py`, `scripts/check_run.py`, and the safety tests are runnable local tools. `/quick-close` and `/meeting-closeout` are prompts for pasted notes or local files; they still require Claude Code and have not been verified end-to-end against a real workspace. The other command prompts and `prototype-build` skill are present, but many depend on populated data or external sources. |
+| **Needs your configuration** | Real company context, templates, saved views, browser access, and scheduled runs require your tools, URLs, permissions, and policy review. Nothing here is connected to a real company system by default. Browser paths described in SETUP.md are options to test, not verified integrations. |
+| **Requires an approved destination** | `scripts/snapshot-state.sh` creates a local copy only after `PM_STATE_BACKUP` is set to an approved, access-controlled, non-Git location. It does not encrypt or upload the snapshot. |
+| **Known script stubs** | `scripts/log_metrics.py`, `scripts/extract_document.sh`, and `scripts/render_template.py` intentionally exit as stubs. Use the documented manual/markdown fallbacks until each needed implementation is tested. |
+| **Not yet verified** | Browser reads, hook behavior in your Claude Code version, scheduled runs, and any external-system write path. Do not treat examples or allow-lists as evidence that an integration works or is approved. |
+
+`Run PM Workflow.command`, `Capture Clipboard.command`, and scheduling are
+optional convenience paths; test them locally before relying on them. See
+SETUP.md and SCHEDULING.md for prerequisites and limitations.
 
 ## Files to read, in order
-1. **SETUP.md** — browser access (test `claude --chrome` first; Playwright fallback; clipboard-capture floor) + scoped permissions + bookmarked views
-2. **CLAUDE.md** — fill in every bracket; the rules, context, AND the command menu (so plain-language requests route to the right workflow) every session inherits
+1. **SETUP.md** — optional local capture and external-access paths, permission examples, hooks, and their verification limits
+2. **CLAUDE.md** — fill only brackets approved for this repository; keep private details in the ignored `.claude/CLAUDE.local.md`; review the rules and command menu
 3. **SCHEDULING.md** — after 2-3 manual cycles per workflow
 4. **SKILLS.md** — the later upgrade path
 5. **AGENTS.md** — where and why subagents are used (isolated review panels + heavy-read isolation), and which commands deliberately stay plain
@@ -20,15 +56,15 @@ python3 scripts/check_run.py                 # FAIL/WARN/OK on what the run actu
 7. **SOURCE-POLICY.md** — who wins when Jira, Confluence, Slack, and code disagree (short; worth reading early)
 8. **EVOLVING.md** + **BACKLOG.md** — read before adding or changing anything; the system's own changelog and friction log
 
-## Daily use — pick your interface (no terminal required)
-**Recommended: Cursor as your cockpit.** Open the PM Workbench folder in Cursor and install the Claude Code extension (Extensions → "Claude Code", or run `claude` once in Cursor's built-in terminal and accept its offer to install). You get a chat panel in the sidebar: type `/meeting-closeout` or `/okr-refresh` like a chat message, watch it work, review changes as visual diffs, and click any output file in the file tree to read it. Everything in this kit works identically there, because the commands and rules live in the folder — not in any particular window.
+## Using the prompt kit
+Open the folder in a Claude Code-supported environment after verifying that
+your installed version recognizes the project's `.claude/commands/` and
+settings. Cursor is one possible interface; its extension and command behavior
+are not verified by this kit. Review proposed local changes before using them.
 
 Also available:
-- **"Run PM Workflow.command"** — double-click, pick a number, done. (First open: right-click → Open to pass Gatekeeper.)
-- **"Capture Clipboard.command"** — copy anything in your chat client/email/wherever, double-click, pick a category. It's filed with a timestamp and processed at the nightly inbox run.
-- **Scheduled runs** — no interface at all; results land in `outputs/` for you to read in Cursor like documents.
-
-The command line only appears twice in your life: the one-time SETUP.md steps and the one-time SCHEDULING.md crontab paste — and for both, you can open the file in Cursor and ask the chat panel to run the steps for you.
+- **"Run PM Workflow.command"** and **"Capture Clipboard.command"** — optional scripts; verify on your OS and review where they write before use.
+- **Scheduled runs** — an optional future setup. Scheduling is not configured or verified; see `SCHEDULING.md` and BACKLOG.md before considering it.
 
 ## Every duty → its workflow
 | Duty | Workflow(s) |
@@ -48,22 +84,28 @@ The command line only appears twice in your life: the one-time SETUP.md steps an
 | Week one back | `/return-brief` (one-time) |
 | Is the system itself working for me | `/workbench-health` (reads the run log; proposes pruning) |
 
-## Day one: everything works. Setup happens while you work.
+## Before using real data
 
-There is no ramp-up phase and nothing is deferred. All 25 commands (plus the `prototype-build` skill) are live — six are in front, the rest are one name away (see CLAUDE.md "Start with six") the moment you install Claude Code and open this folder — use whichever one the day demands. What makes that possible: **every command self-configures on first use** (CLAUDE.md rule 17). The first time a command needs a dashboard URL, a Slack search, or a template it doesn't have, it asks you inline, finishes the real work with your answer, and saves it so it never asks again. Setup isn't a phase you complete before using the system — it's a side effect of the first week of actually using it.
+The command files are workflow prompts, not tested integrations. Read
+`CLAUDE.md`; add only information approved for this repository. It is
+version-controlled. Keep sensitive local context in the ignored
+`.claude/CLAUDE.local.md` file. Use pasted or exported material until each
+external read path has been tested and approved. A prompt may ask
+for missing information, but that does not make its browser, dashboard,
+document-extraction, metric-logging, or scheduled path operational. Use
+`BACKLOG.md` for known gaps and unverified behavior. Do not schedule workflows
+until they have completed several reviewed manual runs on approved sources.
 
-**The only true one-time step:** the browser bridge test in SETUP.md (~15 min). Do it when you first need a command that browses (discovery, OKR, Jira views). Until then, every command runs on paste-ins and the clipboard capture — a labeled fallback, not a blocker.
+## Evidence and run logging
+The `log_run.py` hook is configured to append a run-log row, but hooks fail open
+and are not verified in your Claude Code installation. Check `logs/run-log.csv`
+after a run; if the row is missing, log it manually or investigate the hook.
+Use `outputs/receipts.md` only if useful for recording outcomes and review
+effort; do not treat incomplete logs as measured reliability or time saved.
 
-**What "first run" looks like in practice:**
-- `/weekly-update`, Friday of week one: registers are sparse, so it drafts from what exists, asks for the two things it's missing, and marks anything you skip as incomplete. Real update, out the door.
-- `/okr-refresh`, first month-end: no metric YAMLs yet — it asks which metrics and where they live, does the run with your answers, and writes the YAMLs itself. Second run is automatic.
-- `/prd-package`, whenever the first PRD is due: empty templates folder → it asks for one past PRD to match, uses it, saves it.
-- `/quick-close` and `/meeting-closeout`: nothing to configure, ever.
-
-**Tinker as you go** (this is where your "tweak and tinker" time goes, whenever it exists): fill CLAUDE.md brackets as you notice a wrong assumption, drop past PRDs/updates into templates when convenient, wire SCHEDULING.md once a command has run manually enough times to be boring, and log every annoyance in BACKLOG.md — that friction log is what makes the tinkering targeted instead of guesswork. None of it gates anything.
-
-## The evidence you'll want later (do not skip this)
-`logs/run-log.csv` is written automatically by every workflow (CLAUDE.md rule 19) — that is where time-on-task and reliability numbers come from, not from a diary. On top of it, keep `outputs/receipts.md` short and weekly: outcomes influenced, decisions accelerated, risks surfaced before impact, and the acceptance rate of Claude's proposed changes (how often you accept vs. correct — your quality check on the system and your evidence that your judgment is the driver). Frame it as business impact, not "I used AI a lot" — and be careful with "hours saved": if review and reconciliation time climbs alongside output, that is not saving. Say it out loud in your next 1:1: the always-current board and on-time updates are a system you built. Don't let it be invisible.
-
-## What Claude will never do here
-Send, submit, publish, or change any external system without your explicit approval in the moment. Scheduled runs use only the allow-list in `.claude/settings.json` — no browser interaction tools (click/type/fill/key/evaluate/run-code) are allowed, and in headless mode an unlisted tool is refused rather than prompted. Read that file; it is a list, not a guarantee. OKR metric values are retrieved from what the dashboard already calculated, logged and freshness-checked — never recomputed by the model. Raw captures are never edited. Sources are always cited. When something fails (SSO expired, Chrome closed), it says so plainly instead of improvising.
+## Operating policy and limits
+The intended policy is to require approval before external writes, avoid editing
+raw captures, and cite sources. These are instructions, not technical
+guarantees; verify the effective settings and review actions. Browser reads,
+scheduled runs, metric logging, and document extraction are not verified
+integrations. The checker and hooks are fallible and may fail open.

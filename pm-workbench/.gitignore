@@ -1,5 +1,7 @@
-# Sensitive working data — never version-control raw captures, exports, or registers.
-# System logic (commands, agents, docs, templates) IS safe to commit.
+# Sensitive working data — never version-control raw captures, exports, registers,
+# logs, or generated output. A private/personal Git repository is not an approved
+# backup by default. Review company context, links, roadmaps, templates, and
+# learning notes before committing; they may contain sensitive information.
 inbox/**
 archive/**
 state/**
@@ -14,4 +16,7 @@ browser-profiles/
 *.pdf
 *.docx
 *.pptx
-# Config CSVs that SHOULD be committed stay tracked: reference/links.csv, roadmap/*.csv
+.claude/CLAUDE.local.md
+.claude/settings.local.json
+__pycache__/
+# reference/links.csv and roadmap/*.csv are trackable; review for company data before committing.

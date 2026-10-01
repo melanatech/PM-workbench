@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PM Workbench</title>
+    <title>PM Workbench — Course and Claude Code kit</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -21,17 +21,26 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         h1 { margin-bottom: 10px; }
-        p { line-height: 1.6; color: #666; }
-        .placeholder { margin-top: 20px; padding: 20px; background: #f9f9f9; border-left: 4px solid #1e6b4e; }
+        p { line-height: 1.6; color: #555; margin-top: 12px; }
+        .course-link {
+            display: inline-block;
+            margin-top: 24px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            background: #1e6b4e;
+            color: #fff;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .course-link:hover, .course-link:focus-visible { background: #155239; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>PM Workbench</h1>
-        <p>A product management workspace for analytics and value realization.</p>
-        <div class="placeholder">
-            <p><strong>Site is live.</strong> HTML files will be added here next.</p>
-        </div>
+        <p>Learn product management workflows in the interactive course, then use the companion Claude Code kit to run them in your own workspace.</p>
+        <p>The course lives in <code>docs/</code> and uses a simulated workspace; the separate <code>pm-workbench/</code> folder contains the Claude Code commands, agents, and scripts. Course actions do not connect to live services.</p>
+        <a class="course-link" href="https://melanatech.github.io/PM-workbench/">Open the course →</a>
     </div>
 </body>
 </html>

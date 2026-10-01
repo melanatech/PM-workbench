@@ -178,5 +178,10 @@ For changes, keep pull requests focused, update the affected documentation, and
 run the safety tests above. If changing the course, also check its links,
 keyboard navigation, and mobile layout.
 
-**License:** No license file is currently included. Ask the repository owner about
-reuse or redistribution permissions rather than assuming a license.
+## Reuse permissions
+
+This repository is public for viewing; it does not grant blanket permission to
+copy, modify, or redistribute the project. Ask the repository owner before
+reusing project material beyond what applicable law already permits. Individual
+third-party assets or contributions may have separate rights or terms; this
+notice does not change those.

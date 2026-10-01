@@ -8,7 +8,19 @@ A lightweight bookmark list, not a register — logged links to templates, polic
 
 ## The hub: `registers/initiatives.csv`
 
-One row per feature, tracking its stage and links to every artifact about it. Stage values: `prd`, `prototype`, `experiment`, `launched`, `killed`, `iterating` (post-launch work on a shipped thing). **The stage is descriptive, not a forced pipeline** — real work doesn't move linearly. A prototype can precede a PRD, an experiment can run without either, and a launched feature loops back to `iterating`. Each command sets the stage that reflects what just happened; none of them should refuse to run because "the previous stage" hasn't happened. This is what turns "a bunch of files that happen to share a feature name" into something commands can actually query. Written by `/prd-package`, `/prototype-build`, `/experiment-package`, `/experiment-analyze`, `/launch-package`. Read (cross-checked) by `/discovery`, `/competitive-scan`, `/meeting-closeout`, `/jira-reconcile`, `/okr-refresh`, `/strategy-refresh`, `/weekly-update`, and `/ripple-check`.
+One row per feature, tracking its stage and links to every artifact about it. Stage values: `prd`, `prototype`, `experiment`, `launched`, `killed`, `iterating` (continued work after a confirmed decision to iterate, including post-launch work). `/experiment-analyze` maps confirmed outcomes to stages as follows: ship → `launched`, kill → `killed`, iterate → `iterating`. **The stage is descriptive, not a forced pipeline** — real work doesn't move linearly. A prototype can precede a PRD, an experiment can run without either, and a launched feature can loop back to `iterating`. Each command sets the stage that reflects what just happened; none of them should refuse to run because "the previous stage" hasn't happened. This is what turns "a bunch of files that happen to share a feature name" into something commands can actually query. Written by `/prd-package`, `/prototype-build`, `/experiment-package`, `/experiment-analyze`, `/launch-package`. Read (cross-checked) by `/discovery`, `/competitive-scan`, `/meeting-closeout`, `/jira-reconcile`, `/okr-refresh`, `/strategy-refresh`, `/weekly-update`, and `/ripple-check`.
+
+### Manual check: experiment decision register updates
+
+Use a disposable initiative/decision-register copy or inspect the expected changes without editing live registers. For each outcome, check the result before and after explicit user confirmation:
+
+| Experiment recommendation | Before confirmation | After confirmation |
+|---|---|---|
+| Ship | Results memo only; no decision row or initiative change | Add decision row; set initiative stage to `launched` and link `related_decisions` to that row |
+| Kill | Results memo only; no decision row or initiative change | Add decision row; set initiative stage to `killed` and link `related_decisions` to that row |
+| Iterate | Results memo only; no decision row or initiative change | Add decision row; set initiative stage to `iterating` and link `related_decisions` to that row |
+
+Pass only if none of the three recommendations changes either register while unconfirmed, and each confirmed outcome writes the mapped stage and decision link.
 
 ## Full write/read map
 
@@ -25,7 +37,7 @@ One row per feature, tracking its stage and links to every artifact about it. St
 | `/prd-prototype-sync` | (report only, no writes) | Both `outputs/prds/[feature]/` and `prototypes/[feature]/` directly |
 | `/research-package` | `outputs/research/[name]/` | Prior research (`internal-docs-reader`) + prototype it's testing |
 | `/experiment-package` | `outputs/experiments/[name]/`, `registers/initiatives.csv` (updates) | `evidence.csv`, `okr-history.csv` (baseline), five review subagents |
-| `/experiment-analyze` | `registers/decisions.csv`, `registers/initiatives.csv` (stage → shipped/killed) | The pre-registered design + results + `results-integrity-reviewer` |
+| `/experiment-analyze` | `registers/decisions.csv`, `registers/initiatives.csv` (confirmed ship → `launched`, kill → `killed`, iterate → `iterating`) | The pre-registered design + results + `results-integrity-reviewer` |
 | `/launch-package` | `outputs/launches/[feature]/`, `registers/initiatives.csv` (stage → launched) | PRD, Jira, prototype, docs (`launch-drift-detector`) + `initiatives.csv` (related_okr for monitoring plan) |
 | `/competitive-scan` | `outputs/monthly/competitive-log.md` | External sites (`competitive-capture-agent`) + internal battlecards (`internal-docs-reader`) + `registers/initiatives.csv` (relevance flag) |
 | `/strategy-refresh` | `outputs/strategy/[date]/` | Everything: `evidence.csv`, `okr-history.csv`, competitive log, `learning/` (via `strategy-synthesizer` + `internal-docs-reader`) + `registers/initiatives.csv` (portfolio view) |

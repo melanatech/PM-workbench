@@ -1,1 +1,2 @@
 - [Filesystem preflight](filesystem-preflight.md) — shell process substitution can hide traversal failures; check complete enumeration before recovery writes.
+- [GitHub publishing access](github-publishing-access.md) — connector access and terminal Git authentication are separate; object uploads do not prove branch-update permission.

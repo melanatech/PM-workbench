@@ -10,11 +10,11 @@ Build the PRD package for: $ARGUMENTS
 
 **Step 0 — dispatch to `prd-context-gatherer`, and in parallel to `internal-docs-reader`.** The first reads evidence, code findings, OKR baseline, competitive log, and prior decisions/risks for this feature; the second checks the shared drive, wiki research pages, and `reference/user-research/` for anything relevant that isn't already reflected in those registers. Everything below works from both briefs instead of re-reading files from scratch.
 
-**Step 1 — readiness report**, using that brief: evidence strength (with citations), problem clarity, target-user clarity, baseline metric availability, unresolved technical questions, dependencies, revenue/retention hypothesis, measurement readiness, and the gaps the gatherer flagged. **If evidence is thin or there's no baseline, say "not ready" and list what's needed — a polished PRD on a weak foundation is a trap, and this gate is what keeps your docs credible.**
+**Step 1 — readiness report**, using that brief: evidence strength (with citations), problem clarity, target-user clarity, baseline metric availability, unresolved technical questions, dependencies, revenue/retention hypothesis, measurement readiness, and the gaps the gatherer flagged. **If evidence is thin or there's no baseline, say "not ready" and list what's needed — a polished PRD on a weak foundation is a trap, and this gate is what keeps your docs credible. If a missing fact could materially change the problem, audience, scope, or recommendation, ask focused questions and wait before treating the package as complete. Never infer specifics just to fill a PRD section.**
 
 **Step 1.5 — register the initiative.** Check `registers/initiatives.csv` for an existing row for this feature; create one if absent (stage=prd) or update it (prd_path, related_evidence_ids from the gatherer's brief, related_okr, last_updated). This is the row every other command checks against — it's what lets a Jira update or a piece of discovery evidence find its way back to this PRD later.
 
-**Step 2 — draft the package**, to `outputs/prds/[feature]/`:
+**Step 2 — draft the package**, to `outputs/prds/[feature]/`, when the evidence supports it. If a provisional draft is still useful while material questions remain, label it provisional and put `[NEEDS INPUT: ...]` at every unsupported or undecided point; keep assumptions distinct from verified facts. Do not present that draft as ready for review.
 1. Full PRD (structure from `reference/templates/` examples)
 2. One-page executive pre-read: problem in two sentences, the bet, cost/risk, the specific ask
 3. Engineering + design question list

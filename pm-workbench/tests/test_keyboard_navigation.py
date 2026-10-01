@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import signal
 import shutil
 import socket
 import struct
@@ -22,7 +23,10 @@ from urllib.request import Request, urlopen
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 COURSE = REPOSITORY / "docs" / "index.html"
-CHROMIUM = shutil.which("chromium") or shutil.which("chromium-browser")
+CHROMIUM = (
+    shutil.which("chromium") or shutil.which("chromium-browser")
+    or shutil.which("google-chrome") or shutil.which("google-chrome-stable")
+)
 if not CHROMIUM and Path("/repl/tools/bin/chromium").is_file():
     CHROMIUM = "/repl/tools/bin/chromium"
 
@@ -162,6 +166,10 @@ class CourseKeyboardNavigationTests(unittest.TestCase):
         if not COURSE.is_file():
             raise RuntimeError(f"Static course not found: {COURSE}")
         cls.temp_dir = tempfile.TemporaryDirectory(prefix="course-keyboard-test-")
+        cls.addClassCleanup(cls.temp_dir.cleanup)
+        # Registered before starting either process so partial setup failures
+        # still stop any subprocesses before removing the Chromium profile.
+        cls.addClassCleanup(cls._stop_processes)
         cls.server_port = unused_port()
         cls.chrome_port = unused_port()
         cls.server = subprocess.Popen(
@@ -172,6 +180,7 @@ class CourseKeyboardNavigationTests(unittest.TestCase):
             ],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
+            start_new_session=True,
         )
         cls.chrome = subprocess.Popen(
             [
@@ -185,6 +194,7 @@ class CourseKeyboardNavigationTests(unittest.TestCase):
             ],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
+            start_new_session=True,
         )
         cls.base_url = f"http://127.0.0.1:{cls.server_port}/"
         cls.devtools_url = f"http://127.0.0.1:{cls.chrome_port}"
@@ -205,17 +215,66 @@ class CourseKeyboardNavigationTests(unittest.TestCase):
         raise RuntimeError(f"Service did not start in time: {url}")
 
     @classmethod
-    def tearDownClass(cls):
-        for process in (getattr(cls, "chrome", None), getattr(cls, "server", None)):
-            if process and process.poll() is None:
-                process.terminate()
-                try:
-                    process.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    process.kill()
-                    process.wait(timeout=5)
-        if hasattr(cls, "temp_dir"):
-            cls.temp_dir.cleanup()
+    def _group_is_alive(cls, process):
+        process.poll()  # Reap an exited group leader before checking the group.
+        try:
+            os.killpg(process.pid, 0)
+            return True
+        except ProcessLookupError:
+            return False
+
+    @classmethod
+    def _terminate_process_group(cls, process, name):
+        if not process:
+            return
+        try:
+            os.killpg(process.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+
+        deadline = time.monotonic() + 5
+        while cls._group_is_alive(process) and time.monotonic() < deadline:
+            time.sleep(0.05)
+        if cls._group_is_alive(process):
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            deadline = time.monotonic() + 5
+            while cls._group_is_alive(process) and time.monotonic() < deadline:
+                time.sleep(0.05)
+        if cls._group_is_alive(process):
+            raise RuntimeError(f"{name} process group {process.pid} would not stop")
+        process.wait(timeout=1)
+
+    @classmethod
+    def _stop_processes(cls):
+        chrome = getattr(cls, "chrome", None)
+        devtools_url = getattr(cls, "devtools_url", None)
+        if chrome and devtools_url and cls._group_is_alive(chrome):
+            # Ask Chromium to flush and close its profile before terminating its
+            # isolated process group. A closed DevTools socket is acceptable only
+            # if the process-group check below confirms that shutdown completed.
+            browser_socket = None
+            try:
+                with urlopen(devtools_url + "/json/version", timeout=2) as response:
+                    browser_endpoint = json.load(response)["webSocketDebuggerUrl"]
+                browser_socket = DevTools(browser_endpoint)
+                browser_socket.call("Browser.close")
+            except (OSError, RuntimeError, URLError, KeyError, ValueError):
+                pass
+            finally:
+                if browser_socket:
+                    browser_socket.close()
+
+        failures = []
+        for name, process in (("Chromium", chrome), ("Static server", getattr(cls, "server", None))):
+            try:
+                cls._terminate_process_group(process, name)
+            except (OSError, subprocess.TimeoutExpired, RuntimeError) as exc:
+                failures.append(f"{name} cleanup failed: {exc}")
+        if failures:
+            raise RuntimeError("; ".join(failures))
 
     def setUp(self):
         target_url = self.base_url
@@ -263,6 +322,114 @@ class CourseKeyboardNavigationTests(unittest.TestCase):
             self.tab()
         self.fail(f"Could not reach keyboard target within {limit} Tab presses")
 
+    def wait_until(self, predicate, description, timeout=15):
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if self.browser.evaluate(predicate):
+                return
+            time.sleep(0.1)
+        self.fail(f"Timed out waiting for {description}")
+
+    def assert_visible_controls_keyboard_accessible(self):
+        self.wait_until(
+            "Number(getComputedStyle(document.querySelector('.view.active')).opacity) > 0.99",
+            "the active course view's entry transition to finish",
+            timeout=5,
+        )
+        controls = self.browser.evaluate("""
+          (() => {
+            const selector = 'a[href],button,input,select,textarea,[role="button"],[tabindex]:not([tabindex="-1"])';
+            const isVisiblyDisplayed = el => {
+              if (!el.getClientRects().length) return false;
+              for (let node = el; node; node = node.parentElement) {
+                const style = getComputedStyle(node);
+                if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return false;
+                if (style.transform !== 'none') {
+                  const rect = node.getBoundingClientRect();
+                  if (rect.right <= 0 || rect.left >= innerWidth || rect.bottom <= 0) return false;
+                }
+              }
+              return true;
+            };
+            const visible = [...document.querySelectorAll(selector)].filter(isVisiblyDisplayed);
+            return visible.map((el, index) => {
+              el.dataset.keyboardAuditIndex = String(index);
+              return {
+                index,
+                tag: el.tagName,
+                id: el.id,
+                text: (el.innerText || el.getAttribute('aria-label') || '').trim(),
+                disabled: el.matches(':disabled'),
+                inert: Boolean(el.closest('[inert]')),
+                ariaHidden: Boolean(el.closest('[aria-hidden="true"]')),
+                tabIndex: el.tabIndex,
+              };
+            });
+          })()
+        """)
+        self.assertGreater(len(controls), 5, "The visible course view should expose keyboard controls")
+        disabled = [control for control in controls if control["disabled"]]
+        inaccessible = [
+            control for control in controls
+            if not control["disabled"] and (
+                control["inert"] or control["ariaHidden"] or control["tabIndex"] < 0
+            )
+        ]
+        describe = lambda items: ", ".join(
+            f"{item['tag']}#{item['id']} {item['text'][:35]}" for item in items
+        )
+        self.assertFalse(
+            inaccessible,
+            "Visibly displayed enabled controls must not be inert, aria-hidden, or removed from Tab order: " +
+            describe(inaccessible),
+        )
+        expected = {control["index"] for control in controls if not control["disabled"]}
+
+        # Start the real sequential keyboard traversal from the document's natural
+        # unfocused state. Inert/aria-hidden controls were collected above, rather
+        # than filtered out as though their ineligibility made them non-existent.
+        self.browser.evaluate("document.activeElement.blur()")
+        for _ in range(len(controls) + 2):
+            active = self.browser.evaluate(
+                "document.activeElement.getAttribute('data-keyboard-audit-index')"
+            )
+            if active == "0":
+                break
+            self.tab(shift=True)
+        else:
+            self.fail("Could not reverse-tab to the first visible control before the reachability audit")
+        ring = self.browser.evaluate("""
+          (() => {
+            const style = getComputedStyle(document.activeElement);
+            return {outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth};
+          })()
+        """)
+        self.assertNotEqual(ring["outlineStyle"], "none", f"Keyboard focus needs a visible outline: {ring}")
+        self.assertGreater(float(ring["outlineWidth"].replace("px", "")), 0, f"Focus outline has no width: {ring}")
+
+        visited = set()
+        for _ in range(len(controls) + 2):
+            active = self.browser.evaluate(
+                "document.activeElement.getAttribute('data-keyboard-audit-index')"
+            )
+            if active is None:
+                break
+            index = int(active)
+            if index in visited:
+                break
+            visited.add(index)
+            self.tab()
+        missing = [
+            control for control in controls
+            if not control["disabled"] and control["index"] not in visited
+        ]
+        self.assertFalse(
+            missing,
+            "Visibly displayed enabled controls skipped by sequential Tab navigation: " +
+            describe(missing) + f"; visited indexes: {sorted(visited)}",
+        )
+        return controls
+
     def test_course_serves_with_landmarks_focus_ring_and_reachable_visible_controls(self):
         response = urlopen(self.base_url, timeout=5)
         self.assertEqual(response.status, 200)
@@ -286,50 +453,38 @@ class CourseKeyboardNavigationTests(unittest.TestCase):
         self.assertTrue(loaded["navLabel"])
         self.assertTrue(loaded["heading"], "Main course heading must load")
         self.assertTrue(loaded["activeView"], "The course's initial view must be active")
+        self.assert_visible_controls_keyboard_accessible()
 
-        controls = self.browser.evaluate("""
-          (() => {
-            const selector = 'a[href],button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])';
-            return [...document.querySelectorAll(selector)].filter(el =>
-              el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden' &&
-              !el.closest('[inert],[aria-hidden="true"]')
-            ).map((el, index) => {
-              el.dataset.keyboardTestIndex = String(index);
-              return {index, tag: el.tagName, id: el.id, text: (el.innerText || el.getAttribute('aria-label') || '').trim()};
-            });
-          })()
-        """)
-        self.assertGreater(len(controls), 5, "The loaded course should expose keyboard controls")
-        self.tab()
-        ring = self.browser.evaluate("""
-          (() => {
-            const el = document.activeElement;
-            const style = getComputedStyle(el);
-            return {tag: el.tagName, outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth, outlineColor: style.outlineColor};
-          })()
-        """)
-        self.assertNotEqual(ring["outlineStyle"], "none", f"Keyboard focus needs a visible outline: {ring}")
-        self.assertGreater(float(ring["outlineWidth"].replace("px", "")), 0, f"Focus outline has no width: {ring}")
-
-        visited = set()
-        for _ in range(len(controls) + 2):
-            active = self.browser.evaluate(
-                "document.activeElement.getAttribute('data-keyboard-test-index')"
+    def test_visible_inert_and_aria_hidden_controls_fail_the_keyboard_oracle(self):
+        selector = ".home-actions button:first-child"
+        for attribute, value, expected_message in (
+            ("inert", "", "inert"),
+            ("aria-hidden", "true", "aria-hidden"),
+        ):
+            previous = self.browser.evaluate(
+                f"document.querySelector('{selector}').getAttribute('{attribute}')"
             )
-            if active is None:
-                break
-            index = int(active)
-            if index in visited:
-                break
-            visited.add(index)
-            self.tab()
-        expected = {control["index"] for control in controls}
-        missing = [control for control in controls if control["index"] not in visited]
-        self.assertFalse(
-            missing,
-            "Visible controls skipped by sequential Tab navigation: " +
-            ", ".join(f"{item['tag']}#{item['id']} {item['text'][:35]}" for item in missing),
-        )
+            self.browser.evaluate(
+                f"document.querySelector('{selector}').setAttribute('{attribute}', {json.dumps(value)})"
+            )
+            try:
+                with self.assertRaisesRegex(AssertionError, expected_message):
+                    self.assert_visible_controls_keyboard_accessible()
+            finally:
+                self.browser.evaluate(f"""
+                  (() => {{
+                    const control = document.querySelector('{selector}');
+                    const previous = {json.dumps(previous)};
+                    if (previous === null) control.removeAttribute('{attribute}');
+                    else control.setAttribute('{attribute}', previous);
+                  }})()
+                """)
+            self.assertEqual(
+                self.browser.evaluate(f"document.querySelector('{selector}').getAttribute('{attribute}')"),
+                previous,
+                f"The {attribute} regression mutation should be restored after its check",
+            )
+            self.assert_visible_controls_keyboard_accessible()
 
     def test_keyboard_navigation_and_workspace_file_dialog_focus_containment_and_restoration(self):
         self.tab()
@@ -342,46 +497,91 @@ class CourseKeyboardNavigationTests(unittest.TestCase):
         self.assertTrue(self.browser.evaluate("document.querySelector('.view.active h1')?.textContent.trim()"))
         self.assertEqual(self.browser.evaluate("document.activeElement.tagName"), "H1")
         self.assertEqual(self.browser.evaluate("document.activeElement.tabIndex"), -1)
-        lesson_controls = self.browser.evaluate("""
+        self.assert_visible_controls_keyboard_accessible()
+        self.assertGreater(
+            self.browser.evaluate("document.querySelectorAll('#v-l0 .preserved-stage-button').length"),
+            1,
+            "The initial lesson needs multiple keyboard-selectable stages",
+        )
+
+        # Select a different lesson stage with Tab/Enter and verify the disclosure
+        # state and active panel stay synchronized.
+        self.tab_until("document.activeElement.matches('#v-l0 .preserved-stage-button:nth-child(2)')")
+        self.enter()
+        switched_stage = self.browser.evaluate("""
           (() => {
-            const selector = 'a[href],button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])';
-            return [...document.querySelectorAll(selector)].filter(el =>
-              el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden' &&
-              !el.closest('[inert],[aria-hidden="true"]')
-            ).map((el, index) => {
-              el.dataset.keyboardTestIndex = String(index);
-              return {index, tag: el.tagName, id: el.id, text: (el.innerText || el.getAttribute('aria-label') || '').trim()};
-            });
+            const button = document.querySelector('#v-l0 .preserved-stage-button:nth-child(2)');
+            const panel = document.getElementById(button.dataset.stageTarget);
+            return {
+              focused: document.activeElement === button,
+              expanded: button.getAttribute('aria-expanded'),
+              active: button.classList.contains('active'),
+              panelVisible: panel.classList.contains('active') && panel.getAttribute('aria-hidden') === 'false',
+            };
           })()
         """)
-        self.assertGreater(len(lesson_controls), 5, "The lesson view should expose keyboard controls")
-        # The heading is programmatically focused after navigation but not in the
-        # normal Tab order. Reverse-tab to the first sequential control, then audit
-        # the complete cycle including the shared header.
-        for _ in range(30):
-            if self.browser.evaluate("document.activeElement.matches('.brand')"):
-                break
-            self.tab(shift=True)
-        else:
-            self.fail("Could not reverse-tab from the lesson heading to the first course control")
-        lesson_visited = set()
-        for _ in range(len(lesson_controls) + 2):
-            active = self.browser.evaluate(
-                "document.activeElement.getAttribute('data-keyboard-test-index')"
+        self.assertTrue(switched_stage["focused"])
+        self.assertEqual(switched_stage["expanded"], "true")
+        self.assertTrue(switched_stage["active"])
+        self.assertTrue(switched_stage["panelVisible"])
+
+        # Navigate through several distinct lesson views via their keyboard-accessible
+        # course rail, auditing each view's displayed controls before continuing.
+        for rail_index, view_id in ((2, "v-l1"), (3, "v-l2"), (5, "v-l4")):
+            target = f".view.active .preserved-rail button:nth-child({rail_index})"
+            self.tab_until(f"document.activeElement.matches('{target}')")
+            self.enter()
+            self.assertEqual(
+                self.browser.evaluate("document.querySelector('.view.active').id"),
+                view_id,
             )
-            if active is None:
-                break
-            index = int(active)
-            if index in lesson_visited:
-                break
-            lesson_visited.add(index)
-            self.tab()
-        lesson_missing = [control for control in lesson_controls if control["index"] not in lesson_visited]
-        self.assertFalse(
-            lesson_missing,
-            "Visible lesson controls skipped by sequential Tab navigation: " +
-            ", ".join(f"{item['tag']}#{item['id']} {item['text'][:35]}" for item in lesson_missing),
+            self.assertEqual(self.browser.evaluate("document.activeElement.tagName"), "H1")
+            self.assert_visible_controls_keyboard_accessible()
+
+        # Reach the weekly simulation stage in Meetings, run it from its keyboard
+        # control, then activate both the generated and follow-up choices by keyboard.
+        self.tab_until("""
+          [...document.querySelectorAll('.view.active .preserved-stage-button')].some(button =>
+            button === document.activeElement && button.textContent.includes('Draft the weekly update')
+          )
+        """)
+        self.enter()
+        self.assertTrue(self.browser.evaluate("""
+          document.querySelector('#v-l4 [data-sim="weekly"]')
+            ?.closest('.preserved-stage').classList.contains('active')
+        """))
+        self.tab_until("document.activeElement.matches('#v-l4 [data-sim=\"weekly\"] .runbtn')")
+        self.enter()
+        try:
+            self.wait_until(
+                "!!document.querySelector('#v-l4 [data-sim=\"weekly\"] .choices button')",
+                "the weekly simulation's first generated choice",
+            )
+        except AssertionError:
+            state = self.browser.evaluate("""
+              (() => {
+                const term = document.querySelector('#v-l4 [data-sim="weekly"]');
+                return {active: document.activeElement.outerHTML.slice(0, 200), disabled: term.querySelector('.runbtn').disabled,
+                  body: term.querySelector('.term-body').innerText.slice(-500), stageActive: term.closest('.preserved-stage').classList.contains('active')};
+              })()
+            """)
+            self.fail(f"Weekly simulation failed to create its choice: {state}")
+        self.assert_visible_controls_keyboard_accessible()
+        self.tab_until("document.activeElement.matches('#v-l4 [data-sim=\"weekly\"] .choices button')")
+        self.assertTrue(self.browser.evaluate("!!document.activeElement.closest('.choices')"))
+        self.enter()
+        self.wait_until(
+            "!!document.querySelector('#v-l4 [data-sim=\"weekly\"] .choices button')",
+            "the weekly simulation's follow-up choice",
         )
+        self.assert_visible_controls_keyboard_accessible()
+        self.tab_until("document.activeElement.matches('#v-l4 [data-sim=\"weekly\"] .choices button')")
+        self.enter()
+        self.wait_until(
+            "!!document.querySelector('#v-l4 [data-sim=\"weekly\"] .done-tag')",
+            "the weekly simulation to finish after keyboard choice",
+        )
+        self.assertTrue(self.browser.evaluate("state.simsDone.has('weekly')"))
 
         # Workspace drawer is non-modal: its close control is focused and Escape returns
         # to the invoking header button. It is inert while closed.

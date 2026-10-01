@@ -70,13 +70,20 @@ python3 -m unittest discover -s pm-workbench/tests -p 'test_keyboard_navigation.
 ```
 
 This starts a temporary local server and exercises the published course in
-headless Chromium using real Tab, Shift+Tab, Enter, and Escape key events. It
+headless Chromium or Chrome using real Tab, Shift+Tab, Enter, and Escape key events. It
 checks that the course is served and loaded, its landmarks and visible focus
-indicator are present, visible controls are reachable in sequential Tab order,
-and the workspace drawer/file dialog keyboard focus behavior works. It uses
-only Python's standard library and an already-installed Chromium; it does not
-install browser dependencies. If Chromium is unavailable, this browser-specific
-test is reported as skipped.
+indicator are present, visible controls on Home and representative lesson,
+stage, and simulation views are reachable in sequential Tab order, and the
+workspace drawer/file dialog keyboard focus behavior works. It uses only
+Python's standard library and an already-installed browser; it does not install
+browser dependencies. If Chromium or Chrome is unavailable locally, this
+browser-specific test is reported as skipped. This is a desktop Chromium
+regression check, not a screen-reader or multi-browser accessibility audit.
+
+GitHub Actions runs the full suite on pull requests and pushes to `main`.
+The CI job requires a browser and fails if it is missing, rather than skipping
+the keyboard checks. Review the check result before merging or publishing;
+this workflow does not configure branch protection or change GitHub Pages.
 
 Then create an isolated copy containing the fictional fixture:
 

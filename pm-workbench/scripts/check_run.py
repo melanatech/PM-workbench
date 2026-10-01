@@ -183,14 +183,19 @@ def run_log_row_count():
 # ---------- what changed ----------
 CURRENT_INVENTORY = file_inventory()
 DELETED = sorted(set(BASELINE_INVENTORY or {}) - set(CURRENT_INVENTORY))
-ADDED_ARCHIVE_HASHES = {
-    CURRENT_INVENTORY[path] for path in set(CURRENT_INVENTORY) - set(BASELINE_INVENTORY or {})
-    if path.startswith('archive/')
-}
-DELETED = [
-    path for path in DELETED
-    if not (path.startswith('inbox/') and BASELINE_INVENTORY[path] in ADDED_ARCHIVE_HASHES)
-]
+added_archive_counts = {}
+for path in set(CURRENT_INVENTORY) - set(BASELINE_INVENTORY or {}):
+    if path.startswith('archive/'):
+        digest = CURRENT_INVENTORY[path]
+        added_archive_counts[digest] = added_archive_counts.get(digest, 0) + 1
+remaining_deleted = []
+for path in DELETED:
+    digest = (BASELINE_INVENTORY or {}).get(path)
+    if path.startswith('inbox/') and added_archive_counts.get(digest, 0):
+        added_archive_counts[digest] -= 1
+    else:
+        remaining_deleted.append(path)
+DELETED = remaining_deleted
 changed = [p for p in walk() if os.path.getmtime(p) >= CUTOFF]
 changed = [p for p in changed if not p.endswith(('.png', '.jpg', '.webp', '.pdf', '.docx', '.pptx', '.xlsx'))]
 if not changed and not DELETED:

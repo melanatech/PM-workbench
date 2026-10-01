@@ -46,9 +46,23 @@ if [[ "$SNAPSHOT_DIR" == "$WORKBENCH_ROOT" ]]; then
   exit 2
 fi
 
+# Build the complete source manifest before validating or changing the target.
+# A process substitution hides the producer's exit status, so capture and check
+# find directly. Every later snapshot pass reuses this validated manifest.
+manifest="$(mktemp "${TMPDIR:-/tmp}/pm-restore-manifest.XXXXXXXX")"
+trap 'rm -f "$manifest"' EXIT
+if ! find "$SNAPSHOT_DIR" -mindepth 1 -print0 > "$manifest"; then
+  echo "Failed to enumerate the snapshot completely; refusing restore." >&2
+  exit 2
+fi
+if ! cat "$manifest" > /dev/null; then
+  echo "Failed to read the complete snapshot manifest; refusing restore." >&2
+  exit 2
+fi
+
 # A snapshot must contain only the paths copied by snapshot-state.sh. Reject
 # links and special files before mapping any snapshot entry into the workbench.
-while IFS= read -r -d '' path; do
+while IFS= read -r -d '' path || [[ -n "${path:-}" ]]; do
   relative="${path#"$SNAPSHOT_DIR"/}"
   case "$relative" in
     registers|registers/*|logs|logs/*|reference|reference/context|reference/context/*) ;;
@@ -65,11 +79,23 @@ while IFS= read -r -d '' path; do
     echo "Unsafe special file in snapshot: $relative" >&2
     exit 2
   fi
-  if [[ -f "$path" ]] && [[ "$(find "$path" -type f -links +1 -print -quit)" ]]; then
-    echo "Unsafe hardlinked file in snapshot: $relative" >&2
-    exit 2
-  fi
-done < <(find "$SNAPSHOT_DIR" -mindepth 1 -print0)
+done < "$manifest"
+
+# The link-count scan is checked too: an incomplete scan cannot authorize a
+# restore. Its list is only used to refuse unsafe input; the main manifest
+# remains the sole source of paths to preflight and restore.
+snapshot_hardlinks="$(mktemp "${TMPDIR:-/tmp}/pm-restore-hardlinks.XXXXXXXX")"
+trap 'rm -f "$manifest" "$snapshot_hardlinks"' EXIT
+if ! find "$SNAPSHOT_DIR" -type f -links +1 -print0 > "$snapshot_hardlinks"; then
+  echo "Failed to inspect snapshot hardlinks; refusing restore." >&2
+  exit 2
+fi
+if [[ -s "$snapshot_hardlinks" ]]; then
+  IFS= read -r -d '' path < "$snapshot_hardlinks" || true
+  relative="${path#"$SNAPSHOT_DIR"/}"
+  echo "Unsafe hardlinked file in snapshot: $relative" >&2
+  exit 2
+fi
 
 # Snapshot paths are enumerated first so that unexpected top-level entries,
 # including files where a saved root directory is expected, cannot be ignored.
@@ -96,12 +122,18 @@ done
 for target_root in "$WORKBENCH_ROOT/registers" "$WORKBENCH_ROOT/logs" \
                    "$WORKBENCH_ROOT/reference/context"; do
   if [[ -d "$target_root" ]]; then
-    unsafe_link="$(find "$target_root" -type l -print -quit)"
+    if ! unsafe_link="$(find "$target_root" -type l -print -quit)"; then
+      echo "Failed to inspect restore target symlinks: ${target_root#"$WORKBENCH_ROOT"/}" >&2
+      exit 2
+    fi
     if [[ -n "$unsafe_link" ]]; then
       echo "Unsafe symlink in restore target: ${unsafe_link#"$WORKBENCH_ROOT"/}" >&2
       exit 2
     fi
-    hardlink="$(find "$target_root" -type f -links +1 -print -quit)"
+    if ! hardlink="$(find "$target_root" -type f -links +1 -print -quit)"; then
+      echo "Failed to inspect restore target hardlinks: ${target_root#"$WORKBENCH_ROOT"/}" >&2
+      exit 2
+    fi
     if [[ -n "$hardlink" ]]; then
       echo "Unsafe hardlinked file in restore target: ${hardlink#"$WORKBENCH_ROOT"/}" >&2
       exit 2
@@ -114,7 +146,7 @@ done
 
 # Preflight every snapshot entry before writing anything. No differing target
 # file is ever eligible for replacement.
-while IFS= read -r -d '' path; do
+while IFS= read -r -d '' path || [[ -n "${path:-}" ]]; do
   relative="${path#"$SNAPSHOT_DIR"/}"
   target="$WORKBENCH_ROOT/$relative"
   if [[ -L "$target" ]]; then
@@ -127,6 +159,10 @@ while IFS= read -r -d '' path; do
       exit 2
     fi
   else
+    if ! cat "$path" > /dev/null; then
+      echo "Failed to read snapshot file during preflight: $relative" >&2
+      exit 2
+    fi
     if [[ -e "$target" ]]; then
       if [[ ! -f "$target" ]]; then
         echo "Conflict (regular file required): $relative" >&2
@@ -138,10 +174,10 @@ while IFS= read -r -d '' path; do
       fi
     fi
   fi
-done < <(find "$SNAPSHOT_DIR" -mindepth 1 -print0)
+done < "$manifest"
 
 if [[ "$dry_run" -eq 1 ]]; then
-  while IFS= read -r -d '' path; do
+  while IFS= read -r -d '' path || [[ -n "${path:-}" ]]; do
     relative="${path#"$SNAPSHOT_DIR"/}"
     target="$WORKBENCH_ROOT/$relative"
     if [[ -f "$path" ]]; then
@@ -151,7 +187,7 @@ if [[ "$dry_run" -eq 1 ]]; then
         echo "Would restore: $relative"
       fi
     fi
-  done < <(find "$SNAPSHOT_DIR" -type f -print0)
+  done < "$manifest"
   echo "Dry run complete; no files were changed."
   exit 0
 fi
@@ -159,7 +195,7 @@ fi
 # Create missing directories only after the complete preflight. Install files
 # through a same-directory temporary followed by ln, whose no-clobber behavior
 # prevents a concurrent target from ever being overwritten.
-while IFS= read -r -d '' path; do
+while IFS= read -r -d '' path || [[ -n "${path:-}" ]]; do
   relative="${path#"$SNAPSHOT_DIR"/}"
   if [[ -d "$path" ]]; then
     target="$WORKBENCH_ROOT/$relative"
@@ -167,11 +203,12 @@ while IFS= read -r -d '' path; do
       mkdir -p "$target"
     fi
   fi
-done < <(find "$SNAPSHOT_DIR" -mindepth 1 -type d -print0)
+done < "$manifest"
 
-while IFS= read -r -d '' path; do
+while IFS= read -r -d '' path || [[ -n "${path:-}" ]]; do
   relative="${path#"$SNAPSHOT_DIR"/}"
   target="$WORKBENCH_ROOT/$relative"
+  [[ -f "$path" ]] || continue
   if [[ -e "$target" ]]; then
     # Identical files are intentionally not rewritten.
     continue
@@ -193,4 +230,4 @@ while IFS= read -r -d '' path; do
   fi
   rm -f "$temporary"
   echo "Restored: $relative"
-done < <(find "$SNAPSHOT_DIR" -type f -print0)
+done < "$manifest"

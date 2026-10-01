@@ -92,6 +92,40 @@ class DeletedFileTests(unittest.TestCase):
             self.assertNotIn("inbox/capture.txt", inventory)
             self.assertEqual(inventory["archive/capture.txt"], hashlib.sha256(content).hexdigest())
 
+    def test_one_archive_move_cannot_excuse_two_identical_deleted_captures(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.make_workspace(root)
+            content = b"duplicate capture contents\n"
+            first = root / "inbox/first.txt"
+            second = root / "inbox/second.txt"
+            first.parent.mkdir()
+            first.write_bytes(content)
+            second.write_bytes(content)
+            old_time = time.time() - 7200
+            os.utime(first, (old_time, old_time))
+            os.utime(second, (old_time, old_time))
+            marker, original_inventory = self.baseline(root, {
+                "inbox/first.txt": content,
+                "inbox/second.txt": content,
+            })
+            archived = root / "archive/first.txt"
+            archived.parent.mkdir()
+            os.replace(first, archived)
+            second.unlink()
+            original_marker = marker.read_bytes()
+
+            result = run([sys.executable, "scripts/check_run.py"], cwd=root)
+
+            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+            self.assertIn("inbox/second.txt: file was deleted", result.stdout)
+            self.assertNotIn("inbox/first.txt: file was deleted", result.stdout)
+            self.assertEqual(marker.read_bytes(), original_marker)
+            self.assertEqual(
+                json.loads(marker.read_text(encoding="utf-8"))["inventory"],
+                original_inventory,
+            )
+
     def test_isolated_fixture_loader_seeds_inventory(self):
         with tempfile.TemporaryDirectory() as temporary:
             isolated = Path(temporary) / "fictional-workbench"

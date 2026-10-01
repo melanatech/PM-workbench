@@ -176,9 +176,13 @@ Every hook fails **open**: if one crashes, it prints a one-line warning and lets
 
 After a run, `python3 scripts/check_run.py` checks local file changes, register
 shape, selected provenance patterns, run-log activity, write scope, and
-completion-claim wording. It is heuristic and timestamp-based; it cannot
-detect deletions or establish factual truth. A failed check retains its
-baseline so the same findings are checked again. See its docstring and
+completion-claim wording. It detects deleted files using a path/content
+inventory in `state/.last-check`; an unchanged inbox file moved into `archive/`
+is treated as a move. Deletions before the first successful check or fixture
+load establishes an inventory (including on older installations without one)
+cannot be detected. Edits that preserve or predate their mtime can still escape
+the changed-file checks. A failed check retains its successful baseline so the
+same findings are checked again. See the checker docstring and
 `fixtures/lumenly/README.md`.
 
 ## Part 5: Internal documents (shared drive, other wiki pages, the file browser)

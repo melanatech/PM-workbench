@@ -62,6 +62,22 @@ From the **repository root**, run the local safety tests:
 python3 -m unittest discover -s pm-workbench/tests -v
 ```
 
+The standard-library test suite includes the toolkit safety checks. To run the
+static course keyboard-navigation regression check by itself, use:
+
+```sh
+python3 -m unittest discover -s pm-workbench/tests -p 'test_keyboard_navigation.py' -v
+```
+
+This starts a temporary local server and exercises the published course in
+headless Chromium using real Tab, Shift+Tab, Enter, and Escape key events. It
+checks that the course is served and loaded, its landmarks and visible focus
+indicator are present, visible controls are reachable in sequential Tab order,
+and the workspace drawer/file dialog keyboard focus behavior works. It uses
+only Python's standard library and an already-installed Chromium; it does not
+install browser dependencies. If Chromium is unavailable, this browser-specific
+test is reported as skipped.
+
 Then create an isolated copy containing the fictional fixture:
 
 ```sh

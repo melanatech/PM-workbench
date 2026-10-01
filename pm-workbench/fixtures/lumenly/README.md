@@ -28,6 +28,9 @@ entire load if any existing file differs. Preview with
 conflicting target files and is intended only for disposable/fictitious data;
 it can replace an inbox file or context file, so do not use it against real
 work.
+The load records a checker baseline inventory. The checker cannot detect
+deletions that happened before an inventory was first established; unchanged
+inbox files intentionally moved into `archive/` are not reported as deletions.
 
 **Then run a command and check the run** from the isolated or explicitly loaded
 workbench root:

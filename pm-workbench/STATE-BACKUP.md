@@ -29,10 +29,32 @@ apply the organization's retention policy; the script does not prune snapshots.
 
 Treat each snapshot as a recovery copy, not as live synchronization. Restore
 only after checking the destination, the snapshot date, and any newer local
-changes. Avoid copying a snapshot over active state without reviewing the
-diff. Immutable history registers and dated outputs preserve events; current
-state rows in commitments, risks, and initiatives reflect the latest approved
-state (see `CLAUDE.md`, rule 7).
+changes. The restore tool only considers `registers/`, `reference/context/`,
+and `logs/`, the same paths captured by the snapshot script. It restores
+missing files; identical files are left alone. It never replaces a differing
+file. A differing file or an unsafe symlink/hardlink anywhere in the relevant
+snapshot or live target scope refuses the entire restore during preflight.
+
+Recovery flow:
+
+1. Confirm the approved backup location and select the exact dated snapshot
+   directory created by `snapshot-state.sh`. Do not point at the backup parent.
+2. Review the plan without changing anything:
+   ```
+   scripts/restore-state.sh --dry-run /approved/backup/YYYYMMDD-HHMMSS
+   ```
+3. If the preview is correct, run the same command without `--dry-run`:
+   ```
+   scripts/restore-state.sh /approved/backup/YYYYMMDD-HHMMSS
+   ```
+4. If preflight reports a conflict or unsafe path, the restore has not started.
+   Review and reconcile newer work manually; do not delete or replace newer
+   records merely to make the restore pass. Then re-run the preview.
+
+Immutable history registers and dated outputs preserve events; current state
+rows in commitments, risks, and initiatives reflect the latest approved state
+(see `CLAUDE.md`, rule 7). Restore is not synchronization or a way to roll back
+newer records.
 
 If an approved non-Git backup location is not available, leave the backup
 unconfigured. Do not substitute a personal repository or an unapproved cloud

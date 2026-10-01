@@ -1,0 +1,29 @@
+name: Workbench and course checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  regression-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Require a browser for keyboard checks
+        shell: bash
+        run: |
+          browser="$(command -v chromium || command -v chromium-browser || command -v google-chrome || command -v google-chrome-stable)" || {
+            echo "Chromium or Chrome is required; keyboard checks must not be skipped."
+            exit 1
+          }
+          "$browser" --version
+      - name: Run toolkit and course regressions
+        run: python3 -m unittest discover -s pm-workbench/tests -v

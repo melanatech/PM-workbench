@@ -1,0 +1,1 @@
+- [Filesystem preflight](filesystem-preflight.md) — shell process substitution can hide traversal failures; check complete enumeration before recovery writes.

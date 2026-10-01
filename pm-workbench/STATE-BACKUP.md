@@ -34,6 +34,14 @@ and `logs/`, the same paths captured by the snapshot script. It restores
 missing files; identical files are left alone. It never replaces a differing
 file. A differing file or an unsafe symlink/hardlink anywhere in the relevant
 snapshot or live target scope refuses the entire restore during preflight.
+Snapshot enumeration and manifest reads must also complete successfully before
+any target directories or files are created.
+Preflight reads every snapshot file, so a file already unreadable at that point
+also blocks both preview and restore. This is not a transaction: a snapshot or
+target changed concurrently, or a later read/write/disk error, can still
+interrupt a restore after some missing files have been added. Avoid concurrent
+changes and verify restored files afterward; the script does not roll back files
+already restored if a later I/O error occurs.
 
 Recovery flow:
 

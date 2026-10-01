@@ -28,12 +28,19 @@ Checks
 
 Coverage limits
   This is a heuristic local check, not a semantic review or a security boundary.
-  It uses file modification times (so deleted files and edits with preserved/old
-  timestamps are not detected), checks only the patterns above, and does not
-  verify external systems or whether cited sources are truthful. Register
+  Changed-file checks use modification times (so edits with preserved/old
+  timestamps are not detected). A path/content inventory in state/.last-check
+  detects files removed since the last successful check, even when timestamps
+  cannot help. An unchanged inbox file moved into archive/ is treated as a move,
+  not a deletion. Deletions before the first inventory is established (or since
+  an older baseline with no inventory) cannot be detected; the first successful
+  check or fixture load bootstraps that inventory. The checker checks only the
+  patterns above and does not verify external systems or whether cited sources
+  are truthful. Register
   integrity is checked across registers/*.csv when the check window contains a
   changed file; provenance is checked only for changed outputs, drafts,
-  registers, and learning files. A no-change shortcut skips all checks; use
+  registers, and learning files. A no-change shortcut skips all checks except
+  deletion detection; use
   --all for a full runtime-workspace pass. A run-log check confirms a new row
   relative to the last successful baseline, but cannot prove that the row
   accurately describes the run. Hooks remain a separate, fail-open check.
@@ -46,7 +53,7 @@ Usage
 
 Exit code: 1 if any FAIL, else 0. No network, no model, stdlib only.
 """
-import sys, os, re, csv, io, time, glob
+import sys, os, re, csv, io, time, glob, hashlib
 import json
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -66,6 +73,7 @@ if os.path.islink(os.path.dirname(MARK)) or os.path.islink(MARK) or (
     sys.exit(2)
 BASELINE_RUN_LOG_ROWS = None
 BASELINE_CUTOFF = None
+BASELINE_INVENTORY = None
 if os.path.exists(MARK):
     try:
         with open(MARK, encoding='utf-8') as baseline_file:
@@ -74,6 +82,14 @@ if os.path.exists(MARK):
             BASELINE_CUTOFF = float(baseline['cutoff'])
         if isinstance(baseline.get('run_log_rows'), int):
             BASELINE_RUN_LOG_ROWS = baseline['run_log_rows']
+        if isinstance(baseline.get('inventory'), dict):
+            inventory = baseline['inventory']
+            if all(isinstance(path, str) and isinstance(digest, str)
+                   for path, digest in inventory.items()):
+                BASELINE_INVENTORY = inventory
+            else:
+                print("Invalid file inventory in state/.last-check; refusing to check against it.", file=sys.stderr)
+                sys.exit(2)
     except (OSError, ValueError, AttributeError):
         # Older installations used free text here; its modification time is
         # retained as the baseline until a successful check upgrades the marker.
@@ -89,12 +105,15 @@ elif BASELINE_CUTOFF is not None:
 else:
     CUTOFF = time.time() - SINCE_MIN * 60
 
-def mark(cutoff=None, run_log_rows=None):
+def mark(cutoff=None, run_log_rows=None, inventory=None, include_inventory=True):
     os.makedirs(os.path.dirname(MARK), exist_ok=True)
+    baseline = {'checked_at': time.strftime('%Y-%m-%dT%H:%M:%S'),
+                'cutoff': time.time() if cutoff is None else cutoff,
+                'run_log_rows': run_log_row_count() if run_log_rows is None else run_log_rows}
+    if include_inventory:
+        baseline['inventory'] = file_inventory() if inventory is None else inventory
     with open(MARK, 'w', encoding='utf-8') as marker:
-        json.dump({'checked_at': time.strftime('%Y-%m-%dT%H:%M:%S'),
-                   'cutoff': time.time() if cutoff is None else cutoff,
-                   'run_log_rows': run_log_row_count() if run_log_rows is None else run_log_rows}, marker)
+        json.dump(baseline, marker)
 
 def retain_failed_baseline():
     # A first failed check has no prior marker to retain. Save its cutoff and
@@ -103,7 +122,9 @@ def retain_failed_baseline():
     if BASELINE_CUTOFF is None or CUTOFF < BASELINE_CUTOFF:
         mark(cutoff=CUTOFF,
              run_log_rows=BASELINE_RUN_LOG_ROWS if BASELINE_RUN_LOG_ROWS is not None
-             else run_log_row_count())
+             else run_log_row_count(),
+             inventory=BASELINE_INVENTORY,
+             include_inventory=BASELINE_INVENTORY is not None)
 
 ALLOWED_DIRS = ('inbox/', 'archive/', 'outputs/', 'registers/', 'state/', 'logs/',
                 'learning/', 'reference/', 'prototypes/', 'drafts/', 'repos/', 'roadmap/')
@@ -134,6 +155,19 @@ def walk(prefixes=None):
             if prefixes and not p.startswith(prefixes): continue
             yield p
 
+def file_inventory():
+    inventory = {}
+    for path in walk():
+        digest = hashlib.sha256()
+        try:
+            with open(path, 'rb') as handle:
+                for chunk in iter(lambda: handle.read(65536), b''):
+                    digest.update(chunk)
+        except OSError:
+            continue
+        inventory[path] = digest.hexdigest()
+    return inventory
+
 def read(p):
     try:
         with open(p, encoding='utf-8', errors='replace') as fh: return fh.read()
@@ -147,11 +181,29 @@ def run_log_row_count():
         return 0
 
 # ---------- what changed ----------
+CURRENT_INVENTORY = file_inventory()
+DELETED = sorted(set(BASELINE_INVENTORY or {}) - set(CURRENT_INVENTORY))
+ADDED_ARCHIVE_HASHES = {
+    CURRENT_INVENTORY[path] for path in set(CURRENT_INVENTORY) - set(BASELINE_INVENTORY or {})
+    if path.startswith('archive/')
+}
+DELETED = [
+    path for path in DELETED
+    if not (path.startswith('inbox/') and BASELINE_INVENTORY[path] in ADDED_ARCHIVE_HASHES)
+]
 changed = [p for p in walk() if os.path.getmtime(p) >= CUTOFF]
 changed = [p for p in changed if not p.endswith(('.png', '.jpg', '.webp', '.pdf', '.docx', '.pptx', '.xlsx'))]
-if not changed:
+if not changed and not DELETED:
     print("Nothing changed since the last check (use --since N or --all).")
+    # Bootstrap or refresh the inventory only after this no-change pass succeeds.
+    # Keep the timestamp/run-log baseline so a no-op does not hide recent writes.
+    mark(cutoff=BASELINE_CUTOFF if BASELINE_CUTOFF is not None else time.time(),
+         run_log_rows=BASELINE_RUN_LOG_ROWS if BASELINE_RUN_LOG_ROWS is not None
+         else run_log_row_count(),
+         inventory=CURRENT_INVENTORY)
     sys.exit(0)
+for path in DELETED:
+    FAIL(f"{path}: file was deleted since the last successful check")
 
 # ---------- 4. write scope ----------
 outside = [p for p in changed if not p.startswith(ALLOWED_DIRS) and p not in ('BACKLOG.md',)]
@@ -255,5 +307,5 @@ if fails:
     print("Check baseline retained because failures remain; fix them and rerun to check the same files.")
     retain_failed_baseline()
 else:
-    mark()
+    mark(inventory=CURRENT_INVENTORY)
 sys.exit(1 if fails else 0)

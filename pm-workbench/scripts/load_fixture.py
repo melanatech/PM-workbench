@@ -13,6 +13,7 @@ source workspace unchanged. The isolated copy can be removed when finished.
 """
 import argparse
 import csv
+import hashlib
 import json
 import os
 import shutil
@@ -25,6 +26,13 @@ ROOT_MUTABLE_DIRS = {
     "inbox", "archive", "state", "logs", "registers", "outputs", "repos",
     "learning", "drafts", "prototypes", "roadmap", "reference",
     "node_modules", "browser-profiles", "__pycache__",
+}
+INVENTORY_SKIP = (".git/", "node_modules/", ".claude/", "fixtures/", "scripts/",
+                  "tools/", "tests/")
+PROJECT_FILES = {
+    "AGENTS.md", "CLAUDE.md", "CONNECTIONS.md", "EVOLVING.md", "SCHEDULING.md",
+    "SETUP.md", "SKILLS.md", "SOURCE-POLICY.md", "START HERE.md", "STATE-BACKUP.md",
+    "Capture Clipboard.command", "Run PM Workflow.command", ".gitignore",
 }
 
 
@@ -78,6 +86,31 @@ def run_log_rows(root):
         return 0
 
 
+def file_inventory(root):
+    inventory = {}
+    for directory, dirs, files in os.walk(root):
+        relative_dir = os.path.relpath(directory, root).replace(os.sep, "/")
+        relative_dir = "" if relative_dir == "." else relative_dir + "/"
+        if any(relative_dir.startswith(prefix) for prefix in INVENTORY_SKIP):
+            dirs[:] = []
+            continue
+        for filename in files:
+            relative = relative_dir + filename
+            if relative == "state/.last-check" or (
+                relative_dir == "" and relative in PROJECT_FILES
+            ):
+                continue
+            digest = hashlib.sha256()
+            try:
+                with open(os.path.join(directory, filename), "rb") as handle:
+                    for chunk in iter(lambda: handle.read(65536), b""):
+                        digest.update(chunk)
+            except OSError:
+                continue
+            inventory[relative] = digest.hexdigest()
+    return inventory
+
+
 def write_check_baseline(root, kind):
     state = os.path.join(root, "state")
     if os.path.islink(state):
@@ -95,6 +128,7 @@ def write_check_baseline(root, kind):
             "checked_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
             "cutoff": time.time(),
             "run_log_rows": run_log_rows(root),
+            "inventory": file_inventory(root),
         }, handle)
     os.utime(marker, None)
 

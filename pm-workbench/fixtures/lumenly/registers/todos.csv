@@ -1,0 +1,5 @@
+id,description,owner,due_date,priority,status,initiative,blocks,links,origin,source,created,last_updated,note
+TODO-001,Confirm with Dana whether the permissions change takes 2 or 3 weeks,me,2026-07-20,high,open,Export Reliability,,RISK-008,stated,inbox/captures/capture-2026-07-16.md,2026-07-16,2026-07-16,
+TODO-002,Research silent scheduled-export failures before writing the PRD,me,2026-07-16,high,open,Export Reliability,PRD for Export Reliability,EV-211,stated,inbox/exports/slack-search-export.txt,2026-07-15,2026-07-15,
+TODO-003,"Confirm the mobile team's plans (secondhand, unverified)",me,,normal,open,,,,stated,reference/context/current-priorities.md,2026-07-16,2026-07-16,
+TODO-004,File the Fernwood support case export,me,,low,done,Export Reliability,,EV-211,stated,inbox/exports/support-case-8841.txt,2026-07-15,2026-07-16,filed

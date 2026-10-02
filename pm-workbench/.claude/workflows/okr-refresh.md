@@ -27,7 +27,7 @@ Risk/caveat: ...
 Recommended action: ...
 ```
 4. **Three destinations, drafted:**
-   - Weekly-update paragraph → feeds `/weekly-update`
+   - Weekly-update paragraph → feeds `/report weekly-update`
    - Spreadsheet row(s) matching `state/okr-history.csv` columns, ready to paste
    - OKR-site text block matching prior entries' format; pre-fill the form if browser access allows and I approve, and **stop before submit**
 5. **Cross-check against `registers/initiatives.csv`:** if a metric that moved is the related_okr for an active initiative, name that initiative directly in the narrative — "this is the target metric for [initiative], currently at [stage]" — instead of reporting the number in isolation from the work meant to move it.

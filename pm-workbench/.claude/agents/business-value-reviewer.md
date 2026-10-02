@@ -1,6 +1,6 @@
 ---
 name: business-value-reviewer
-description: Use when reviewing whether a proposed experiment leads to a real decision regardless of outcome. Invoked by /experiment-package.
+description: Use when reviewing whether a proposed experiment leads to a real decision regardless of outcome. Invoked by /build experiment-package.
 tools: Read
 model: sonnet
 ---

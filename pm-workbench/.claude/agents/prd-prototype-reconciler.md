@@ -1,6 +1,6 @@
 ---
 name: prd-prototype-reconciler
-description: Use whenever both a PRD and a prototype exist for the same feature, after either changes, to reconcile both against the shared Feature Contract. Invoked by /prd-package, /prototype-build, and /prd-prototype-sync.
+description: Use whenever both a PRD and a prototype exist for the same feature, after either changes, to reconcile both against the shared Feature Contract. Invoked by /build prd-package, /build prototype-build, and /build prd-prototype-sync.
 tools: Read
 model: sonnet
 ---

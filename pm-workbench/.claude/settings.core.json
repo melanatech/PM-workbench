@@ -83,24 +83,8 @@
     ]
   },
   "skillOverrides": {
-    "code-dive": "off",
-    "competitive-scan": "off",
-    "daily-brief": "off",
-    "experiment-analyze": "off",
-    "experiment-package": "off",
-    "launch-package": "off",
-    "learn-product-flow": "off",
-    "meeting-prep": "off",
-    "prd-package": "off",
-    "prd-prototype-sync": "off",
-    "process-inbox": "off",
-    "research-package": "off",
-    "research-plan": "off",
-    "return-brief": "off",
-    "ripple-check": "off",
-    "roadmap-update": "off",
-    "rotate-registers": "off",
-    "strategy-refresh": "off",
-    "prototype-build": "off"
+    "prototype-build": "off",
+    "todo": "off",
+    "build": "off"
   }
 }

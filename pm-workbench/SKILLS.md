@@ -2,7 +2,7 @@
 
 You asked about skills. Short version: **skills are the newer format of the exact same thing your commands already are**, with one meaningful upgrade.
 
-A command is a markdown file at `.claude/commands/okr-refresh.md` → you type `/okr-refresh`.
+A workflow is a markdown file at `.claude/workflows/okr-refresh.md` → you run it as `/report okr-refresh` through its router. (Originally each lived in `.claude/commands/` and was typed directly; the routers replaced that.)
 A skill is the same content at `.claude/skills/okr-refresh/SKILL.md` → you can still type `/okr-refresh`, **and** Claude can now invoke it on its own when it recognizes the situation calls for it.
 
 That auto-invocation is the practical difference. With commands, if you say "hey, pull this week's numbers," Claude improvises. With skills, it recognizes that's the okr-refresh job and runs your tuned, battle-tested version — same guardrails, same output format — without you remembering the exact command name. Skills can also bundle extra files (reference docs, scripts) in their folder that load only when the skill runs, which keeps sessions lean.
@@ -13,7 +13,7 @@ The kit ships as commands deliberately. Weeks 1-3 are for tuning prompts — edi
 ## Converting one (it's just a file move)
 ```
 mkdir -p .claude/skills/okr-refresh
-mv .claude/commands/okr-refresh.md .claude/skills/okr-refresh/SKILL.md
+mv .claude/workflows/okr-refresh.md .claude/skills/okr-refresh/SKILL.md   # then remove it from routes.json
 ```
 Then add a `description:` line to the frontmatter if it doesn't have one — that's what Claude reads to decide when to auto-invoke. Make it describe the *situation* ("Pull current OKR metrics from dashboards and draft the weekly numbers update") rather than just naming the command.
 

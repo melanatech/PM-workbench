@@ -11,6 +11,6 @@ Deep-dive: $ARGUMENTS
 4. Output to `learning/[flow]/`: flow walkthrough w/ states; doc-vs-reality differences; metric map; likely bottlenecks worth validating; open questions.
 5. Append to inventories in `reference/product-knowledge/`: feature-inventory.md, flow-inventory.md, data-dictionary.md — create on first run.
 
-Pairs with `/code-dive` for the same area: UI truth + code truth + doc claims, three-way reconciled.
+Pairs with `/discover code-dive` for the same area: UI truth + code truth + doc claims, three-way reconciled.
 
 **First run:** ask for the product URL and the login path if the bracket is unfilled; save it.

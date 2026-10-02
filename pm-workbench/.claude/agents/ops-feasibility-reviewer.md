@@ -1,6 +1,6 @@
 ---
 name: ops-feasibility-reviewer
-description: Use when reviewing what an experiment costs support, sales, and account teams during the test, and whether a cheaper method would answer the question. Invoked by /experiment-package.
+description: Use when reviewing what an experiment costs support, sales, and account teams during the test, and whether a cheaper method would answer the question. Invoked by /build experiment-package.
 tools: Read
 model: sonnet
 ---

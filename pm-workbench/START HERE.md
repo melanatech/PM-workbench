@@ -19,7 +19,7 @@ cd /tmp/pm-workbench-lumenly
 ```
 Open that isolated folder in Claude Code, then run:
 ```
-/meeting-closeout inbox/meetings/2026-07-14-roadmap-review.txt
+/capture meeting-closeout inbox/meetings/2026-07-14-roadmap-review.txt
 python3 scripts/check_run.py
 ```
 `fixtures/lumenly/README.md` describes expected results. To discard the test,
@@ -36,7 +36,7 @@ python3 -m unittest discover -s tests -v
 
 | Status | What this means |
 |---|---|
-| **Ready to try locally** | `scripts/load_fixture.py`, `scripts/check_run.py`, and the safety tests are runnable local tools. `/quick-close` and `/meeting-closeout` are prompts for pasted notes or local files; they still require Claude Code and have not been verified end-to-end against a real workspace. The other command prompts and `prototype-build` skill are present, but many depend on populated data or external sources. |
+| **Ready to try locally** | `scripts/load_fixture.py`, `scripts/check_run.py`, and the safety tests are runnable local tools. `/quick-close` and `/capture meeting-closeout` are prompts for pasted notes or local files; they still require Claude Code and have not been verified end-to-end against a real workspace. The other command prompts and `prototype-build` skill are present, but many depend on populated data or external sources. |
 | **Needs your configuration** | Real company context, templates, saved views, browser access, and scheduled runs require your tools, URLs, permissions, and policy review. Nothing here is connected to a real company system by default. Browser paths described in SETUP.md are options to test, not verified integrations. |
 | **Requires an approved destination** | `scripts/snapshot-state.sh` creates a local copy only after `PM_STATE_BACKUP` is set to an approved, access-controlled, non-Git location. `scripts/restore-state.sh` previews and restores missing files from an explicitly selected snapshot without replacing differing records. Neither script encrypts or uploads the snapshot. See `STATE-BACKUP.md` for the recovery flow. |
 | **Known script stubs** | `scripts/log_metrics.py`, `scripts/extract_document.sh`, and `scripts/render_template.py` intentionally exit as stubs. Use the documented manual/markdown fallbacks until each needed implementation is tested. |
@@ -58,7 +58,7 @@ SETUP.md and SCHEDULING.md for prerequisites and limitations.
 
 ## Using the prompt kit
 Open the folder in a Claude Code-supported environment after verifying that
-your installed version recognizes the project's `.claude/commands/` and
+your installed version recognizes the project's `.claude/commands/` (eight commands; the workflow texts they route to are in `.claude/workflows/`) and
 settings. Cursor is one possible interface; its extension and command behavior
 are not verified by this kit. Review proposed local changes before using them.
 
@@ -67,22 +67,27 @@ Also available:
 - **Scheduled runs** — an optional future setup. Scheduling is not configured or verified; see `SCHEDULING.md` and BACKLOG.md before considering it.
 
 ## Every duty → its workflow
+The six cluster commands (`/capture`, `/brief`, `/sync`, `/discover`, `/build`, `/report`) take the workflow name as their first word; `/quick-close` and `/todo` stand alone. See CLAUDE.md for the cluster table.
+
 | Duty | Workflow(s) |
 |---|---|
-| Learning platform/flows/data | `/learn-product-flow` + `/code-dive` |
-| Discovery → documented strategy input | `/discovery` (chat/support/behavior-analytics + user research docs, in parallel) |
-| Finding & recruiting users | `/research-plan` (dashboards/behavior analytics/Jira + existing persona/research docs — produces criteria and questions, never a list of people) |
-| PRDs + leadership/tech buy-in | `/prd-package` (grounded context → readiness gate → draft → bounded stakeholder pre-review: 1–2 angles in Standard, all five in Deep → prototype reconciliation) |
-| Prototypes + testing | `/prototype-build` (same bounded review + real browser QA + PRD reconciliation) + `/research-package`; `/prd-prototype-sync` anytime the two need a manual re-check |
-| OKR gathering/monitoring/reporting | `/okr-refresh` (retrieves already-calculated dashboard values, logs and validates freshness, drafts 3 destinations — never recomputes a metric itself) |
-| Docs, release notes, launch coordination | `/launch-package` (drift report first, then all audience docs) |
-| Experiments | `/experiment-package` (adversarial gate) + `/experiment-analyze` |
-| Meeting summaries | `/meeting-closeout` (feeds the registers — the keystone habit) |
-| Competitive intelligence | `/competitive-scan` (dated diffs, monthly) |
-| Weekly leadership updates | `/weekly-update` (generated from registers) |
-| Strategy/innovation/revenue docs | `/strategy-refresh` (change report first; revenue ideas get real models) |
-| Week one back | `/return-brief` (one-time) |
-| Is the system itself working for me | `/workbench-health` (reads the run log; proposes pruning) |
+| Learning platform/flows/data | `/discover learn-product-flow` + `/discover code-dive` |
+| Discovery → documented strategy input | `/discover discovery` (chat/support/behavior-analytics + user research docs, in parallel) |
+| Finding & recruiting users | `/discover research-plan` (dashboards/behavior analytics/Jira + existing persona/research docs — produces criteria and questions, never a list of people) |
+| PRDs + leadership/tech buy-in | `/build prd-package` (grounded context → readiness gate → draft → bounded stakeholder pre-review: 1–2 angles in Standard, all five in Deep → prototype reconciliation) |
+| Prototypes + testing | `/build prototype-build` (same bounded review + real browser QA + PRD reconciliation) + `/discover research-package`; `/build prd-prototype-sync` anytime the two need a manual re-check |
+| OKR gathering/monitoring/reporting | `/report okr-refresh` (retrieves already-calculated dashboard values, logs and validates freshness, drafts 3 destinations — never recomputes a metric itself) |
+| Docs, release notes, launch coordination | `/build launch-package` (drift report first, then all audience docs) |
+| Experiments | `/build experiment-package` (adversarial gate) + `/build experiment-analyze` |
+| Meeting summaries | `/capture meeting-closeout` (feeds the registers — the keystone habit) |
+| Run things on a schedule or leave a session watching the inbox | `SCHEDULING.md` (cron/launchd/Task Scheduler through `scripts/run_scheduled.py`, or `/loop` with `.claude/loop.md`; `state/PAUSE` stops everything) |
+| My own to-dos (add, update, finish, drop, list; propose from the inbox; draft the outreach; `sweep`) | `/todo` (`registers/todos.csv`; `propose` and `work` use the `todo-worker` subagent) |
+| Competitive intelligence | `/discover competitive-scan` (dated diffs, monthly) |
+| Weekly leadership updates | `/report weekly-update` (generated from registers) |
+| Strategy/innovation/revenue docs | `/report strategy-refresh` (change report first; revenue ideas get real models) |
+| Week one back | `/brief return-brief` (one-time) |
+| Is the system itself working for me | `/report workbench-health` (reads the run log; proposes pruning) |
+| Is it helping: fewer dropped balls, better decisions | `/report monthly-review` (monthly; scheduled; first snapshot starts a 21-day baseline) |
 
 ## Before using real data
 

@@ -1,6 +1,6 @@
 ---
 name: return-window-scanner
-description: Use once, for /return-brief, to read Slack/Jira/Confluence across an entire leave-to-return window and extract what changed. The heaviest single read in this kit - always isolate it.
+description: Use once, for /brief return-brief, to read Slack/Jira/Confluence across an entire leave-to-return window and extract what changed. The heaviest single read in this kit - always isolate it.
 tools: Read, Grep, Glob, mcp__browser-bridge__browser_navigate, mcp__browser-bridge__browser_snapshot
 model: sonnet
 ---

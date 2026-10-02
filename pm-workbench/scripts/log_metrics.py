@@ -17,7 +17,7 @@ If a metric ever genuinely needs calculation from raw row-level exports
 workflow — mark it in its YAML as `retrieval_method: raw_calculation` and
 write a dedicated script for that one metric. Don't fold it into this one.
 
-Usage (called by /okr-refresh, not run standalone):
+Usage (called by /report okr-refresh, not run standalone):
   python3 scripts/log_metrics.py --metric onboarding_completion \
       --value 0.412 --as-of 2026-07-15 --source quicksight
 

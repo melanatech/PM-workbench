@@ -23,7 +23,7 @@ Your organization may restrict extensions, browser automation, package
 installation, or access to company systems. Follow its approval process. This
 kit does not establish or verify approval for any integration.
 
-**Job A — optional manual capture.** If permitted, install the included **Workbench Clipper** from `tools/workbench-clipper/`, then test it with non-sensitive content and verify where the file is saved. It is intended to store page text, URL, title, and timestamp in `Downloads/pm-workbench-inbox/`; `/process-inbox` is a prompt, not an automatic importer unless its local workflow is run. If extensions are unavailable, `Capture Clipboard.command` or pasting into the chat are alternatives; review the resulting files because captures may contain sensitive information.
+**Job A — optional manual capture.** If permitted, install the included **Workbench Clipper** from `tools/workbench-clipper/`, then test it with non-sensitive content and verify where the file is saved. It is intended to store page text, URL, title, and timestamp in `Downloads/pm-workbench-inbox/`; `/capture process-inbox` is a prompt, not an automatic importer unless its local workflow is run. If extensions are unavailable, `Capture Clipboard.command` or pasting into the chat are alternatives; review the resulting files because captures may contain sensitive information.
 
 **Job B — letting Claude read pages for you (discovery scans, OKR pulls, Jira views).** If permitted, test Anthropic's **Claude in Chrome** integration by following its current installation instructions, then ask Claude Code to read the open tab without interacting with it. Availability, supported browsers, account requirements, and organizational policy can change; verify these before use. This workbench has not tested this path against a real company source.
 
@@ -168,8 +168,8 @@ behavior means a hook error warns but does not stop the work:
 
 | Hook | When it fires | What it does for you |
 |---|---|---|
-| `validate_register_write.py` | before any write to `registers/*.csv` | checks field count, line breaks, duplicate IDs, and headers; preserves decision/evidence/participant history rows, while allowing same-ID updates to commitments/risks/initiatives (rule 7, rule 14) |
-| `check_output_provenance.py` | after any write to `outputs/`, `drafts/`, `learning/` | intends to flag a `DEC-`/`EV-`/`RISK-` id not found in a register or a ticket key not found in an export (rule 3, rule 21) |
+| `validate_register_write.py` | before any write to `registers/*.csv` | checks field count, line breaks, duplicate IDs, and headers; preserves decision/evidence/participant history rows, while allowing same-ID updates to commitments/risks/initiatives/todos (rule 7, rule 14). It only sees Write/Edit tool calls, so `scripts/todo_register.py` re-checks the same rules itself |
+| `check_output_provenance.py` | after any write to `outputs/`, `drafts/`, `learning/` | intends to flag a `DEC-`/`EV-`/`RISK-`/`TODO-` id not found in a register or a ticket key not found in an export (rule 3, rule 21); also records a hash of each file written to `outputs/` or `drafts/` in `state/output-hashes.csv` so the monthly review can count edits you made afterward |
 | `log_run.py` | when a turn ends | intends to append the run-log line for a `/command` turn (rule 19) |
 
 Every hook fails **open**: if one crashes, it prints a one-line warning and lets the work continue. They need Python 3 on your PATH (`python3` on macOS, `python` on Windows — the command tries both). To turn one off, delete its entry from `settings.json`. The independent checker cannot prove that Claude Code invoked these hooks.
@@ -195,7 +195,7 @@ Two access paths, use whichever is real for you:
 
 **Binary formats** (.docx, .pptx, .xlsx) don't extract cleanly through a plain text read. `scripts/extract_document.sh` is currently a stub; it does not perform conversion yet. Use an approved export to plain text/CSV or paste relevant content until a specific format implementation has been tested.
 
-Drop anything durable-but-unprocessed into `inbox/documents/`; `/process-inbox`
+Drop anything durable-but-unprocessed into `inbox/documents/`; `/capture process-inbox`
 is a prompt workflow that may index it into `reference/user-research/` or the
 appropriate local file and then archive the original. Review its proposed file
 changes. Binary extraction is not available until the stub is implemented.

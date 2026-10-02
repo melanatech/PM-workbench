@@ -1,0 +1,121 @@
+{
+  "_note": "Single source of truth for the routers. model = what the runner subagent is dispatched on. Edit a workflow's model here, not in its file. See .claude/workflows/_protocol.md.",
+  "clusters": {
+    "capture": {
+      "meeting-closeout": {
+        "path": ".claude/workflows/meeting-closeout.md",
+        "model": "sonnet"
+      },
+      "process-inbox": {
+        "path": ".claude/workflows/process-inbox.md",
+        "model": "sonnet"
+      }
+    },
+    "brief": {
+      "daily-brief": {
+        "path": ".claude/workflows/daily-brief.md",
+        "model": "haiku"
+      },
+      "return-brief": {
+        "path": ".claude/workflows/return-brief.md",
+        "model": "sonnet"
+      },
+      "meeting-prep": {
+        "path": ".claude/workflows/meeting-prep.md",
+        "model": "sonnet"
+      }
+    },
+    "sync": {
+      "jira-reconcile": {
+        "path": ".claude/workflows/jira-reconcile.md",
+        "model": "sonnet"
+      },
+      "ripple-check": {
+        "path": ".claude/workflows/ripple-check.md",
+        "model": "sonnet"
+      },
+      "roadmap-update": {
+        "path": ".claude/workflows/roadmap-update.md",
+        "model": "sonnet"
+      },
+      "rotate-registers": {
+        "path": ".claude/workflows/rotate-registers.md",
+        "model": "haiku"
+      }
+    },
+    "discover": {
+      "discovery": {
+        "path": ".claude/workflows/discovery.md",
+        "model": "sonnet"
+      },
+      "research-plan": {
+        "path": ".claude/workflows/research-plan.md",
+        "model": "sonnet"
+      },
+      "research-package": {
+        "path": ".claude/workflows/research-package.md",
+        "model": "sonnet"
+      },
+      "competitive-scan": {
+        "path": ".claude/workflows/competitive-scan.md",
+        "model": "sonnet"
+      },
+      "learn-product-flow": {
+        "path": ".claude/workflows/learn-product-flow.md",
+        "model": "sonnet"
+      },
+      "code-dive": {
+        "path": ".claude/workflows/code-dive.md",
+        "model": "sonnet"
+      }
+    },
+    "build": {
+      "prd-package": {
+        "path": ".claude/workflows/prd-package.md",
+        "model": "opus"
+      },
+      "prototype-build": {
+        "path": ".claude/skills/prototype-build/SKILL.md",
+        "model": "sonnet"
+      },
+      "prd-prototype-sync": {
+        "path": ".claude/workflows/prd-prototype-sync.md",
+        "model": "sonnet"
+      },
+      "experiment-package": {
+        "path": ".claude/workflows/experiment-package.md",
+        "model": "opus"
+      },
+      "experiment-analyze": {
+        "path": ".claude/workflows/experiment-analyze.md",
+        "model": "sonnet"
+      },
+      "launch-package": {
+        "path": ".claude/workflows/launch-package.md",
+        "model": "sonnet"
+      }
+    },
+    "report": {
+      "weekly-update": {
+        "path": ".claude/workflows/weekly-update.md",
+        "model": "sonnet"
+      },
+      "okr-refresh": {
+        "path": ".claude/workflows/okr-refresh.md",
+        "model": "sonnet"
+      },
+      "strategy-refresh": {
+        "path": ".claude/workflows/strategy-refresh.md",
+        "model": "opus"
+      },
+      "workbench-health": {
+        "path": ".claude/workflows/workbench-health.md",
+        "model": "haiku"
+      },
+      "monthly-review": {
+        "path": ".claude/workflows/monthly-review.md",
+        "model": "sonnet"
+      }
+    }
+  }
+}

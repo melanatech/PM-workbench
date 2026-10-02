@@ -19,7 +19,7 @@ try:
     tp = p.get('transcript_path')
     if not tp or not os.path.exists(tp):
         sys.exit(0)
-    cmd, last_user_ts, blocked = None, None, False
+    cmd, last_user_ts, blocked, first_arg = None, None, False, ''
     with open(tp, encoding='utf-8', errors='replace') as fh:
         for line in fh:
             try: ev = json.loads(line)
@@ -34,17 +34,49 @@ try:
             else:
                 text, skills = (content or ''), []
             if role == 'user' and text.strip() and not text.startswith('<'):
-                cmd = None; blocked = False
+                cmd = None; blocked = False; first_arg = ''
                 last_user_ts = ev.get('timestamp')
                 first = text.strip().split()[0] if text.strip() else ''
                 if first.startswith('/'):
                     cmd = first.lstrip('/').split(':')[-1]
+                    rest = text.strip().split()
+                    first_arg = rest[1] if len(rest) > 1 else ''
             elif role == 'assistant':
                 for s_ in skills:
                     if s_: cmd = str(s_).lstrip('/')
                 if 'BLOCKED:' in text: blocked = True
     if not cmd:
         sys.exit(0)  # ordinary chat turn — not a workflow run
+    # Cluster commands (/build, /report, ...) log as cluster:workflow. The router writes
+    # state/.run-workflow ("cluster:workflow") before it dispatches; a workflow name typed as
+    # the first argument is the fallback. The marker is removed after use so it cannot go stale.
+    try:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'workflows', 'routes.json'), encoding='utf-8') as rf:
+            clusters = json.load(rf).get('clusters', {})
+    except Exception:
+        clusters = {}
+    if cmd in clusters:
+        marker = os.path.join(root(), 'state', '.run-workflow')
+        chosen = None
+        try:
+            if os.path.isfile(marker) and not os.path.islink(marker):
+                got = open(marker, encoding='utf-8').read().strip()
+                c, _, w = got.partition(':')
+                fresh = True
+                if last_user_ts:
+                    try:
+                        t0 = datetime.datetime.fromisoformat(last_user_ts.replace('Z', '+00:00')).timestamp()
+                        fresh = os.path.getmtime(marker) >= t0 - 2
+                    except Exception:
+                        fresh = True
+                if c == cmd and w in clusters[cmd] and fresh:
+                    chosen = got
+                os.unlink(marker)
+        except Exception:
+            pass
+        if not chosen and first_arg and first_arg.lstrip('/') in clusters[cmd]:
+            chosen = f"{cmd}:{first_arg.lstrip('/')}"
+        cmd = chosen or f"{cmd}:unspecified"
     logp = os.path.join(root(), 'logs', 'run-log.csv')
     os.makedirs(os.path.dirname(logp), exist_ok=True)
     new = not os.path.exists(logp) or os.path.getsize(logp) == 0

@@ -100,16 +100,17 @@ The loader leaves the source workbench unchanged and refuses a non-empty
 isolation destination. Open the **isolated folder** in Claude Code and run:
 
 ```text
-/meeting-closeout inbox/meetings/2026-07-14-roadmap-review.txt
+/capture meeting-closeout inbox/meetings/2026-07-14-roadmap-review.txt
 ```
 
 After reviewing the generated files, run this in a terminal from that same folder:
 
 ```sh
 python3 scripts/check_run.py
+python3 scripts/score_fixture.py
 ```
 
-Compare the result with the
+`score_fixture.py` scores the registers against a gold answer file and reports expected items found, missed, and invented. Compare the result with the
 [fixture's expected outcomes](pm-workbench/fixtures/lumenly/README.md).
 The checker is a local heuristic, not a guarantee that every fact is correct.
 When finished, remove only the isolated folder you selected after confirming its
@@ -118,6 +119,25 @@ exact path. Do not use fixture overwrite options against real work.
 Continue with [START HERE](pm-workbench/START%20HERE.md) and
 [SETUP](pm-workbench/SETUP.md) before adapting the toolkit.
 
+## Commands at a glance
+
+The toolkit has eight commands. Six are routers over 26 workflows: you give each one a workflow name, or just describe the job and it picks.
+
+| Command | Workflows |
+| --- | --- |
+| `/capture` | `meeting-closeout`, `process-inbox` |
+| `/brief` | `daily-brief`, `return-brief`, `meeting-prep` |
+| `/sync` | `jira-reconcile`, `ripple-check`, `roadmap-update`, `rotate-registers` |
+| `/discover` | `discovery`, `research-plan`, `research-package`, `competitive-scan`, `learn-product-flow`, `code-dive` |
+| `/build` | `prd-package`, `prototype-build`, `prd-prototype-sync`, `experiment-package`, `experiment-analyze`, `launch-package` |
+| `/report` | `weekly-update`, `okr-refresh`, `strategy-refresh`, `workbench-health`, `monthly-review` |
+
+`/quick-close` is a 60-second capture. `/todo` manages your own to-do list (`registers/todos.csv`); it can propose to-dos from the inbox, draft help for a few that are due (`sweep`), and queue proposals without adding them.
+
+`/report monthly-review` counts dropped balls and decision quality from the registers and logs, with a recorded baseline. See `pm-workbench/reference/workbench-metrics.md` for what each number can and cannot tell you.
+
+Unattended runs go through `pm-workbench/scripts/run_scheduled.py` (cron, launchd or Task Scheduler), or through `/loop` in an open session. A `state/PAUSE` file stops everything. See [SCHEDULING](pm-workbench/SCHEDULING.md).
+
 ## What is ready—and what is not
 
 | Status | Scope |
@@ -125,7 +145,7 @@ Continue with [START HERE](pm-workbench/START%20HERE.md) and
 | **Available now** | Static course and essay; local fixture loader, run checker, and safety tests; command and agent prompt files. |
 | **Needs configuration and review** | Company context, templates, capture tools, external read paths, permissions, and scheduling. No real company systems are connected by default. |
 | **Known stubs** | `log_metrics.py`, `extract_document.sh`, and `render_template.py`. Use the documented manual or Markdown fallbacks until the needed implementation is tested. |
-| **Not verified end-to-end** | Browser reads against real sources, hooks in your Claude Code installation, scheduled workflows, and external-system writes. |
+| **Not verified end-to-end** | Browser reads against real sources, hooks in your Claude Code installation, the router-to-subagent hand-off and per-workflow model choice, the scheduling wrapper under `claude -p` and `/loop`, and external-system writes. |
 
 See the [readiness guidance](pm-workbench/START%20HERE.md#what-is-ready-configurable-and-still-a-stub)
 and [known gaps](pm-workbench/BACKLOG.md). Passing the local tests does not verify
@@ -139,11 +159,12 @@ docs/                         Published static course and essay
   blog/ai-system-worked/       Standalone essay page
   assets/                     Course images
 pm-workbench/                 Companion toolkit; open this folder for real use
-  .claude/                    Commands, agents, hooks, settings, and skills
+  .claude/                    Commands (the eight above), workflows and their routing table,
+                              agents, hooks, settings, and skills
   fixtures/lumenly/           Fictional example inputs and expected outcomes
   reference/                  Context, source links, and template guidance
   scripts/                    Local utilities and clearly identified stubs
-  tests/                      First-run safety and checker tests
+  tests/                      Safety, routing, to-do, metrics and scheduling tests
 index.html                    Repository-root entry page linking to the course
 ```
 
@@ -187,7 +208,8 @@ Ctrl+C when finished.
 | Operating rules | [CLAUDE.md](pm-workbench/CLAUDE.md) |
 | Resolving conflicting sources | [SOURCE-POLICY](pm-workbench/SOURCE-POLICY.md) |
 | How workflows share state | [CONNECTIONS](pm-workbench/CONNECTIONS.md) |
-| Optional scheduling | [SCHEDULING](pm-workbench/SCHEDULING.md) |
+| Optional scheduling and `/loop` | [SCHEDULING](pm-workbench/SCHEDULING.md) |
+| What the monthly review measures | [workbench-metrics](pm-workbench/reference/workbench-metrics.md) |
 | Design decisions and known gaps | [EVOLVING](pm-workbench/EVOLVING.md) · [BACKLOG](pm-workbench/BACKLOG.md) |
 
 ## Reporting issues and contributing

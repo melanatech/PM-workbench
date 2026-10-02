@@ -1,6 +1,6 @@
 ---
 name: launch-drift-detector
-description: Use when checking a feature launch for discrepancies across PRD, Jira, prototype, docs, marketing, and support materials before drafting launch documentation. Invoked by /launch-package.
+description: Use when checking a feature launch for discrepancies across PRD, Jira, prototype, docs, marketing, and support materials before drafting launch documentation. Invoked by /build launch-package.
 tools: Read, Grep
 model: sonnet
 ---

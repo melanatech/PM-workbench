@@ -1,6 +1,6 @@
 ---
 name: discovery-source-reader
-description: Use when reading raw discovery sources (bookmarked chat searches, support-case pages, behavior-analytics segments) for /discovery. Browses them directly in its own context and returns only structured evidence records.
+description: Use when reading raw discovery sources (bookmarked chat searches, support-case pages, behavior-analytics segments) for /discover discovery. Browses them directly in its own context and returns only structured evidence records.
 tools: Read, mcp__browser-bridge__browser_navigate, mcp__browser-bridge__browser_snapshot, mcp__browser-bridge__browser_tabs
 model: sonnet
 ---

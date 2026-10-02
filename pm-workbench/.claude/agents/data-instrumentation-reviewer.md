@@ -1,6 +1,6 @@
 ---
 name: data-instrumentation-reviewer
-description: Use to review a PRD or prototype from a measurability standpoint - can success actually be tracked. Shared reviewer for /prd-package and /prototype-build.
+description: Use to review a PRD or prototype from a measurability standpoint - can success actually be tracked. Shared reviewer for /build prd-package and /build prototype-build.
 tools: Read
 model: sonnet
 ---

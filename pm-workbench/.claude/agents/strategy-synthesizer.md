@@ -1,6 +1,6 @@
 ---
 name: strategy-synthesizer
-description: Use for /strategy-refresh's first step - reading the accumulated evidence, OKR history, competitive log, and learning files to produce the change report before any doc is rewritten.
+description: Use for /report strategy-refresh's first step - reading the accumulated evidence, OKR history, competitive log, and learning files to produce the change report before any doc is rewritten.
 tools: Read
 model: sonnet
 ---

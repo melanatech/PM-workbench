@@ -1,6 +1,6 @@
 ---
 name: customer-facing-reviewer
-description: Use to review a PRD or prototype from a support/AM/sales-enablement angle - is this realistic to explain and support. Shared reviewer for /prd-package and /prototype-build.
+description: Use to review a PRD or prototype from a support/AM/sales-enablement angle - is this realistic to explain and support. Shared reviewer for /build prd-package and /build prototype-build.
 tools: Read
 model: sonnet
 ---

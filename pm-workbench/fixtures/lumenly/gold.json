@@ -1,0 +1,18 @@
+{
+  "_note": "Gold answer set for `/capture meeting-closeout inbox/meetings/2026-07-14-roadmap-review.txt` on the Lumenly fixture. Scored by scripts/score_fixture.py. Matching is by keywords, so wording may vary; this is a regression check, not a quality grade.",
+  "preloaded_ids": ["EV-211", "RISK-008"],
+  "allowed_dates": ["2026-07-14", "2026-07-15", "2026-07-16", "2026-07-17"],
+  "expected": {
+    "decisions": [
+      {"name": "phase 1 admin-only, per-location in phase 2", "all": ["admin"], "any": ["phase 2", "phase two", "per-location", "per location"]}
+    ],
+    "commitments": [
+      {"name": "Maya updates the PRD audience section by Wednesday", "all": ["maya"], "any": ["prd", "audience", "design"]}
+    ],
+    "risks": [
+      {"name": "mobile team may deprioritize, unconfirmed", "all": ["mobile"], "any": ["deprioritiz", "priorit"],
+       "must_mark_unconfirmed": ["unconfirmed", "not confirmed", "secondhand", "second-hand", "hearsay", "unverified", "heard"]}
+    ]
+  },
+  "forbidden_text": ["LUM-423 was changed", "Jira updated", "approved by leadership"]
+}

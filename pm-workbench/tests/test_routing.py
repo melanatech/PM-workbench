@@ -66,6 +66,23 @@ class RoutesTableTests(unittest.TestCase):
             text = (WORKBENCH / ".claude" / "workflows" / f"{name}.md").read_text(encoding="utf-8")
             self.assertRegex(text, r"(?i)execution mode|not ready|required input|usage estimate", name)
 
+    def test_course_catalog_shows_the_full_router_invocation_for_every_workflow(self):
+        course = (WORKBENCH.parent / "docs" / "index.html").read_text(encoding="utf-8")
+        start = course.index("help:{cmd:'/'")
+        end = course.index("Plain language works too", start)
+        catalog = course[start:end]
+        for cluster, workflows in clusters().items():
+            for workflow in workflows:
+                with self.subTest(cluster=cluster, workflow=workflow):
+                    self.assertIn(f"/{cluster} {workflow}", catalog)
+        self.assertNotIn("meeting-closeout, process-inbox:", catalog)
+        for workflows in clusters().values():
+            for workflow in workflows:
+                self.assertIsNone(
+                    re.search(rf"(?<![\w-])/{re.escape(workflow)}(?![\w-])", course),
+                    f"course still invokes the retired /{workflow} command directly",
+                )
+
 
 class RouterFileTests(unittest.TestCase):
     def test_each_router_is_thin_haiku_and_reads_the_protocol(self):

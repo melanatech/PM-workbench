@@ -9,7 +9,7 @@ import sys, os, csv, io
 sys.path.insert(0, os.path.dirname(__file__))
 from _common import payload, root, rel, block, warn
 
-CURRENT_STATE_REGISTERS = {'commitments.csv', 'risks.csv', 'initiatives.csv'}
+CURRENT_STATE_REGISTERS = {'commitments.csv', 'risks.csv', 'initiatives.csv', 'todos.csv'}
 
 try:
     p = payload()

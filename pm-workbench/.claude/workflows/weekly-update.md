@@ -13,7 +13,7 @@ Then read maintained state — this update is generated, not recalled:
 - `registers/commitments.csv` — due, completed, or missed since last update
 - `registers/decisions.csv` and `registers/risks.csv` — new or changed entries
 - Latest `outputs/weekly/*-discovery.md`
-- Latest OKR narrative from `/okr-refresh` outputs
+- Latest OKR narrative from `/report okr-refresh` outputs
 - Last week's update in `outputs/weekly/` (style + continuity reference)
 
 Structure — leading with change, never repeating background:

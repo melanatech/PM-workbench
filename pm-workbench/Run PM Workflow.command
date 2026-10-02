@@ -30,25 +30,29 @@ echo "23) Code dive on a feature"
 echo "24) Rotate registers"
 echo "25) Return-to-work brief (one-time)"
 echo "26) Workbench health (what do I actually use)"
+echo "27) Monthly review (dropped balls, decision quality)"
+echo "28) To-do list (add, list, done, propose, sweep...)"
 echo ""
 read -p "Pick a number: " choice
 read -p "Extra details (optional, press Enter to skip): " args
 
 case $choice in
-  1) cmd="/quick-close $args";;        2) cmd="/meeting-closeout $args";;
-  3) cmd="/meeting-prep $args";;       4) cmd="/daily-brief";;
-  5) cmd="/process-inbox";;            6) cmd="/jira-reconcile";;
-  7) cmd="/discovery $args";;          8) cmd="/okr-refresh";;
-  9) cmd="/weekly-update";;           10) cmd="/research-plan $args";;
-  11) cmd="/prd-package $args";;      12) cmd="/prototype-build $args";;
-  13) cmd="/prd-prototype-sync $args";; 14) cmd="/research-package $args";;
-  15) cmd="/experiment-package $args";; 16) cmd="/experiment-analyze $args";;
-  17) cmd="/launch-package $args";;   18) cmd="/roadmap-update $args";;
-  19) cmd="/ripple-check $args";;     20) cmd="/competitive-scan $args";;
-  21) cmd="/strategy-refresh";;       22) cmd="/learn-product-flow $args";;
-  23) cmd="/code-dive $args";;        24) cmd="/rotate-registers";;
-  25) cmd="/return-brief $args";;
-  26) cmd="/workbench-health";;
+  1) cmd="/quick-close $args";;        2) cmd="/capture meeting-closeout $args";;
+  3) cmd="/brief meeting-prep $args";;       4) cmd="/brief daily-brief";;
+  5) cmd="/capture process-inbox";;            6) cmd="/sync jira-reconcile";;
+  7) cmd="/discover discovery $args";;          8) cmd="/report okr-refresh";;
+  9) cmd="/report weekly-update";;           10) cmd="/discover research-plan $args";;
+  11) cmd="/build prd-package $args";;      12) cmd="/build prototype-build $args";;
+  13) cmd="/build prd-prototype-sync $args";; 14) cmd="/discover research-package $args";;
+  15) cmd="/build experiment-package $args";; 16) cmd="/build experiment-analyze $args";;
+  17) cmd="/build launch-package $args";;   18) cmd="/sync roadmap-update $args";;
+  19) cmd="/sync ripple-check $args";;     20) cmd="/discover competitive-scan $args";;
+  21) cmd="/report strategy-refresh";;       22) cmd="/discover learn-product-flow $args";;
+  23) cmd="/discover code-dive $args";;        24) cmd="/sync rotate-registers";;
+  25) cmd="/brief return-brief $args";;
+  26) cmd="/report workbench-health";;
+  27) cmd="/report monthly-review $args";;
+  28) cmd="/todo $args";;
   *) echo "Not a valid choice."; exit 1;;
 esac
 

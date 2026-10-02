@@ -1,6 +1,6 @@
 ---
 name: code-repo-explorer
-description: Use when exploring a cloned company repo for /code-dive or when /prototype-build needs to check real product patterns. Reads the repo in isolation; only findings return.
+description: Use when exploring a cloned company repo for /discover code-dive or when /build prototype-build needs to check real product patterns. Reads the repo in isolation; only findings return.
 tools: Read, Grep, Glob
 model: sonnet
 ---

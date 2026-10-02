@@ -1327,23 +1327,18 @@ const SIMS={
 
 help:{cmd:'/',
  script:[
-  {t:'dim',x:'(Typing / in Claude Code opens the command palette — every workflow, with a one-line description. /help works too.)'},
+  {t:'dim',x:'(Typing / in Claude Code opens the command palette — every command, with a one-line description. /help works too.)'},
   {t:'spacer'},
-  {t:'plain',x:'/quick-close        capture a decision in under a minute'},
-  {t:'plain',x:'/meeting-closeout   full meeting → decisions, commitments, follow-through'},
-  {t:'plain',x:'/meeting-prep       walk into a meeting already caught up'},
-  {t:'plain',x:'/jira-reconcile     board vs. reality, with a proposed fix list'},
-  {t:'plain',x:'/weekly-update      Friday update assembled from the week\u2019s state'},
-  {t:'plain',x:'/discovery          ask the evidence, add to it, see what\u2019s new, map opportunities'},
-  {t:'plain',x:'/okr-refresh        pull the official numbers, draft all destinations'},
-  {t:'plain',x:'/prd-package        problem + goal + audience → full PRD package'},
-  {t:'plain',x:'/prototype-build    contract → clickable prototype'},
-  {t:'plain',x:'/research-plan      who to learn from, how to reach them, what to ask'},
-  {t:'plain',x:'/experiment-package test design with a decision for every outcome'},
-  {t:'plain',x:'/roadmap-update     one change, every surface the roadmap lives on'},
-  {t:'plain',x:'/launch-package     drift check first, then every launch doc'},
-  {t:'plain',x:'  …and 11 more (24 commands + the prototype-build skill). Plain language works too —'},
-  {t:'plain',x:'  "close out this meeting" routes to the right one without remembering any name.'}]},
+  {t:'plain',x:'/quick-close  capture a decision in under a minute'},
+  {t:'plain',x:'/capture      meeting-closeout, process-inbox: turn a meeting or the inbox into decisions, commitments, risks'},
+  {t:'plain',x:'/brief        daily-brief, return-brief, meeting-prep: walk in already caught up'},
+  {t:'plain',x:'/sync         jira-reconcile, ripple-check, roadmap-update, rotate-registers: make every surface agree'},
+  {t:'plain',x:'/discover     discovery, research-plan, research-package, competitive-scan, learn-product-flow, code-dive'},
+  {t:'plain',x:'/build        prd-package, prototype-build, prd-prototype-sync, experiment-package, experiment-analyze, launch-package'},
+  {t:'plain',x:'/report       weekly-update, okr-refresh, strategy-refresh, workbench-health, monthly-review'},
+  {t:'plain',x:'/todo         your own to-do list: add, update, done, drop, list, propose, work'},
+  {t:'plain',x:'  Each of the six cluster commands takes a workflow name first: /capture meeting-closeout, /build prd-package.'},
+  {t:'plain',x:'  Plain language works too \u2014 "close out this meeting" routes to the right one without remembering any name.'}]},
 
 ctx:{cmd:t=>t||'set up my context: I own reporting & analytics; my updates go to VP Product and eng leads; keep my writing direct and brief',
  script:t=>{
@@ -1400,7 +1395,7 @@ paste:{cmd:t=>'[pasted] '+((t||'').slice(0,80)+((t||'').length>80?'…':'')),
 
 links:{cmd:t=>t||'log our PRD template link: https://lumenly.atlassian.net/wiki/spaces/PROD/pages/1123/prd-template',
  script:t=>{const url=((t||'').match(/https?:\/\/\S+/)||['https://lumenly.atlassian.net/wiki/spaces/PROD/pages/1123/prd-template'])[0];
-  const row='L001,PRD Template,template,'+url+',confluence,canonical PRD structure for the reporting team,2026-07-18,used by /prd-package';
+  const row='L001,PRD Template,template,'+url+',confluence,canonical PRD structure for the reporting team,2026-07-18,used by /build prd-package';
   const body=FILES['reference/links.csv']+'\n'+row;
   return [
    {t:'plain',x:'Added to reference/links.csv:'},
@@ -1410,7 +1405,7 @@ links:{cmd:t=>t||'log our PRD template link: https://lumenly.atlassian.net/wiki/
    {t:'spacer'},
    {t:'plain',x:'Any command needing the template now fetches this link live — no stale copy to maintain.'}]}},
 
-closeout:{cmd:'/meeting-closeout inbox/meetings/2026-07-14-roadmap-review.txt',
+closeout:{cmd:'/capture meeting-closeout inbox/meetings/2026-07-14-roadmap-review.txt',
  script:[
   {t:'dim',x:'Source: the Teams transcript at inbox/meetings/2026-07-14-roadmap-review.txt'},
   {t:'spacer'},
@@ -1419,9 +1414,9 @@ closeout:{cmd:'/meeting-closeout inbox/meetings/2026-07-14-roadmap-review.txt',
   {t:'flag',x:'• RISK-007 — mobile-team deprioritization: Priya said "not confirmed, just something I heard" — logged as watch, not fact',reg:['risk','RISK-007,mobile deprioritization,medium,watch,secondhand (Priya)']},
   {t:'plain',x:'• Initiative: Manager Scorecards — stage set to PRD',reg:['init','INIT-003,Manager Scorecards,prd,DEC-014;DEC-015']},
   {t:'file',path:'outputs/daily/2026-07-14-roadmap-meeting.md'},
-  {t:'flag',x:'Conflict: Jira LUM-423 still targets Q3 for per-location scoping — contradicts DEC-015. /jira-reconcile has the fix ready.'}]},
+  {t:'flag',x:'Conflict: Jira LUM-423 still targets Q3 for per-location scoping — contradicts DEC-015. /sync jira-reconcile has the fix ready.'}]},
 
-yourmeeting:{cmd:t=>'/meeting-closeout [your pasted notes]',
+yourmeeting:{cmd:t=>'/capture meeting-closeout [your pasted notes]',
  script:t=>{const notes=t&&t.trim()?t:'Synced with Priya. Agreed to move the analytics review to monthly.\nPriya will share the instrumentation checklist by Tuesday.\nHeard the data team might lose a contractor next quarter.';
   const parsed=parseNotes(notes);const out=[{t:'dim',x:'Source: the notes you pasted'},{t:'spacer'}];
   parsed.forEach(p=>{seq++;
@@ -1431,12 +1426,12 @@ yourmeeting:{cmd:t=>'/meeting-closeout [your pasted notes]',
     else out.push({t:'plain',x:'• noted (no action): '+p.txt})});
   out.push({t:'file',path:'registers/decisions.csv',body:undefined});
   out.push({t:'spacer'});
-  out.push({t:'plain',x:'The same parser appends these entries to the registers used by the seeded meeting. They will appear in the next /weekly-update run.'});
+  out.push({t:'plain',x:'The same parser appends these entries to the registers used by the seeded meeting. They will appear in the next /report weekly-update run.'});
   const firstDec=parsed.find(p=>p.k==='dec'),firstCom=parsed.find(p=>p.k==='com');
   state.userMeetingLine=(firstDec?firstDec.txt:firstCom?firstCom.txt:notes.split('\n')[0]).slice(0,90);
   return out}},
 
-jira:{cmd:'/jira-reconcile',
+jira:{cmd:'/sync jira-reconcile',
  script:[
   {t:'dim',x:'Source: inbox/exports/jira-board-export.csv (your export — a live board view once the browser bridge is set up)'},
   {t:'spacer'},
@@ -1455,7 +1450,7 @@ jira:{cmd:'/jira-reconcile',
   ['skip for now',[
    {t:'dim',x:'Skipped. Both flags remain visible the next time you reconcile the workspace.'}]]]},
 
-weekly:{cmd:'/weekly-update',
+weekly:{cmd:'/report weekly-update',
  script:[
   {t:'dim',x:'Checking current state before drafting: decisions ✓ commitments ✓ risks ✓ jira output ✓ discovery ✓'+(state.userMeetingLine?' — including the items from the notes you pasted earlier':'')},
   {t:'flag',x:'Missing: this week\u2019s OKR numbers. Draft with that section marked pending, or add them first?'}],
@@ -1487,7 +1482,7 @@ METRICS  [pending — OKR pull Monday]
 ASK  LUM-437 ownership.`},
      {t:'plain',x:'Format preference saved — future updates start from this shape.'}]],
     ['it\u2019s good as is',[{t:'log',x:'Kept. Paste-ready for email or Confluence.'}]]]}],
-  ['add OKRs first',[{t:'dim',x:'Run /okr-refresh (next lesson), then re-run me — everything else is staged.'}]]]},
+  ['add OKRs first',[{t:'dim',x:'Run /report okr-refresh (next lesson), then re-run me — everything else is staged.'}]]]},
 
 discovery:{cmd:t=>t&&t.trim()?t:'what do we know about export reliability problems?',
  script:t=>{
@@ -1537,7 +1532,7 @@ discovery:{cmd:t=>t&&t.trim()?t:'what do we know about export reliability proble
   ];
  }},
 
-okr:{cmd:'/okr-refresh',
+okr:{cmd:'/report okr-refresh',
  script:[
   {t:'flag',x:'First run — where does "weekly active admins" live? Paste the dashboard link, or the current value directly.'}],
  choice:[['paste the dashboard link',[
@@ -1574,7 +1569,7 @@ LUM-437 ownership.`}]],
   ['type the value directly',[
    {t:'log',x:'Logged 41.2%, tagged manually-provided. Paste the link anytime to make future runs automatic.',reg:['okr','2026-07-18,weekly_active_admins,41.2%,manual,typed']}]]]},
 
-prd:{cmd:'/prd-package manager scorecards — problem: owners can\u2019t see per-manager performance without hand-built exports; goal: lift weekly active admins toward 45%; audience: enterprise admins first',
+prd:{cmd:'/build prd-package manager scorecards — problem: owners can\u2019t see per-manager performance without hand-built exports; goal: lift weekly active admins toward 45%; audience: enterprise admins first',
  script:[
   {t:'dim',x:'Required input: problem, goal, and audience. Workspace context: EV-211 + 2 support cases, DEC-014/015, the Jul 14 transcript, and baseline 41.2%. Export-failure evidence is excluded because it describes a different problem. Template: reference/templates/prd-template.md.'},
   {t:'spacer'},
@@ -1601,7 +1596,7 @@ do their most important review outside the product.`)},
    {t:'dim',x:'Paste a link or drop the file. The current draft will be restructured against the new template without discarding its content.'}]],
   ['looks good',[{t:'log',x:'Marked review-ready. Review sequence: VP one-pager before the meeting.'}]]]},
 
-proto:{cmd:'/prototype-build manager scorecards',
+proto:{cmd:'/build prototype-build manager scorecards',
  script:[
   {t:'dim',x:'Type: web (React), selected for the feature\u2019s interaction states. Scaffolding a git-initialized repo with a README and run command (sonnet — mechanical, well-specified work).'},
   {t:'file',path:'prototypes/manager-scorecards/index.html',body:'(rendered prototype)'},
@@ -1623,7 +1618,7 @@ proto:{cmd:'/prototype-build manager scorecards',
   ['mark exploratory',[{t:'fn',x:()=>{state.protoChoice='exploratory'}},{t:'log',x:'Labeled exploratory in the contract — testable in sessions, committed nowhere.'}]],
   ['remove it',[{t:'fn',x:()=>{state.protoChoice='remove'}},{t:'log',x:'Removed from the prototype; contract unchanged.'}]]]},
 
-research:{cmd:t=>'/research-plan silent export failures'+(t&&t.trim()?' — focus: '+t.slice(0,50):''),
+research:{cmd:t=>'/discover research-plan silent export failures'+(t&&t.trim()?' — focus: '+t.slice(0,50):''),
  script:t=>[
   {t:'dim',x:'This workflow never names specific people to contact — it has no customer directory and will not invent one. It builds the research plan from EV-211 and the two support cases; whoever owns your customer records applies the criteria.'},
   {t:'spacer'},
@@ -1644,7 +1639,7 @@ research:{cmd:t=>'/research-plan silent export failures'+(t&&t.trim()?' — focu
   {t:'file',path:'outputs/research/2026-07-18-plan.md',body:'# Research plan — silent export failures\n\n## Screening criteria\nQualify: admins at multi-location accounts (5+ loc) with a scheduled export\nin the last 30 days.\nExclude: contacted <90 days ago; active escalation; internal test accounts.\nDiversity guard: >=2 mid-market, >=1 non-reporter of the problem.\n\n## Outreach\nCSM first, PM follows to schedule. Account owner notified first.\n[per-segment drafts included]\n\n## Research design\nDecision: notification center vs. simple alert vs. nothing.\nGuide: past-behavior questions on discovery, recovery, and workaround.\nPre-registered rule: >=4/6 recover with an alert alone -> ship the alert,\nskip the notification build.'},
   {t:'plain',x:'Deliverable: participant criteria (for whoever runs the lookup), outreach drafts, interview questions, and pre-registered decision rules. No names — a name this system produced would be a guess wearing a fact\u2019s clothes.'}]},
 
-experiment:{cmd:'/experiment-package failure notifications for scheduled exports',
+experiment:{cmd:'/build experiment-package failure notifications for scheduled exports',
  script:[
   {t:'dim',x:'Grounding: EV-211, the job-log baseline (11% repeat-export after failure), the Export Reliability scope.'},
   {t:'plain',x:'Uncertainty triage first: this decides whether to build a notification center — a causal question with real build cost, so it earns the full adversarial panel. A usability question would have been routed to research instead.'},
@@ -1652,7 +1647,7 @@ experiment:{cmd:'/experiment-package failure notifications for scheduled exports
   {t:'file',path:'outputs/experiments/export-notify/design.md'},
   {t:'flag',x:'Review the "IF null" rule: a null result must still produce a decision. Pre-review condition: support needs the reply template before launch. Priya\u2019s analytics review remains required before tracker submission.'}]},
 
-roadmap:{cmd:'/roadmap-update scorecards ph2 slips one sprint (permissions est. now 3 wks, auth freeze); add Export Reliability to Next (case #8841, retry + failure alerts)',
+roadmap:{cmd:'/sync roadmap-update scorecards ph2 slips one sprint (permissions est. now 3 wks, auth freeze); add Export Reliability to Next (case #8841, retry + failure alerts)',
  script:()=>[
   {t:'dim',x:'Two separate features in one input — handled as two change sets so nothing blurs:'},
   {t:'spacer'},
@@ -1683,7 +1678,7 @@ Report scheduling v2,Later,2027-H1,you`},
 
 codedive:{cmd:t=>{
   const q=t&&t.trim();
-  return q?(q.startsWith('/code-dive')?q:'/code-dive '+q):'/code-dive scorecards permissions';
+  return q?(q.startsWith('/discover code-dive')?q:'/discover code-dive '+q):'/discover code-dive scorecards permissions';
 },
  script:[
   {t:'dim',x:'Access path: targeted read of the repos you have GitHub access to (read-only). Runs in Standard mode — one bounded pass over the relevant files.'},
@@ -1695,7 +1690,7 @@ codedive:{cmd:t=>{
   {t:'file',path:'outputs/product-knowledge/scorecards-permissions.md',body:'# Code dive — scorecards permissions (product-language)\nAccess: read-only GitHub, repo lumenly-web, 4 files touched.\n\nCONFIRMED\n- Scorecard visibility = account admin flag (authz/scorecard_policy.rb:41).\n- Export button emits scorecard_exported (matches contract instrumentation).\n\nINFERRED (verify with Dana)\n- Per-location scoping hook present but stubbed (scoping/location_scope.rb) —\n  looks like scaffolding for phase 2, unconfirmed.\n\nNEEDS ENGINEERING\n- Is export retry (LUM-437) on the same job runner as scorecard generation?\n  Code paths diverge; ownership unclear.\n\nEvery claim above is tagged by confidence — inference is never presented as fact.'},
   {t:'plain',x:'Findings are tagged by confidence and saved to product-knowledge for the next feature — this compounds instead of being re-learned each time.'}]},
 
-competitive:{cmd:'/competitive-scan reporting',
+competitive:{cmd:'/discover competitive-scan reporting',
  script:[
   {t:'dim',x:'Runs in Fast mode. Access path: captures of competitor pages on the approved watchlist (reference/competitive-watchlist.md), diffed against last month\u2019s saved capture. Analysis is limited to that watchlist.'},
   {t:'spacer'},
@@ -1705,7 +1700,7 @@ competitive:{cmd:'/competitive-scan reporting',
   {t:'plain',x:'Two marketing-only diffs (pricing-page wording and a new logo) were recorded without escalation.'},
   {t:'file',path:'outputs/monthly/competitive-note.md'}]},
 
-strategy:{cmd:'/strategy-refresh reporting',
+strategy:{cmd:'/report strategy-refresh reporting',
  script:[
   {t:'flag',x:'Deep mode — this fans out across evidence, metrics, experiments, and the competitive log. Estimated usage: ~moderate. Proceed, or run a Standard summary instead?'}],
  choice:[['proceed with the full refresh',[
@@ -1719,7 +1714,7 @@ strategy:{cmd:'/strategy-refresh reporting',
   ['Standard summary',[
    {t:'dim',x:'Compact path: one-paragraph read — Scorecards thesis strengthening, export-reliability edge lost to MetricHive, one fundable new opportunity. The full model remains available through Deep mode.'}]]]},
 
-launch:{cmd:'/launch-package manager scorecards',
+launch:{cmd:'/build launch-package manager scorecards',
  script:[
   {t:'dim',x:'Refreshing scope first — a drift check against stale inputs is worthless. Comparing: PRD · Jira export · contract · draft support doc.'},
   {t:'flag',x:'DISCREPANCY: the exec one-pager implies all-customer GA · Jira LUM-440 says enterprise-only · draft support doc is silent on the limitation. Resolve before any drafting:'}],
@@ -1750,28 +1745,31 @@ ask:{cmd:'what did we decide about scorecards permissions?',
 
 schedule:{cmd:'set up scheduling for my workbench',
  script:[
-  {t:'plain',x:'Scheduling lives in Claude Code Desktop: Routines \u2192 New routine \u2192 Local, this folder, pick a time. No cron, no admin, same on macOS and Windows; missed runs catch up when the laptop wakes. Four ways things can run \u2014 and the discipline that keeps them from becoming noise:'},
-  {t:'plain',x:'\u2022 EVENT-BASED: a new transcript/export lands \u2192 it OFFERS the matching workflow (never runs it unasked).'},
-  {t:'plain',x:'\u2022 CADENCE-BASED: Thursday PM \u2192 generate a weekly-update draft for Friday review.'},
-  {t:'plain',x:'\u2022 CONDITION-BASED: alert only when something crosses a line \u2014 a stale ticket, a PRD/prototype conflict, a metric that can\u2019t be retrieved.'},
+  {t:'plain',x:'Two lanes, one set of guardrails. LANE 1: your computer\u2019s scheduler (cron or launchd on a Mac, Task Scheduler on Windows) calls scripts/run_scheduled.py, which runs claude -p in this folder even when no session is open. LANE 2: /loop in a session you left open, reading .claude/loop.md \u2014 it can ask you a question because you are there, but it stops when the terminal closes.'},
+  {t:'plain',x:'Four ways things can run \u2014 and the discipline that keeps them from becoming noise:'},
+  {t:'plain',x:'\u2022 EVENT-BASED: files do not trigger anything by themselves, so an hourly check looks at inbox/ and runs only if something is new, then processes it and QUEUES to-do proposals. Nothing is added to your list until you review the queue.'},
+  {t:'plain',x:'\u2022 CADENCE-BASED: Thursday PM \u2192 generate a weekly-update draft for Friday review. Weekday mornings \u2192 the daily brief, and a sweep that drafts help for at most 3 to-dos that are due.'},
+  {t:'plain',x:'\u2022 CONDITION-BASED: surface only what crosses a line \u2014 a stale ticket, a PRD/prototype conflict, a metric that can\u2019t be retrieved, a run that failed.'},
   {t:'flag',x:'\u2022 SUPPRESSION: when nothing material changed, it stays silent. A brief that\u2019s quiet when quiet is true stays trustworthy.'},
   {t:'spacer'},
-  {t:'flag',x:'Scheduling gate: complete 2\u20133 reliable manual runs first. Scheduled runs use the settings.json allow-list only \u2014 no browser interaction tools, no sending or publishing.'}]},
+  {t:'plain',x:'Guardrails on every unattended run: an empty file named state/PAUSE stops everything; at most 5 scheduled runs a day; no permission prompts, so anything that would need an answer is denied instead of hanging; Fast or Standard mode only; nothing is ever sent, posted, or changed outside the workbench.'},
+  {t:'plain',x:'When a run needs you, it finishes what it can, labels the gap, and logs BLOCKED. Tomorrow\u2019s brief lists it as a decision for you, along with overnight drafts and any failed or skipped runs.'},
+  {t:'flag',x:'Scheduling gate: complete 2\u20133 reliable manual runs first, then schedule the daily brief and inbox check before anything else. Scheduled runs use the settings.json allow-list only \u2014 no browser interaction tools, no sending or publishing.'}]},
 
 trouble:{cmd:t=>({
-   session:'/weekly-update  (browser session expired mid-run)',
-   filters:'/jira-reconcile  (board filter can\u2019t be verified)',
-   incomplete:'/discovery what do we know about export failures?  (search came back partial)',
-   format:'/okr-refresh  (the export format changed)',
-   disagree:'/launch-package  (two sources disagree)',
-   dupe:'/meeting-closeout  (register may already have this decision)',
-   usage:'/prd-package  (usage limit hit mid-review)',
-   partial:'/roadmap-update  (Jira applied, spreadsheet did not)',
-   oob:'/prd-package  (someone edited the PRD outside the workbench)',
+   session:'/report weekly-update  (browser session expired mid-run)',
+   filters:'/sync jira-reconcile  (board filter can\u2019t be verified)',
+   incomplete:'/discover discovery what do we know about export failures?  (search came back partial)',
+   format:'/report okr-refresh  (the export format changed)',
+   disagree:'/build launch-package  (two sources disagree)',
+   dupe:'/capture meeting-closeout  (register may already have this decision)',
+   usage:'/build prd-package  (usage limit hit mid-review)',
+   partial:'/sync roadmap-update  (Jira applied, spreadsheet did not)',
+   oob:'/build prd-package  (someone edited the PRD outside the workbench)',
    drift:'compare the prototype against its Feature Contract',
-   unsourced:'/weekly-update  (a drafted claim has no source)',
+   unsourced:'/report weekly-update  (a drafted claim has no source)',
    sched:'inspect a scheduled run that fired with missing inputs'
- }[t]||'/weekly-update  (browser session expired mid-run)'),
+ }[t]||'/report weekly-update  (browser session expired mid-run)'),
  script:t=>({
    session:[{t:'flag',x:'STOP: browser session expired; the requested data is unavailable.'},{t:'plain',x:'Response: identify the failed read, request Chrome re-authentication or a pasted value, and preserve the remaining draft with a labeled data gap.'}],
    filters:[{t:'flag',x:'STOP: the saved board view returned no verifiable filter.'},{t:'plain',x:'Response: request the correct board view, save the mapping, and defer reconciliation until the source is verified.'}],
@@ -1874,7 +1872,7 @@ V.home=`<section class="home-hero">
 </div></div></section>`;
 
 V.l0=`<div class="eyebrow">Lesson 0</div><h1>Get the actual workbench running on your machine</h1>${illo('l0')}
-<div class="lesson-orientation"><p>Launch the existing system on macOS or Windows, choose the working surface that fits you, and discover installed commands without memorizing them. Install steps here are current as of September 2026 — check <code>code.claude.com/docs</code> if a command has changed.</p></div>
+<div class="lesson-orientation"><p>Launch the existing system on macOS or Windows, choose the working surface that fits you, and discover the eight commands without memorizing them. Install steps here are current as of September 2026 — check <code>code.claude.com/docs</code> if a command has changed.</p></div>
 
 <div class="step"><div class="shead"><span class="snum">STEP 1</span><span class="stitle">Check for Node.js — needed for the browser bridge and prototypes</span></div>
 <p><span data-os="mac">Open <b>Terminal</b> (⌘-space, type "terminal", Enter).</span><span data-os="win">Open <b>PowerShell</b> (Start, type "powershell", Enter).</span> Type this and press Enter:</p>
@@ -1893,7 +1891,7 @@ V.l0=`<div class="eyebrow">Lesson 0</div><h1>Get the actual workbench running on
 <h2>Find every command from the palette</h2>
 <p>Type <code>/</code> in the chat and the full command palette appears, each with a description. Try it:</p>
 ${term('help','haiku','<b>/</b>')}
-<p class="note"><b>The command palette verifies which workflows exist.</b> Plain-language requests route to the same workflows. This course shows slash commands for orientation; routine use can begin with a description of the task.</p>`;
+<p class="note"><b>Eight commands, 26 workflows.</b> Six commands (<code>/capture</code>, <code>/brief</code>, <code>/sync</code>, <code>/discover</code>, <code>/build</code>, <code>/report</code>) each take a workflow name as the first word; <code>/quick-close</code> and <code>/todo</code> stand alone. Plain-language requests route to the same workflows. This course shows slash commands for orientation; routine use can begin with a description of the task.</p>`;
 
 V.l1=`<div class="eyebrow">Lesson 1</div><h1>Teach it who you are — in one message</h1>${illo('l1')}
 
@@ -1924,7 +1922,7 @@ V.l3=`<div class="eyebrow">Lesson 3</div><h1>Where the information comes from</h
 ${term('paste','haiku','From #cs-escalations: Harbor Dental asked if scorecard exports can go to a shared drive instead of email. Second account asking this month.','area')}
 <p class="note">Pasted text requires no special integration. When Cursor is closed, a one-click OS shortcut (a <span data-os="mac">macOS Quick Action in the right-click menu</span><span data-os="win">right-click "Send to" entry</span>) moves the current clipboard into <code>inbox/</code>.</p></div>
 <div class="step"><div class="shead"><span class="snum">PATH 4</span><span class="stitle">Browser, three jobs, in order — capture first, automation last (none needs admin approval)</span></div>
-<p><b>A · Capture what you're looking at (most days):</b> the <b>Workbench Clipper</b> in <code>tools/workbench-clipper/</code>. <span data-os="mac">Chrome → <code>chrome://extensions</code></span><span data-os="win">Chrome or Edge → <code>chrome://extensions</code></span> → Developer mode → Load unpacked → that folder (2 minutes). Right-click any page or selection → <i>Send to PM Workbench</i> → pick a category → it lands in <code>Downloads/pm-workbench-inbox/</code> with URL, title, and timestamp in the frontmatter; <code>/process-inbox</code> pulls it in. You clicked, so there is no automation to govern.</p>
+<p><b>A · Capture what you're looking at (most days):</b> the <b>Workbench Clipper</b> in <code>tools/workbench-clipper/</code>. <span data-os="mac">Chrome → <code>chrome://extensions</code></span><span data-os="win">Chrome or Edge → <code>chrome://extensions</code></span> → Developer mode → Load unpacked → that folder (2 minutes). Right-click any page or selection → <i>Send to PM Workbench</i> → pick a category → it lands in <code>Downloads/pm-workbench-inbox/</code> with URL, title, and timestamp in the frontmatter; <code>/capture process-inbox</code> pulls it in. You clicked, so there is no automation to govern.</p>
 <p><b>B · Let Claude read pages for you (discovery scans, OKR pulls, Jira views):</b> install Anthropic's <b>Claude in Chrome</b> extension, sign in, then type <code>/chrome</code> in Claude Code (or launch <code>claude --chrome</code>). Test: "in read-only mode, tell me what's on my current tab; don't click or type." Beta, Chrome/Edge only, needs a claude.ai login; an org can disable the extension — then use C.</p>
 <p><b>C · Fallback only — Playwright MCP over a debug Chrome profile.</b> Same reads, but you own the plumbing (a profile that must be open, an SSO that expires, a deny list you maintain). The kit's <code>settings.json</code> denies every Playwright interaction tool and allows only navigate/snapshot/tabs/screenshot; in a scheduled run an unlisted tool is refused, interactively it prompts. Setup is in <code>SETUP.md</code> Part 1.</p>
 <p class="note">No browser at all is also fine: every command runs on exports and pastes, labeled as such.</p></div>
@@ -1938,15 +1936,15 @@ V.l4=`<div class="eyebrow">Lesson 4</div><h1>One meeting, every follow-through</
 <div class="lesson-orientation"><p>Trace decisions to the meeting source and coordinate every downstream update without relying on memory. The transcript remains the source; state compounds across workflows.</p></div>
 <h3>Close out the seeded roadmap review</h3>
 <p>You organized the meeting, so a transcript exists (Teams, Zoom, Meet — whichever your company records). Open <code>inbox/meetings/2026-07-14-roadmap-review.txt</code> first, then trace every extraction to a source line. An AI meeting summary or typed notes follow the same workflow.</p>
-${term('closeout','sonnet','<b>/meeting-closeout</b> inbox/meetings/2026-07-14-roadmap-review.txt')}
+${term('closeout','sonnet','<b>/capture meeting-closeout</b> inbox/meetings/2026-07-14-roadmap-review.txt')}
 <h3>Close out notes from your own meeting</h3>
 <p>The seeded transcript proves nothing if it only works on seeded files. Paste notes from a real meeting of yours (or edit the sample) — same parsing, cumulative rows:</p>
 ${term('yourmeeting','sonnet','Synced with Priya. Agreed to move the analytics review to monthly.\nPriya will share the instrumentation checklist by Tuesday.\nHeard the data team might lose a contractor next quarter.','area')}
 <h3>Reconcile the board with the meeting decision</h3>
-${term('jira','sonnet','<b>/jira-reconcile</b>')}
+${term('jira','sonnet','<b>/sync jira-reconcile</b>')}
 <h3>Draft the weekly update</h3>
 <p>Note what happens after the draft: it checks your <i>previous</i> commitments against this draft, and you can ask for format changes — which it remembers.</p>
-${term('weekly','sonnet','<b>/weekly-update</b>')}
+${term('weekly','sonnet','<b>/report weekly-update</b>')}
 <div class="why"><b>Open the update file.</b> Every line traces to a register row or source file in the workspace, including the rows created from your pasted notes.</div>`;
 
 V.l5=`<div class="eyebrow">Lesson 5</div><h1>Interrogate evidence, then refresh the official number</h1>${illo('l5')}
@@ -1967,7 +1965,7 @@ ${term('discovery','sonnet','what do we know about export reliability problems?'
 <p>This mock dashboard contains the official value. The workflow removes the repeated work of opening several dashboards, transcribing values, and rewriting the same update. On the first run, it records the source and the approved retrieval method: browser bridge or pasted data.</p>
 <div class="dash"><div class="dtitle">Lumenly Analytics · Weekly Active Admins</div><div class="dval">41.2%</div><div class="dmeta">target 45% · +1.8pp vs last week · data through Jul 15</div>
 <svg width="260" height="46" viewBox="0 0 260 46"><polyline points="0,38 30,36 60,37 90,32 120,33 150,28 180,26 210,22 240,18 260,16" fill="none" stroke="#7bd8a8" stroke-width="2.5"/><line x1="0" y1="10" x2="260" y2="10" stroke="#5a6ba8" stroke-dasharray="4 4"/><text x="2" y="8" fill="#9fb0e0" font-size="9">target 45%</text></svg></div>
-${term('okr','sonnet','<b>/okr-refresh</b>')}`;
+${term('okr','sonnet','<b>/report okr-refresh</b>')}`;
 
 V.l7=`<div class="eyebrow">Lesson 7</div><h1>Turn accumulated evidence into a PRD and working prototype</h1>${illo('l7')}
 
@@ -1976,14 +1974,14 @@ V.l7=`<div class="eyebrow">Lesson 7</div><h1>Turn accumulated evidence into a PR
 <p>You bring the customer problem, intended outcome, first audience, and real scope constraints — a bare feature name gets refused. It brings everything the whole workspace has accumulated (and says what it set aside, so context is auditable). Runs on Opus automatically — the deep-reasoning model, saved for work like this.</p>
 <div class="lesson-principles"><article><b>What the system does</b><p>Retrieves relevant evidence, preserves the source trace, identifies exclusions, and compiles coordinated artifacts.</p></article><article><b>Your responsibility before drafting</b><p>Confirm the evidence is relevant. Notice gaps or overconfident claims. Challenge what was included or excluded.</p></article></div>
 <div class="hinge"><div class="hbox src">Evidence · strategy · current behavior</div><div class="harrow">→</div><div class="hbox contract">Feature Contract<div class="hsub">the shared spec both sides honor</div></div><div class="hforks"><span>↙</span><span>↘</span></div><div class="hbox pp">PRD ⇄ Prototype<div class="hsub">divergence is a choice, never a silent overwrite</div></div></div>
-${term('prd','opus','<b>/prd-package</b> manager scorecards — problem: owners can\u2019t see per-manager performance without hand-built exports; goal: lift weekly active admins toward 45%; audience: enterprise admins first')}
+${term('prd','opus','<b>/build prd-package</b> manager scorecards — problem: owners can\u2019t see per-manager performance without hand-built exports; goal: lift weekly active admins toward 45%; audience: enterprise admins first')}
 <p><b>Open all three files</b> — then use the refine choices: the problem-section rewrite produces a real v2, and the edit style is remembered.</p>
 <h3>The prototype — open it, click it</h3>
 <p>Built from the Feature Contract: every state the contract names becomes a screen. It can be static HTML, a real React app, or an Expo mobile app — the type is chosen up front because each runs (and gets QA'd) differently; anything beyond a single throwaway screen gets scaffolded as a real git-initialized repo, ready to import to GitHub, with a home for your company's design components or style guide if you have them.</p>
 
 <p>In real life you open <code>index.html</code> directly, or run the dev server the README names, or open the Expo web link — or share any of those in a research session. Here, the OPEN PROTOTYPE card renders the real thing:</p>
 <div class="lesson-principles"><article><b>One shared definition</b><p>The Feature Contract defines scope, permissions, states, edge cases, and instrumentation once. The PRD and prototype must honor those same decisions.</p></article><article><b>Your review responsibility</b><p>Click every declared state, read the QA report, and resolve any behavior absent from the contract.</p></article></div>
-${term('proto','sonnet','<b>/prototype-build</b> manager scorecards')}
+${term('proto','sonnet','<b>/build prototype-build</b> manager scorecards')}
 <h3>What to repeat on your own work</h3>
 <div class="register-key"><div><b>Ground it</b>Assemble current evidence, decisions, metrics, and templates before drafting.</div><div><b>Direct it</b>Supply the problem, goal, audience, and real constraints the system cannot infer.</div><div><b>Interrogate it</b>Open every output, test every state, inspect QA, and resolve divergence explicitly.</div></div>
 <div class="why"><b>The command is the smallest part.</b> Confidence comes from knowing the sequence and the boundaries: ground → direct → inspect → decide.</div>`;
@@ -1997,7 +1995,7 @@ V.l8=`<div class="eyebrow">Lesson 8</div><h1>Run a research and experiment loop 
 ${term('research','sonnet','recovery workflow after a failed export','line')}
 <div class="why"><b>Participant criteria:</b> the PM defines <i>who</i> is worth learning from, <i>how</i> to reach them without leading the witness, and <i>which</i> past-behavior questions test the assumption. Whoever owns your customer records applies those criteria — the workbench hands over criteria, never names.</div>
 <h3>Design the test before anyone builds anything</h3>
-${term('experiment','opus','<b>/experiment-package</b> failure notifications for scheduled exports')}
+${term('experiment','opus','<b>/build experiment-package</b> failure notifications for scheduled exports')}
 <div class="why"><b>The critical line is "IF null →".</b> Every experiment must define the decision produced by a null result. The design gate blocks tests that leave the original decision unchanged.</div>`;
 
 V.l9=`<div class="eyebrow">Lesson 9</div><h1>Keep the roadmap coherent across every surface</h1>${illo('l9')}
@@ -2011,14 +2009,14 @@ V.l9=`<div class="eyebrow">Lesson 9</div><h1>Keep the roadmap coherent across ev
 <div class="bcol"><h5>Later</h5><div class="bcard" id="bc3">Report scheduling v2<div class="bmeta">2027-H1</div></div></div>
 </div>
 <p>One input, two features — notice it splits them into separate change sets so context never blurs between initiatives, then proposes per-surface changes for each:</p>
-${term('roadmap','sonnet','<b>/roadmap-update</b> scorecards ph2 slips one sprint (permissions est. now 3 wks, auth freeze); add Export Reliability to Next (case #8841, retry + failure alerts)')}
+${term('roadmap','sonnet','<b>/sync roadmap-update</b> scorecards ph2 slips one sprint (permissions est. now 3 wks, auth freeze); add Export Reliability to Next (case #8841, retry + failure alerts)')}
 <div class="why"><b>The change manifest records completion.</b> The update is complete when every intended surface is either applied or explicitly pending. Drafts remain labeled as drafts. The reason for the slip stays attached to the decision for later retrieval.</div>`;
 
 V.l6=`<div class="eyebrow">Lesson 6</div><h1>Understand a feature at code level with explicit confidence boundaries</h1>${illo('l6')}
 
 <div class="lesson-orientation"><p>Use code as one source of truth, separate confirmed implementation from inference, and turn what remains unknown into focused engineering questions instead of guesses.</p></div>
 <p>You have read access to the repos. This reads the relevant code and translates it into product language, with every claim tagged by confidence — the honesty that makes it safe to rely on. Editable — ask about any part of the feature:</p>
-${term('codedive','sonnet','/code-dive scorecards permissions','line')}
+${term('codedive','sonnet','/discover code-dive scorecards permissions','line')}
 <div class="why"><b>Confidence tags:</b> code confirms implementation. Deployment, intent, customer use, and strategic approval require additional evidence. The workflow separates confirmed behavior, inference, and focused engineering questions. Findings accumulate in the product-knowledge map for future work.</div>`;
 
 V.l10=`<div class="eyebrow">Lesson 10</div><h1>Close delivery into strategy</h1>${illo('l10')}
@@ -2027,13 +2025,13 @@ V.l10=`<div class="eyebrow">Lesson 10</div><h1>Close delivery into strategy</h1>
 <div class="lesson-principles"><article><b>Reconcile before drafting</b><p>Current artifacts must agree—or expose where they do not—before downstream launch material is produced.</p></article><article><b>Strategy is a change report</b><p>Show what strengthened, weakened, or contradicted existing assumptions instead of starting with a blank-page essay.</p></article></div>
 <h3>Catch launch drift before you write a single doc</h3>
 <p>The most expensive launch bug is documents generated from sources that already disagree. This reconciles first, drafts second:</p>
-${term('launch','sonnet','<b>/launch-package</b> manager scorecards')}
+${term('launch','sonnet','<b>/build launch-package</b> manager scorecards')}
 <h3>Compare competitors through material changes</h3>
 <p>It diffs this month's captures against last month's and classifies real product changes vs. marketing rewording — then flags anything that undercuts something you're building:</p>
-${term('competitive','sonnet','<b>/competitive-scan</b> reporting')}
+${term('competitive','sonnet','<b>/discover competitive-scan</b> reporting')}
 <h3>Refresh strategy from accumulated evidence — as a change report</h3>
 <p>The change report shows which assumptions strengthened, weakened, or gained contradictory evidence. Review the <b>Deep-mode usage estimate</b> before the full run; Standard mode remains available for a narrower summary:</p>
-${term('strategy','opus','<b>/strategy-refresh</b> reporting')}
+${term('strategy','opus','<b>/report strategy-refresh</b> reporting')}
 <h3>Recover after the workspace goes stale</h3>
 ${term('recover','sonnet','I haven\u2019t touched the workbench in ten days — what went stale?')}
 <h3>Query accumulated state directly</h3>
@@ -2062,7 +2060,7 @@ V.l11=`<div class="eyebrow">Lesson 11</div><h1>Handle failure by stopping, namin
 </div>
 ${term('trouble','sonnet','session','line')}
 <h3>Scheduling — automate only earned workflows</h3>
-<p>Once a workflow is boringly reliable by hand, you can schedule it as a local routine in the Desktop app (a form, a Run-now button, a run history). Four modes, and the discipline that keeps scheduling from becoming a second inbox:</p>
+<p>Once a workflow is boringly reliable by hand, you can run it unattended two ways: your computer’s own scheduler calling a small wrapper script (it works with no session open, and checks a pause file, a daily cap and a lock first), or <code>/loop</code> in a session you leave open. Four modes, and the discipline that keeps scheduling from becoming a second inbox:</p>
 ${term('schedule','haiku','set up scheduling for my workbench')}
 <div class="why"><b>Trust model:</b> uncertainty remains labeled, failures stop visibly, and fallbacks preserve verified work. Unsupported confidence is never presented as a completed result.</div>`;
 
@@ -2075,13 +2073,13 @@ V.fin=`<div class="eyebrow">Finale</div><h1>Operate the workbench independently<
 <h2>Readiness check</h2>
 <p class="note">This self-check measures whether you can select the right workflow, inspect the relevant evidence, evaluate the output, and recover safely from incomplete work.</p>
 <div class="quiz" data-q="1"><p class="q">1 · A meeting produced three decisions and one action item. Two minutes remain before the next call. Which workflow fits?</p><div class="qopts">
-<button data-r="1">/meeting-closeout — provide the notes or transcript to extract decisions, commitments, risks, and downstream updates</button>
+<button data-r="1">/capture meeting-closeout — provide the notes or transcript to extract decisions, commitments, risks, and downstream updates</button>
 <button data-r="0">Open Jira and update tickets manually</button>
-<button data-r="0">/strategy-refresh to capture the big picture</button></div></div>
+<button data-r="0">/report strategy-refresh to capture the big picture</button></div></div>
 <div class="quiz" data-q="2"><p class="q">2 · You need to understand a feature before writing its PRD. Which command fits, and which evidence boundary matters?</p><div class="qopts">
-<button data-r="1">/code-dive — then inspect the confidence tags: confirmed, inferred, and needs engineering</button>
-<button data-r="0">/prd-package — assume the implementation without inspecting the code</button>
-<button data-r="0">/discovery — code questions are discovery questions</button></div></div>
+<button data-r="1">/discover code-dive — then inspect the confidence tags: confirmed, inferred, and needs engineering</button>
+<button data-r="0">/build prd-package — assume the implementation without inspecting the code</button>
+<button data-r="0">/discover discovery — code questions are discovery questions</button></div></div>
 <div class="quiz" data-q="3"><p class="q">3 · A workflow reports "Done — updated the roadmap." The change manifest shows Jira applied ✓ and the spreadsheet pending. What is the correct status?</p><div class="qopts">
 <button data-r="1">The transaction remains incomplete until the spreadsheet update is applied or explicitly left pending</button>
 <button data-r="0">Complete — Jira is the source of truth and the remaining update is cosmetic</button>
@@ -2099,7 +2097,7 @@ V.fin=`<div class="eyebrow">Finale</div><h1>Operate the workbench independently<
 <button onclick="rateReady(1)">Reference needed</button>
 <button onclick="rateReady(2)">Ready for daily workflows</button>
 <button onclick="rateReady(3)">Ready for the full system</button></div></div>
-<div class="why" id="homework" style="display:none"><b>Week-one target:</b> build fluency with the daily loop: <code>/quick-close</code>, <code>/meeting-closeout</code>, and <code>/weekly-update</code>. Use the remaining workflows when their situations arise. <b>Next action:</b> run <code>/meeting-closeout</code> after your next real meeting. The same operating pattern—capture, reconcile, produce—extends across the course.</div>`;
+<div class="why" id="homework" style="display:none"><b>Week-one target:</b> build fluency with the daily loop: <code>/quick-close</code>, <code>/capture meeting-closeout</code>, and <code>/report weekly-update</code>. Use the remaining workflows when their situations arise. <b>Next action:</b> run <code>/capture meeting-closeout</code> after your next real meeting. The same operating pattern—capture, reconcile, produce—extends across the course.</div>`;
 
 /* ================= ROUTER & COMPLETION ================= */
 let cur=0;
@@ -2115,7 +2113,7 @@ const MAPMETA=[
  ['🧪','Run a research loop','slate · study · transcript · findings · experiment triage'],
  ['🗺','Keep the roadmap coherent','two initiatives · four surfaces · grouped approval'],
  ['🚢','Close delivery into strategy','launch drift · competition · strategy · recovery'],
- ['🛟','When things go wrong','12 failure modes · scheduling · why it earns trust'],
+ ['🛟','When things go wrong','12 failure modes · unattended runs and the pause file · why it earns trust'],
  ['🎓','Finale','what accumulated + a real readiness check']];
 const LESSON_POSTERS=['SETUP','CONTEXT','CAPTURE','SOURCES','MEETINGS','EVIDENCE','SYSTEMS','DEFINE','RESEARCH','ROADMAP','STRATEGY','RECOVER','READY'];
 const LESSON_SHORT=['Setup','Context','Quick close','Sources','Meetings','Discovery','Code','Define','Research','Roadmap','Strategy','Recover','Finale'];

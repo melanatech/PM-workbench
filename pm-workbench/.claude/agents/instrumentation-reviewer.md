@@ -1,6 +1,6 @@
 ---
 name: instrumentation-reviewer
-description: Use when reviewing whether a proposed experiment's outcomes can actually be measured with existing instrumentation. Invoked by /experiment-package.
+description: Use when reviewing whether a proposed experiment's outcomes can actually be measured with existing instrumentation. Invoked by /build experiment-package.
 tools: Read
 model: sonnet
 ---

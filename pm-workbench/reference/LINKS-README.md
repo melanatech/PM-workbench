@@ -26,13 +26,13 @@ tool that already knows how to read it.
   be overwritten)
 - You want a permanent offline copy of something that matters even if the link breaks
 - It's genuinely raw material to process (a transcript going through
-  `/meeting-closeout`, evidence going into the register) — links.csv is for
+  `/capture meeting-closeout`, evidence going into the register) — links.csv is for
   durable REFERENCE material, not working inputs
 
 ## Example rows
 ```
 link_id,name,category,url,source_system,what_it_is,last_verified,notes
-L001,PRD Template,template,https://yourcompany.atlassian.net/wiki/.../PRD+Template,confluence,Our team's canonical PRD structure,2026-07-20,used by /prd-package
+L001,PRD Template,template,https://yourcompany.atlassian.net/wiki/.../PRD+Template,confluence,Our team's canonical PRD structure,2026-07-20,used by /build prd-package
 L002,Launch Checklist,template,https://drive.yourcompany.com/.../launch-checklist.docx,shared-drive,Standard launch checklist,2026-07-20,fetch live when needed
 L003,Team Wiki Home,reference-doc,https://yourcompany.atlassian.net/wiki/.../Home,confluence,Jump-off point for team docs,2026-07-20,
 ```

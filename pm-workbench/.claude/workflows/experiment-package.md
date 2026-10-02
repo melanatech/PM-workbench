@@ -12,7 +12,7 @@ Most things called "experiments" don't need an experiment, and none of the cheap
 cases need the five-reviewer panel. Classify first:
 
 1. **Usability / "will they understand it" question** → this is *research*, not an
-   experiment. Route to `/research-plan`. Stop.
+   experiment. Route to `/discover research-plan`. Stop.
 2. **Instrumentation or operational validation** ("does the event fire", "does the
    job retry") → this is a *QA / monitoring plan*, not an experiment. Produce a
    short verification checklist. Stop.

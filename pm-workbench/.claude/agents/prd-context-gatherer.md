@@ -1,6 +1,6 @@
 ---
 name: prd-context-gatherer
-description: Use at the start of /prd-package to assemble grounding from every contextual source at once - evidence, code findings, OKR baseline, competitive log, decisions and risks. Isolates a multi-file read before any drafting starts.
+description: Use at the start of /build prd-package to assemble grounding from every contextual source at once - evidence, code findings, OKR baseline, competitive log, decisions and risks. Isolates a multi-file read before any drafting starts.
 tools: Read
 model: sonnet
 ---

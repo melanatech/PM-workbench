@@ -1,6 +1,6 @@
 ---
 name: ux-harm-reviewer
-description: Use when reviewing whether a proposed experiment's treatment could confuse, frustrate, or harm users. Invoked by /experiment-package.
+description: Use when reviewing whether a proposed experiment's treatment could confuse, frustrate, or harm users. Invoked by /build experiment-package.
 tools: Read
 model: sonnet
 ---

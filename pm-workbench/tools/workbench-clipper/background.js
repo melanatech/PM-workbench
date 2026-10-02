@@ -1,5 +1,5 @@
 // PM Workbench Clipper — a human clicks, a file lands in Downloads/pm-workbench-inbox/.
-// Then `python3 scripts/pull_clips.py` (or /process-inbox) moves it into inbox/captures/.
+// Then `python3 scripts/pull_clips.py` (or /capture process-inbox) moves it into inbox/captures/.
 // Nothing here browses, clicks, or submits. It only reads what you are already looking at.
 
 const CATEGORIES = [

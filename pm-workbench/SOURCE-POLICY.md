@@ -33,7 +33,7 @@ disagree, this table decides which wins — never a silent pick, and never
 | Slack update | a **notification** — never authority |
 
 Consequence: a Slack message or a slide can never override Jira status or an
-approved scope decision. `/roadmap-update` and `/okr-refresh` cite this table.
+approved scope decision. `/sync roadmap-update` and `/report okr-refresh` cite this table.
 
 Note on completeness: CSV/Markdown fallbacks are fine during setup, but the
 roadmap workflow is not "done" until the real spreadsheet and deck templates are

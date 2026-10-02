@@ -11,7 +11,7 @@ Run it after any command. It reads what changed since the last check (or since
 Checks
   1. Register integrity   every registers/*.csv parses; every row has the header's
                           column count; IDs are unique; no multi-line cells.
-  2. ID provenance        every DEC-/COM-/RISK-/EV-/INIT- ID cited in a changed
+  2. ID provenance        every DEC-/COM-/RISK-/EV-/INIT-/TODO- ID cited in a changed
                           output or register exists in a register. Every LUM-/JIRA
                           style ticket key cited exists in an inbox export.
   3. Run log              logs/run-log.csv gained a line for this run.
@@ -241,11 +241,11 @@ for p in sorted(glob.glob('registers/*.csv')):
 # ticket keys present in inputs
 for p in walk(INPUT_DIRS):
     tickets |= set(re.findall(r'\b[A-Z]{2,6}-\d{2,6}\b', read(p)))
-tickets = {t for t in tickets if not re.match(r'(DEC|COM|RISK|EV|INIT|OKR)-', t)}
+tickets = {t for t in tickets if not re.match(r'(DEC|COM|RISK|EV|INIT|TODO|OKR)-', t)}
 
 # ---------- 2 + 5 + 6: outputs ----------
 input_blob = "\n".join(read(p) for p in walk(INPUT_DIRS)).lower()
-ID_RE = re.compile(r'\b(?:DEC|COM|RISK|EV|INIT)-\d{3,5}\b')
+ID_RE = re.compile(r'\b(?:DEC|COM|RISK|EV|INIT|TODO)-\d{3,5}\b')
 TICKET_RE = re.compile(r'\b[A-Z]{2,6}-\d{2,6}\b')
 DATE_RE = re.compile(r'\b(20\d\d-\d\d-\d\d|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.? \d{1,2})\b')
 NUM_RE = re.compile(r'\b\d+(?:\.\d+)?\s?(?:%|pp\b|pts\b|[kKM]\b)|\$\s?\d[\d,]*(?:\.\d+)?')

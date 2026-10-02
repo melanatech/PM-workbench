@@ -16,7 +16,7 @@ Unpacked extensions survive restarts. Chrome may show a "disable developer-mode 
 ```
 python3 scripts/pull_clips.py          # moves Downloads/pm-workbench-inbox/** → inbox/<category>/
 ```
-`/process-inbox` runs this first, so the nightly run picks them up automatically. Each clip keeps its frontmatter, so every register row that comes from a clip can cite the URL.
+`/capture process-inbox` runs this first, so the nightly run picks them up automatically. Each clip keeps its frontmatter, so every register row that comes from a clip can cite the URL.
 
 ## Privacy
 Clips can contain customer names. They are working material in `inbox/` and get archived, never committed to git (see `.gitignore`), and CLAUDE.md rule 15 redacts identifiers in durable summaries.

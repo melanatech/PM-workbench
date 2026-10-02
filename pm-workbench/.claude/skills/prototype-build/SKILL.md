@@ -16,7 +16,7 @@ A prototype is the one artifact this system produces that a stakeholder will *se
 Following the same routing discipline as the rest of the system (haiku=trivial, sonnet=default, opus=deep judgment) rather than leaving every step on the ambient session model:
 
 - **Scaffolding (Step 2)** and **QA auto-fixes (Step 3 loop)** → **sonnet**. Mechanical/structural work with a bounded, well-specified fix target — doesn't need opus's deeper reasoning, and haiku is too weak for real code generation.
-- **The stakeholder reviewers (Step 4; 1–2 in Standard, five in Deep)** → **sonnet** each, dispatched in parallel — matching `/prd-package`'s existing panel model, since these are the same reviewer agents.
+- **The stakeholder reviewers (Step 4; 1–2 in Standard, five in Deep)** → **sonnet** each, dispatched in parallel — matching `/build prd-package`'s existing panel model, since these are the same reviewer agents.
 - **Reconciliation against the PRD (Step 5)** → **sonnet**.
 - Nothing in this skill defaults to **opus** — a prototype's judgment calls (does this design work, is this feasible) are exactly what the five-reviewer panel exists to distribute across specialized angles, so no single step needs opus-level depth on its own. If a genuinely hard architectural question comes up mid-build, say so and suggest a manual `/model opus` switch for that one exchange rather than upgrading the whole skill.
 - **haiku** is intentionally unused here — nothing in this skill is a `/quick-close`-style trivial lookup.
@@ -82,7 +82,7 @@ This loop never touches product judgment — it only fixes what QA can prove is 
 
 ## Step 4 — stakeholder review (now on something known to render)
 
-Dispatch reviewers from the same set `/prd-package` uses (`eng-feasibility-reviewer`, `design-ux-reviewer`, `data-instrumentation-reviewer`, `business-revenue-reviewer`, `customer-facing-reviewer`), once, when the prototype is test-ready — **bounded by execution mode: Standard = the 1–2 most relevant (default `design-ux-reviewer` + `eng-feasibility-reviewer`, stated with the reason); the full five only in Deep or on request.** **QA passing is a hard gate for this step** — do not dispatch reviewers against a prototype QA couldn't get to render cleanly; a review of something broken wastes the panel. Give each reviewer the **actual QA screenshots** (`qa-screenshots/*.png`) and the `qa-report.md` verdict, not a text description of the states — their judgment should be grounded in what actually rendered, not a paraphrase of it. Per execution mode: in Standard, do not also fan out elsewhere in the same run.
+Dispatch reviewers from the same set `/build prd-package` uses (`eng-feasibility-reviewer`, `design-ux-reviewer`, `data-instrumentation-reviewer`, `business-revenue-reviewer`, `customer-facing-reviewer`), once, when the prototype is test-ready — **bounded by execution mode: Standard = the 1–2 most relevant (default `design-ux-reviewer` + `eng-feasibility-reviewer`, stated with the reason); the full five only in Deep or on request.** **QA passing is a hard gate for this step** — do not dispatch reviewers against a prototype QA couldn't get to render cleanly; a review of something broken wastes the panel. Give each reviewer the **actual QA screenshots** (`qa-screenshots/*.png`) and the `qa-report.md` verdict, not a text description of the states — their judgment should be grounded in what actually rendered, not a paraphrase of it. Per execution mode: in Standard, do not also fan out elsewhere in the same run.
 
 ### Bounded reviewer-revision loop (judgment calls — gated by you, not automatic)
 
@@ -107,4 +107,4 @@ Update `registers/initiatives.csv`: stage=prototype, prototype_path, last_update
 
 ## Step 7 — pair with a research package
 
-Auto-generate the matching research package (same logic as `/research-package`) so the test plan exists the moment the prototype does. After sessions run, if findings contradict a PRD assumption, flag it and suggest `/prd-prototype-sync` rather than letting the two drift.
+Auto-generate the matching research package (same logic as `/discover research-package`) so the test plan exists the moment the prototype does. After sessions run, if findings contradict a PRD assumption, flag it and suggest `/build prd-prototype-sync` rather than letting the two drift.

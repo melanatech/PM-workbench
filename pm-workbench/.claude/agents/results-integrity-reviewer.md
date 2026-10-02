@@ -1,6 +1,6 @@
 ---
 name: results-integrity-reviewer
-description: Use in /experiment-analyze, in parallel with the main narrative, as an independent check against the pre-registered experiment design. Prevents goalpost-moving and self-serving interpretation.
+description: Use in /build experiment-analyze, in parallel with the main narrative, as an independent check against the pre-registered experiment design. Prevents goalpost-moving and self-serving interpretation.
 tools: Read
 model: sonnet
 ---

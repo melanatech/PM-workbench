@@ -1,6 +1,6 @@
 ---
 name: design-ux-reviewer
-description: Use to review a PRD or prototype from a UX/design-consistency angle. Shared reviewer for /prd-package and /prototype-build.
+description: Use to review a PRD or prototype from a UX/design-consistency angle. Shared reviewer for /build prd-package and /build prototype-build.
 tools: Read
 model: sonnet
 ---

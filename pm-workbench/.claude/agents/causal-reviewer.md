@@ -1,6 +1,6 @@
 ---
 name: causal-reviewer
-description: Use when reviewing a proposed experiment design for causal validity - whether the design can actually answer the stated question. Invoked by /experiment-package.
+description: Use when reviewing a proposed experiment design for causal validity - whether the design can actually answer the stated question. Invoked by /build experiment-package.
 tools: Read
 model: sonnet
 ---

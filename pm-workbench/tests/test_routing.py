@@ -175,6 +175,20 @@ class HealthReportTests(unittest.TestCase):
 
 
 class DocsUseTheNewNamesTests(unittest.TestCase):
+    def test_lesson_zero_explains_and_links_to_the_system_download(self):
+        course = (WORKBENCH.parent / "docs" / "index.html").read_text(encoding="utf-8")
+        start = course.index("V.l0=`")
+        end = course.index("V.l1=`", start)
+        lesson_zero = course[start:end]
+        for text in (
+            "Download the PM Workbench system from GitHub",
+            "https://github.com/melanatech/PM-workbench",
+            "Code → Download ZIP",
+            "inner <code>pm-workbench</code> folder",
+        ):
+            with self.subTest(text=text):
+                self.assertIn(text, lesson_zero)
+
     def test_scheduling_and_menu_script_call_the_routers(self):
         scheduling = (WORKBENCH / "SCHEDULING.md").read_text(encoding="utf-8")
         menu = (WORKBENCH / "Run PM Workflow.command").read_text(encoding="utf-8")

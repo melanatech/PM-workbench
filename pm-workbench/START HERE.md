@@ -8,11 +8,22 @@ fixture below, then use pasted or exported material until any real access path
 has been approved and tested. See the readiness table before relying on a
 workflow.
 
-## First run: verify the kit with fictional data
+## First run: create a live folder, then verify with fictional data
 
-The fixture is fictional. Keep it separate from real work: this command creates
-a code-only copy in the path you choose, loads the fixture there, and leaves the
-source workbench unchanged.
+Do **not** put real captures into the git clone. Create a non-git live workspace
+first (details and troubleshooting in [NEW-USER-SETUP.md](NEW-USER-SETUP.md)):
+
+```
+# from the repository root
+python3 pm-workbench/scripts/create_live_workspace.py ~/pm-live
+# contributors who will edit kit files: add --dev-links
+```
+
+Open `~/pm-live` in Claude Code. Keep the git clone for kit fixes only.
+
+The Lumenly fixture is fictional. Keep it separate from real work: this command
+creates a code-only copy in the path you choose, loads the fixture there, and
+leaves the source workbench unchanged.
 ```
 python3 scripts/load_fixture.py lumenly --isolate /tmp/pm-workbench-lumenly
 cd /tmp/pm-workbench-lumenly
@@ -25,7 +36,8 @@ python3 scripts/check_run.py
 `fixtures/lumenly/README.md` describes expected results. To discard the test,
 remove only the isolated directory after checking its exact path. The checker
 is a local heuristic, not proof that every fact is correct; its coverage and
-limits are documented in `scripts/check_run.py`.
+limits are documented in `scripts/check_run.py`. Do not load the fixture into
+`~/pm-live`.
 
 To exercise the safety checks without Claude Code or any external account:
 ```
@@ -42,19 +54,23 @@ python3 -m unittest discover -s tests -v
 | **Known script stubs** | `scripts/log_metrics.py`, `scripts/extract_document.sh`, and `scripts/render_template.py` intentionally exit as stubs. Use the documented manual/markdown fallbacks until each needed implementation is tested. |
 | **Not yet verified** | Browser reads, hook behavior in your Claude Code version, scheduled runs, and any external-system write path. Do not treat examples or allow-lists as evidence that an integration works or is approved. |
 
-`Run PM Workflow.command`, `Capture Clipboard.command`, and scheduling are
-optional convenience paths; test them locally before relying on them. See
-SETUP.md and SCHEDULING.md for prerequisites and limitations.
+`Run PM Workflow.command` and scheduling are optional. Desktop-app capture
+(Slack, Mail, Notes): from `~/pm-live` run
+`bash scripts/install_clipboard_service.sh`, enable **Send to PM Workbench**
+under System Settings → Keyboard → Keyboard Shortcuts → Services, then
+select text → right-click → Services. Writes into the live `inbox/`
+(via `~/.pm-workbench/live-root`), not the git kit. See SETUP.md.
 
 ## Files to read, in order
-1. **SETUP.md** — optional local capture and external-access paths, permission examples, hooks, and their verification limits
-2. **CLAUDE.md** — fill only brackets approved for this repository; keep private details in the ignored `.claude/CLAUDE.local.md`; review the rules and command menu
-3. **SCHEDULING.md** — after 2-3 manual cycles per workflow
-4. **SKILLS.md** — the later upgrade path
-5. **AGENTS.md** — where and why subagents are used (isolated review panels + heavy-read isolation), and which commands deliberately stay plain
-6. **CONNECTIONS.md** — the full write/read map: what every command feeds and cross-checks against
-7. **SOURCE-POLICY.md** — who wins when Jira, Confluence, Slack, and code disagree (short; worth reading early)
-8. **EVOLVING.md** + **BACKLOG.md** — read before adding or changing anything; the system's own changelog and friction log
+1. **NEW-USER-SETUP.md** — create `~/pm-live`, preflight, optional Claude plugins, fixture, first capture, troubleshooting
+2. **SETUP.md** — optional local capture and external-access paths, permission examples, hooks, and their verification limits
+3. **CLAUDE.md** — fill only brackets approved for this repository; keep private details in the ignored `.claude/CLAUDE.local.md`; review the rules and command menu
+4. **SCHEDULING.md** — after 2-3 manual cycles per workflow
+5. **SKILLS.md** — the later upgrade path
+6. **AGENTS.md** — where and why subagents are used (isolated review panels + heavy-read isolation), and which commands deliberately stay plain
+7. **CONNECTIONS.md** — the full write/read map: what every command feeds and cross-checks against
+8. **SOURCE-POLICY.md** — who wins when Jira, Confluence, Slack, and code disagree (short; worth reading early)
+9. **EVOLVING.md** + **BACKLOG.md** — read before adding or changing anything; the system's own changelog and friction log
 
 ## Using the prompt kit
 Open the folder in a Claude Code-supported environment after verifying that
@@ -63,7 +79,8 @@ settings. Cursor is one possible interface; its extension and command behavior
 are not verified by this kit. Review proposed local changes before using them.
 
 Also available:
-- **"Run PM Workflow.command"** and **"Capture Clipboard.command"** — optional scripts; verify on your OS and review where they write before use.
+- **"Run PM Workflow.command"** — optional; verify on your OS before relying on it.
+- **Clipboard from Slack/desktop apps** — macOS: `bash scripts/install_clipboard_service.sh`, then right-click → Services → **Send to PM Workbench**. Windows: copy, then `python scripts/capture_clipboard.py --gui` (no selected-text Services). `Capture Clipboard.command` is macOS fallback only.
 - **Scheduled runs** — an optional future setup. Scheduling is not configured or verified; see `SCHEDULING.md` and BACKLOG.md before considering it.
 
 ## Every duty → its workflow

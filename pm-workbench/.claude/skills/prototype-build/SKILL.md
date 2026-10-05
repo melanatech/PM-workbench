@@ -54,6 +54,8 @@ Every prototype, whatever the type, must include the states that make a test hon
 
 If a **component library** is the design source, install/link it and build screens from its real components. If a **style-guide doc** is the source, extract tokens into `src/theme/` (or a `:root` block for static) and apply them.
 
+**Checkpoint after scaffold.** Even for loose static: `python3 scripts/prototype_checkpoint.py --path prototypes/[name] --label after-scaffold` (creates local `git init` if missing; never pushes). See Checkpoints below.
+
 ## Step 3 — QA: actually run it and look (do not skip, do not fake)
 
 This is the step that distinguishes a real prototype from a plausible-looking one. Run the bundled QA harness in `qa/` (see `qa/README.md` for prerequisites — it needs a local browser via Playwright, free/open-source, no API or cost — see note below).
@@ -64,6 +66,8 @@ This is the step that distinguishes a real prototype from a plausible-looking on
 - **mobile (Expo):** `expo start --web`, then the same browser pass against the web render. Note in the report that this is the web render, not a true native simulator.
 
 **Output — always inspectable, never a bare "looks good":** the harness writes `prototypes/[name]/qa-report.md` (which states pass/fail per check, per state) plus `prototypes/[name]/qa-screenshots/`. Show me the report and the key screenshots.
+
+**Checkpoint after a QA pass** (including after a successful QA retry): `python3 scripts/prototype_checkpoint.py --path prototypes/[name] --label after-qa`. Do not checkpoint a failing tip — fix or stop first.
 
 **Honest environment fallback.** Real rendering needs local execution (i.e. Claude Code on a machine with a browser, and network to `npm install`). 
 - In Claude Code with those available → run the full harness above.
@@ -90,12 +94,21 @@ Reviewer flags are judgment calls, not bugs — a flag might be a real product d
 
 1. Reviewers flag concerns → present them to me **batched**, one list, not five separate interruptions.
 2. I say which flags to act on (some may be accepted as-is, deferred, or rejected — my call).
-3. Agent revises only what I approved → **re-runs QA** (a revision can break something QA already passed — never skip re-verifying this) → if QA passes, **re-dispatch only the reviewer(s) whose specific concern was addressed**, not the full five-person panel again.
+3. Agent revises only what I approved → **re-runs QA** (a revision can break something QA already passed — never skip re-verifying this) → if QA passes, **checkpoint** with `--label after-revision-qa`, then **re-dispatch only the reviewer(s) whose specific concern was addressed**, not the full five-person panel again.
 4. Repeat at most **once more** after the first revision round. If concerns remain after that, stop and report current state plainly — "still flagged: X, Y — your call on whether to iterate again or ship with known gaps."
 
 This loop terminates by honest reporting, not by deciding on its own that the prototype has become "acceptable" — that threshold is always yours to call, and each additional round costs a real reviewer dispatch, so the cap keeps that cost visible and bounded rather than open-ended.
 
+## Checkpoints (local restore points — not Plans)
 
+Prototypes get **git checkpoints** so a bad revision can be rolled back without inventing Claude Code Plans. Rules:
+
+- Script: `scripts/prototype_checkpoint.py` — commits inside `prototypes/[name]/` only; **never pushes**; refuses paths outside `prototypes/`.
+- Label index (survives restore): `logs/prototype-checkpoints/[name].md`.
+- Required labels during a build: `after-scaffold`, `after-qa`, and `after-revision-qa` when a reviewer-driven revision re-passes QA. Optional ad-hoc: `--label before-risky-change` before a large experiment.
+- Restore when I ask, or when a revision clearly regressed a prior QA pass and I have not asked to keep the new tip: `python3 scripts/prototype_checkpoint.py --path prototypes/[name] --restore after-qa` (add `--force` only if the working tree is dirty and I approved discarding it).
+- After restore, say the commit short hash and offer `git switch -c resume-<hash>` if editing continues.
+- List: `--list`. Do not invent Claude Code Plans / plan files for prototype work.
 
 ## Step 5 — reconcile against the PRD
 
@@ -103,7 +116,7 @@ If `outputs/prds/[feature]/` exists, dispatch `prd-prototype-reconciler` to chec
 
 ## Step 6 — register + repo handoff
 
-Update `registers/initiatives.csv`: stage=prototype, prototype_path, last_updated (create the row if none exists). Then: git is already initialized (Step 2). **I create the GitHub remote myself; you give me the exact push commands and never push yourself.** For a repo-complexity prototype, confirm the README's run command matches what the QA harness actually used — that's the command the next person will trust.
+Update `registers/initiatives.csv`: stage=prototype, prototype_path, last_updated (create the row if none exists). Then: git is already initialized (Step 2 / checkpoints). **I create the GitHub remote myself; you give me the exact push commands and never push yourself.** Mention that local checkpoints already exist (`--list`) and are separate from any remote. For a repo-complexity prototype, confirm the README's run command matches what the QA harness actually used — that's the command the next person will trust.
 
 ## Step 7 — pair with a research package
 

@@ -20,18 +20,20 @@ import shutil
 import sys
 import time
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, SCRIPT_DIR)
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ROOT_MUTABLE_DIRS = {
-    "inbox", "archive", "state", "logs", "registers", "outputs", "repos",
-    "learning", "drafts", "prototypes", "roadmap", "reference",
-    "node_modules", "browser-profiles", "__pycache__",
-}
+import workspace_layout as layout  # noqa: E402
+
+ROOT = layout.KIT_ROOT
+ROOT_MUTABLE_DIRS = layout.ROOT_MUTABLE_DIRS
 INVENTORY_SKIP = (".git/", "node_modules/", ".claude/", "fixtures/", "scripts/",
                   "tools/", "tests/")
 PROJECT_FILES = {
     "AGENTS.md", "CLAUDE.md", "CONNECTIONS.md", "EVOLVING.md", "SCHEDULING.md",
     "SETUP.md", "SKILLS.md", "SOURCE-POLICY.md", "START HERE.md", "STATE-BACKUP.md",
+    "BACKLOG.md", "NEW-USER-SETUP.md",
     "Capture Clipboard.command", "Run PM Workflow.command", ".gitignore",
 }
 
@@ -135,30 +137,7 @@ def write_check_baseline(root, kind):
 
 def copy_code_only(destination):
     """Copy the kit without carrying local/raw working data into an isolate."""
-    target = os.path.abspath(destination)
-    if os.path.commonpath([ROOT, target]) == ROOT:
-        raise ValueError("the isolated workspace must be outside the source workbench")
-    if os.path.lexists(target):
-        if not os.path.isdir(target) or os.listdir(target):
-            raise ValueError(f"isolation destination must not exist or must be empty: {target}")
-        os.rmdir(target)
-
-    def ignore(directory, names):
-        ignored = {
-            name for name in names
-            if name.startswith(".env") or name in {
-                ".git", ".mcp.json", ".DS_Store",
-                "CLAUDE.local.md", "settings.local.json",
-                "__pycache__", "node_modules",
-            }
-        }
-        if os.path.abspath(directory) == ROOT:
-            ignored.update(name for name in names if name in ROOT_MUTABLE_DIRS)
-        return ignored
-
-    os.makedirs(os.path.dirname(target), exist_ok=True)
-    shutil.copytree(ROOT, target, ignore=ignore)
-    return target
+    return layout.copy_code_only(destination, kit_root=ROOT)
 
 
 def load_into(fixture_root, destination, overwrite, dry_run=False):
@@ -218,7 +197,7 @@ def main():
     parser.add_argument("fixture", help="fixture name under fixtures/ (for example: lumenly)")
     parser.add_argument("--overwrite", action="store_true",
                         help="explicitly replace differing fixture target files in this workspace")
-    parser.add_argument("--dry-run", action="store_true", help="show the plan without writing files")
+    parser.add_argument("--dry-run", action="store_true", help="show the plan without writing")
     parser.add_argument("--isolate", metavar="PATH",
                         help="copy code only to a new, separate workspace and load the fixture there")
     args = parser.parse_args()

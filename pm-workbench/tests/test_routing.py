@@ -66,6 +66,25 @@ class RoutesTableTests(unittest.TestCase):
             text = (WORKBENCH / ".claude" / "workflows" / f"{name}.md").read_text(encoding="utf-8")
             self.assertRegex(text, r"(?i)execution mode|not ready|required input|usage estimate", name)
 
+    def test_meeting_closeout_filters_eng_only_commitments(self):
+        text = (WORKBENCH / ".claude" / "workflows" / "meeting-closeout.md").read_text(encoding="utf-8")
+        self.assertIn("PM-scope filter", text)
+        self.assertIn("Do not log as a commitment", text)
+        self.assertIn("SSL", text)
+        inbox = (WORKBENCH / ".claude" / "workflows" / "process-inbox.md").read_text(encoding="utf-8")
+        self.assertIn("PM-scope filter", inbox)
+
+    def test_jira_ticket_draft_template_is_paste_ready(self):
+        path = WORKBENCH / "reference" / "templates" / "jira-ticket-draft.md"
+        self.assertTrue(path.is_file(), path)
+        text = path.read_text(encoding="utf-8")
+        for phrase in ("Summary:", "Initiative / Epic", "Priority:", "Target date:",
+                       "Related tickets:", "do not paste into Jira", "COM-"):
+            self.assertIn(phrase, text)
+        closeout = (WORKBENCH / ".claude" / "workflows" / "meeting-closeout.md").read_text(encoding="utf-8")
+        self.assertIn("reference/templates/jira-ticket-draft.md", closeout)
+        self.assertIn("Related tickets", closeout)
+
     def test_course_catalog_shows_the_full_router_invocation_for_every_workflow(self):
         course = (WORKBENCH.parent / "docs" / "index.html").read_text(encoding="utf-8")
         start = course.index("help:{cmd:'/'")
@@ -106,6 +125,31 @@ class RouterFileTests(unittest.TestCase):
                        "QUESTIONS", "PROPOSALS", "RESULT", "never writes to a register"):
             self.assertIn(phrase, text)
         self.assertIn("never remove one", text)
+
+    def test_compact_output_is_required_of_protocol_and_runner(self):
+        protocol = PROTOCOL.read_text(encoding="utf-8")
+        runner = RUNNER.read_text(encoding="utf-8")
+        claude = (WORKBENCH / "CLAUDE.md").read_text(encoding="utf-8")
+        self.assertIn("Compact output", protocol)
+        self.assertIn("Do not paraphrase", protocol)
+        self.assertIn("Relay = paste, then stop", protocol)
+        self.assertIn("No RESULT + Done pair", protocol)
+        self.assertIn("omit empty", protocol.lower())
+        self.assertIn("Show each artifact once", claude)
+        self.assertNotIn("Show RESULT text in full", protocol)
+        self.assertIn("omit empty negatives", runner)
+        self.assertIn("Never paste the same summary twice", runner)
+        self.assertIn("Ran <cluster>/<workflow> on <model>", runner)
+        self.assertIn("Do **not** mention the Stop hook", runner)
+        self.assertNotIn("Run-log note, one line", runner)
+        self.assertIn("workspace-relative", protocol)
+        self.assertIn("workspace-relative", runner)
+        self.assertIn("Never stop on \"ready.\"", protocol)
+        self.assertIn("Do not announce readiness and wait", protocol)
+        self.assertNotIn("[relative-path](file:///", runner)
+        self.assertIn("workspace-relative", claude)
+        self.assertIn("Do not mention the git clone vs live-folder", runner)
+        self.assertNotIn("End with one line naming the workflow that ran and the model it ran on.", protocol)
 
     def test_runner_cannot_bypass_approval_rules_and_returns_three_blocks(self):
         text = RUNNER.read_text(encoding="utf-8")
@@ -185,9 +229,32 @@ class DocsUseTheNewNamesTests(unittest.TestCase):
             "https://github.com/melanatech/PM-workbench",
             "Code → Download ZIP",
             "inner <code>pm-workbench</code> folder",
+            "~/pm-live",
+            "create_live_workspace.py",
+            "NEW-USER-SETUP.md",
+            "first</b> (or only) folder",
         ):
             with self.subTest(text=text):
                 self.assertIn(text, lesson_zero)
+
+    def test_course_teaches_pm_scope_and_jira_draft_rules(self):
+        course = (WORKBENCH.parent / "docs" / "index.html").read_text(encoding="utf-8")
+        l2 = course[course.index("V.l2=`"):course.index("V.l3=`")]
+        l4 = course[course.index("V.l4=`"):course.index("V.l5=`")]
+        self.assertIn("Eng-only chores", l2)
+        self.assertIn("Promises you own, chase, or depend on", l2)
+        self.assertIn("Registers stay PM-scoped", l4)
+        self.assertIn("jira-ticket-draft.md", l4)
+        self.assertIn("Related</b> means other Jira tickets only", l4)
+        # Course lessons must not teach clipper/DOM or Stop-hook plumbing
+        lessons = "".join(
+            course[course.index(f"V.l{i}=`"):course.index(f"V.l{i+1}=`" if i < 10 else "V.fin=`")]
+            for i in range(0, 11)
+            if f"V.l{i}=`" in course
+        )
+        self.assertNotIn("aria_setsize", lessons)
+        self.assertNotIn("Stop hook", lessons)
+        self.assertNotIn("virtualized", lessons)
 
     def test_scheduling_and_menu_script_call_the_routers(self):
         scheduling = (WORKBENCH / "SCHEDULING.md").read_text(encoding="utf-8")

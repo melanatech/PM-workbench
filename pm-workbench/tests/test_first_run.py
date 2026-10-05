@@ -12,9 +12,16 @@ import unittest
 
 WORKBENCH = Path(__file__).resolve().parents[1]
 LOADER = WORKBENCH / "scripts" / "load_fixture.py"
+LAYOUT = WORKBENCH / "scripts" / "workspace_layout.py"
 CHECKER = WORKBENCH / "scripts" / "check_run.py"
 REGISTER_HOOK = WORKBENCH / ".claude" / "hooks" / "validate_register_write.py"
 SNAPSHOT_SCRIPT = WORKBENCH / "scripts" / "snapshot-state.sh"
+
+
+def install_loader(scripts_dir):
+    scripts_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(LOADER, scripts_dir / "load_fixture.py")
+    shutil.copy(LAYOUT, scripts_dir / "workspace_layout.py")
 
 
 def run(command, *, cwd=None, env=None, input_text=None):
@@ -29,8 +36,7 @@ class FixtureLoaderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             scripts = root / "scripts"
-            scripts.mkdir()
-            shutil.copy(LOADER, scripts / "load_fixture.py")
+            install_loader(scripts)
             shutil.copytree(WORKBENCH / "fixtures", root / "fixtures")
             target = root / "inbox/captures/capture-2026-07-16.md"
             target.parent.mkdir(parents=True)
@@ -48,9 +54,7 @@ class FixtureLoaderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "workbench"
             root.mkdir()
-            scripts = root / "scripts"
-            scripts.mkdir()
-            shutil.copy(LOADER, scripts / "load_fixture.py")
+            install_loader(root / "scripts")
             shutil.copytree(WORKBENCH / "fixtures", root / "fixtures")
             sentinel = Path(temporary) / "outside-sensitive-file.txt"
             sentinel.write_text("preserve outside target\n", encoding="utf-8")
@@ -71,8 +75,7 @@ class FixtureLoaderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             base = Path(temporary)
             source = base / "source-workbench"
-            (source / "scripts").mkdir(parents=True)
-            shutil.copy(LOADER, source / "scripts/load_fixture.py")
+            install_loader(source / "scripts")
             shutil.copytree(WORKBENCH / "fixtures", source / "fixtures")
             source_context = source / "reference/context/private-company-context.md"
             source_context.parent.mkdir(parents=True)

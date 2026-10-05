@@ -5,6 +5,11 @@ until you have checked company policy and verified the access path. Part 0 is
 optional context calibration. Browser access, hooks, scheduling, and template
 conversion are separate setup items, not verified capabilities.
 
+Before this file: create a live workspace with
+`python3 pm-workbench/scripts/create_live_workspace.py ~/pm-live` and follow
+[NEW-USER-SETUP.md](NEW-USER-SETUP.md). Do browser and MCP setup from that live
+folder, not from the git root.
+
 ## Part 0: Give it context (do this first — ~10 minutes)
 
 This is optional context calibration. Do not add raw or sensitive company
@@ -23,14 +28,14 @@ Your organization may restrict extensions, browser automation, package
 installation, or access to company systems. Follow its approval process. This
 kit does not establish or verify approval for any integration.
 
-**Job A — optional manual capture.** If permitted, install the included **Workbench Clipper** from `tools/workbench-clipper/`, then test it with non-sensitive content and verify where the file is saved. It is intended to store page text, URL, title, and timestamp in `Downloads/pm-workbench-inbox/`; `/capture process-inbox` is a prompt, not an automatic importer unless its local workflow is run. If extensions are unavailable, `Capture Clipboard.command` or pasting into the chat are alternatives; review the resulting files because captures may contain sensitive information.
+**Job A — optional manual capture.** If permitted, install the included **Workbench Clipper** from `tools/workbench-clipper/` (in the live folder that is `~/pm-live/tools/workbench-clipper`, which may be a symlink to the kit). In Chrome: `chrome://extensions` → Developer mode → Load unpacked → that folder. **Reload** after every kit update. Right-click any page or selection → *Send to PM Workbench* → *Meeting notes / summary* scrolls Stream’s virtualized transcript and accumulates entries (text only — no meeting screenshot); other categories may also save a viewport PNG. Use the submenu *Selection only* only when you want the highlight. Files land in `Downloads/pm-workbench-inbox/` first — Chrome cannot write elsewhere. **Preferred bridge:** `/capture process-inbox` in Claude Code runs `python3 scripts/pull_clips.py` (approve the Bash prompt) — no Full Disk Access required. Optional: `bash scripts/install_clip_watcher.sh` for background auto-move (often needs FDA on macOS).
+
+**Desktop apps (Slack, Mail, Notes — not Chrome):** there is no in-app clipper. **macOS:** install once with `bash scripts/install_clipboard_service.sh` from `~/pm-live` — builds a Cocoa **NSServices** app at `~/Applications/Send to PM Workbench.app`. Enable under **System Settings → Keyboard → Keyboard Shortcuts → Services** → Text → **Send to PM Workbench** (not Privacy & Security). Then: select text → right-click → Services (if Slack hides it, menu bar → Slack → Services). **Windows:** no Services equivalent for selected text — copy, then `python scripts/capture_clipboard.py --gui`, or paste into Claude Code. Writes into `~/pm-live/inbox/<category>/` via `~/.pm-workbench/live-root`. Fallback on macOS: `Capture Clipboard.command`. Review captures for sensitive content. See [NEW-USER-SETUP.md](NEW-USER-SETUP.md).
 
 **Job B — letting Claude read pages for you (discovery scans, OKR pulls, Jira views).** If permitted, test Anthropic's **Claude in Chrome** integration by following its current installation instructions, then ask Claude Code to read the open tab without interacting with it. Availability, supported browsers, account requirements, and organizational policy can change; verify these before use. This workbench has not tested this path against a real company source.
 
-**Job C — optional fallback: Playwright MCP over a debug Chrome profile.** This path adds plumbing (a Chrome profile that must be open, an SSO that expires, and a deny list you keep current). Use it only if permitted and after reviewing the risks.
-```
-npm install -g @playwright/mcp        # needs Node.js
-```
+**Job C — optional fallback: Playwright MCP over a debug Chrome profile.** This path adds plumbing (a Chrome profile that must be open, an SSO that expires, and a deny list you keep current). Use it only if permitted and after reviewing the risks. Needs Node.js (`node` / `npx`). Prefer `npx --yes` over `npm install -g` — global installs often fail with `EACCES` on locked `/usr/local` prefixes.
+
 Launch a dedicated automation Chrome profile (save as a shortcut — this window open = Claude can read):
 ```
 # macOS
@@ -38,42 +43,93 @@ Launch a dedicated automation Chrome profile (save as a shortcut — this window
 # Windows (PowerShell)
 & "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="$env:USERPROFILE\chrome-claude-profile"
 ```
-Log into your tools once in that window. Register in this project's `.mcp.json`:
+Log into your tools once in that window. Register **only in the live workspace**
+`.mcp.json` (for example `~/pm-live/.mcp.json`), not in the git clone:
 ```json
-{ "mcpServers": { "browser-bridge": { "command": "npx", "args": ["@playwright/mcp@latest", "--cdp-endpoint", "http://localhost:9222"] } } }
+{ "mcpServers": { "browser-bridge": { "command": "npx", "args": ["--yes", "@playwright/mcp@latest", "--cdp-endpoint", "http://localhost:9222"] } } }
 ```
-Test: *"using the browser-bridge, list my open tabs."* The deny list in `.claude/settings.json` (Part 2) applies to this bridge.
+Test: *"using the browser-bridge, list my open tabs."* The deny list in `.claude/settings.json` (Part 2) applies to this bridge. If port 9222 does not respond, confirm Chrome actually started with that user-data-dir; a headless smoke check against `http://127.0.0.1:9222/json/version` is enough to prove CDP is up.
 
 **No browser at all** is fine for workflows that can use exports, files, or pasted text. Label those sources accurately; commands that require a live view remain incomplete until an approved access path is configured.
+
+**Optional Claude Code plugins (MCP / skills — user scope, not kit git).** If
+company policy allows, install from the Claude Code panel (exact IDs):
+
+```text
+/plugin install atlassian@claude-plugins-official
+/plugin install frontend-design@claude-plugins-official
+/plugin install slack@claude-plugins-official
+/plugin install github@claude-plugins-official
+/plugin install figma@claude-plugins-official
+/plugin install chrome-devtools-mcp@claude-plugins-official
+```
+
+Details and policy notes: [NEW-USER-SETUP.md §2b](NEW-USER-SETUP.md). These do
+not replace the Workbench Clipper, clipboard Services capture, or a live-folder
+`.mcp.json` Playwright bridge — they are additional access paths you must name
+when used.
 
 ## Part 2: Permission configuration example (not a security guarantee)
 
 Scheduled/headless runs may not pause to ask permission per tool. This
 `.claude/settings.json` example narrows the configured operations, but does not
 guarantee that the installed client loaded these settings or that every command
-is safe:
+is safe.
+
+**Claude Code permission modes (bottom of the Claude Code prompt).** Click the
+mode indicator. Your build may only show a subset — **Auto is not always listed**
+(plan, org policy, or feature flags). Typical labels:
+
+| UI label | What auto-runs without asking |
+|---|---|
+| Manual | Reads only |
+| **Edit automatically** | File edits + common filesystem Bash (`mkdir`/`mv`/`cp`/…) — **not** `python3` |
+| Plan | Explore / plan before edits |
+| Auto *(if shown)* | Most tools, with a classifier |
+| Bypass permissions *(if enabled)* | Everything — requires the extension setting **Allow dangerously skip permissions** |
+
+**To reduce Bash prompts without Auto:**
+
+1. Prefer **allow rules**, not mode switching. Workbench defaults live in
+   `~/.claude/settings.json` as `Bash(python3 *)` (and similar). **Start a new
+   Claude Code conversation** after changing that file — an open chat keeps the
+   old rules.
+2. In Claude Code, type `/permissions` and add allow rules for commands that still
+   prompt (exact strings Claude shows in the prompt).
+3. On a permission dialog, if you see **Yes, and don't ask again**, use it — it is
+   **not always offered** (one-time-only prompts exist).
+4. Last resort: Claude Code extension settings → enable **Allow dangerously skip
+   permissions**, then pick **Bypass permissions** from the mode menu if it appears.
+
+`Edit automatically` alone will keep asking for `python3` — that is expected.
+
+File path allows must use `Edit(./…)` — Claude Code 2.1+ rejects `Write(./…)` in permissions.allow (scheduled `claude -p` exits 1 immediately).
 
 ```json
 {
   "permissions": {
+    "defaultMode": "acceptEdits",
+    "additionalDirectories": ["~/Downloads/pm-workbench-inbox"],
     "allow": [
       "Read",
-      "Write(./outputs/**)",
-      "Write(./registers/**)",
-      "Write(./state/**)",
-      "Write(./logs/**)",
-      "Write(./learning/**)",
-      "Write(./reference/user-research/**)",
-      "Write(./reference/metric-definitions/**)",
       "Edit(./outputs/**)",
       "Edit(./registers/**)",
-      "Bash(python3 scripts/:*)",
-      "Bash(bash scripts/:*)",
-      "Bash(ls:*)",
-      "Bash(cat:*)",
-      "Bash(mkdir:*)",
-      "Bash(mv inbox:*)",
-      "Bash(mv ./inbox:*)",
+      "Edit(./state/**)",
+      "Edit(./logs/**)",
+      "Edit(./learning/**)",
+      "Edit(./archive/**)",
+      "Edit(./inbox/**)",
+      "Edit(./prototypes/**)",
+      "Edit(./reference/user-research/**)",
+      "Edit(./reference/metric-definitions/**)",
+      "Bash(python3 *)",
+      "Bash(bash scripts/*)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(mkdir *)",
+      "Bash(mv *)",
+      "Bash(cp *)",
+      "Agent",
       "WebSearch",
       "WebFetch",
       "mcp__browser-bridge__browser_snapshot",

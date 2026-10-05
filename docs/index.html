@@ -1872,10 +1872,10 @@ V.home=`<section class="home-hero">
 </div></div></section>`;
 
 V.l0=`<div class="eyebrow">Lesson 0</div><h1>Get the actual workbench running on your machine</h1>${illo('l0')}
-<div class="lesson-orientation"><p>Launch the existing system on macOS or Windows, choose the working surface that fits you, and discover the eight commands without memorizing them. Install steps here are current as of September 2026 — check <code>code.claude.com/docs</code> if a command has changed.</p></div>
+<div class="lesson-orientation"><p>Launch the existing system on macOS or Windows, choose the working surface that fits you, and discover the eight commands without memorizing them. Follow <code>NEW-USER-SETUP.md</code> in the kit for the current first-run path; check <code>code.claude.com/docs</code> if a Claude Code install command has changed.</p></div>
 
 <div class="step"><div class="shead"><span class="snum">BEFORE STEP 1</span><span class="stitle">Download the PM Workbench system from GitHub</span></div>
-<p>This interactive course is a guide; the runnable system is in the <a href="https://github.com/melanatech/PM-workbench" target="_blank" rel="noopener">PM Workbench GitHub repository</a>. On GitHub, choose <b>Code → Download ZIP</b> and extract it. Use the inner <code>pm-workbench</code> folder from the downloaded repository for the setup steps below: open that folder in Cursor or <code>cd</code> into it in Terminal.</p></div>
+<p>This interactive course is a guide; the runnable system is in the <a href="https://github.com/melanatech/PM-workbench" target="_blank" rel="noopener">PM Workbench GitHub repository</a>. On GitHub, choose <b>Code → Download ZIP</b> and extract it. Use the inner <code>pm-workbench</code> folder as the <b>kit</b> (commands, scripts, clipper). Your day-to-day data lives in a separate live folder — usually <code>~/pm-live</code> — created next.</p></div>
 
 <div class="step"><div class="shead"><span class="snum">STEP 1</span><span class="stitle">Check for Node.js — needed for the browser bridge and prototypes</span></div>
 <p><span data-os="mac">Open <b>Terminal</b> (⌘-space, type "terminal", Enter).</span><span data-os="win">Open <b>PowerShell</b> (Start, type "powershell", Enter).</span> Type this and press Enter:</p>
@@ -1886,10 +1886,13 @@ V.l0=`<div class="eyebrow">Lesson 0</div><h1>Get the actual workbench running on
 <div class="step"><div class="shead"><span class="snum">STEP 2</span><span class="stitle">Install Claude Code and sign in</span></div>
 <pre class="snip"><span data-os="mac">curl -fsSL https://claude.ai/install.sh | bash</span><span data-os="win">irm https://claude.ai/install.ps1 | iex</span></pre>
 <p>(This is Anthropic's native installer — Claude Code no longer needs Node or npm to run. If your company already installs it another way, use that.) Verify with <code>claude --version</code>, then type <code>claude</code> once — a browser tab opens to sign in with your work account. One time only.</p></div>
-<div class="step"><div class="shead"><span class="snum">STEP 3</span><span class="stitle">Pick your cockpit</span></div>
+<div class="step"><div class="shead"><span class="snum">STEP 3</span><span class="stitle">Create your live folder, then open it</span></div>
+<p>From the kit folder in Terminal, create the live workspace (inbox, registers, outputs — not a git clone):</p>
+<pre class="snip">python3 scripts/create_live_workspace.py ~/pm-live</pre>
+<p>Details and flags are in <code>NEW-USER-SETUP.md</code>. After that, day-to-day work happens in <code>~/pm-live</code>, not inside the downloaded kit.</p>
 <div class="tabs"><button class="active" onclick="tab(this,'t-cur')">Cursor — recommended</button><button onclick="tab(this,'t-cli')">Terminal only</button></div>
-<div class="tabpanes"><div class="active" id="t-cur"><p>The chat panel, file tree, and visual diffs keep the workspace visible in one place. Download from <b>cursor.com</b>, install<span data-os="mac"> (drag to Applications)</span><span data-os="win"> (run the .exe with the defaults)</span>, then choose <b>File → Open Folder</b> → <code>pm-workbench</code>. Accept the Claude Code extension prompt (or Extensions → search "Claude Code" → Install). In the sidebar chat panel, type <code>hello</code> and verify that it responds.</p></div>
-<div id="t-cli"><p>Works fine: <span data-os="mac"><code>cd ~/pm-workbench</code> then <code>claude</code></span><span data-os="win"><code>cd $HOME\\pm-workbench</code> then <code>claude</code></span>. You chat in the window; everything in this course works identically.</p></div></div>
+<div class="tabpanes"><div class="active" id="t-cur"><p>The chat panel, file tree, and visual diffs keep the workspace visible in one place. Download from <b>cursor.com</b>, install<span data-os="mac"> (drag to Applications)</span><span data-os="win"> (run the .exe with the defaults)</span>, then choose <b>File → Open Folder</b> → <code>~/pm-live</code>. Make that the <b>first</b> (or only) folder in the window so chat links to outputs stay clickable. Accept the Claude Code extension prompt (or Extensions → search "Claude Code" → Install). In the sidebar chat panel, type <code>hello</code> and verify that it responds.</p></div>
+<div id="t-cli"><p>Works fine: <span data-os="mac"><code>cd ~/pm-live</code> then <code>claude</code></span><span data-os="win"><code>cd $HOME\\pm-live</code> then <code>claude</code></span>. You chat in the window; everything in this course works identically.</p></div></div>
 <div class="branch"><button onclick="markDone(this,'install')">Done — it answered me</button></div></div>
 <h2>Find every command from the palette</h2>
 <p>Type <code>/</code> in the chat and the full command palette appears, each with a description. Try it:</p>
@@ -1907,10 +1910,10 @@ V.l2=`<div class="eyebrow">Lesson 2</div><h1>Capture a decision in under a minut
 
 <div class="lesson-orientation"><p>Capture real work quickly while keeping ambiguous statements from becoming fake decisions. The workflow sorts what you said without forcing certainty you did not provide.</p></div>
 <p><code>/quick-close</code> parses a short note into decisions, commitments, risks, and raw notes without forcing certainty.</p>
-<div class="register-key" aria-label="Register types"><div><b>Decisions</b>Settled choices</div><div><b>Commitments</b>An owner plus a due date</div><div><b>Risks</b>Uncertain watch items</div></div>
+<div class="register-key" aria-label="Register types"><div><b>Decisions</b>Settled product choices</div><div><b>Commitments</b>Promises you own, chase, or depend on for product work</div><div><b>Risks</b>Uncertain watch items that affect your work</div></div>
 <p>Run the sample first to see the shape, then <b>clear the box and type a real decision or commitment from your own week</b> — it parses yours exactly the same way (decisions, commitments, and hedged "might/heard" risks each go to the right register).</p>
 ${term('quickclose','haiku','decided w/ Dana — Scorecards phase 1 admin-only, Jordan owns eligibility spec by Fri','line')}
-<p class="note">Clear statements log instantly — internal bookkeeping never waits for approval; only things other people see do. Anything ambiguous is saved raw instead of guessed at, and gets fully reconciled at the nightly inbox run. Voice works too: dictate a 10-second memo<span data-os="mac"> (or your phone)</span><span data-os="win"> (Win+H, or your phone)</span> and drop the transcript in <code>inbox/meetings/</code>.</p>`;
+<p class="note">Clear statements log instantly — internal bookkeeping never waits for approval; only things other people see do. Anything ambiguous is saved raw instead of guessed at, and gets fully reconciled at the nightly inbox run. Eng-only chores overheard in a meeting (infra, certs, on-call) are not PM commitments — leave them out of the register. Voice works too: dictate a 10-second memo<span data-os="mac"> (or your phone)</span><span data-os="win"> (Win+H, or your phone)</span> and drop the transcript in <code>inbox/meetings/</code>.</p>`;
 
 V.l3=`<div class="eyebrow">Lesson 3</div><h1>Where the information comes from</h1>${illo('l3')}
 
@@ -1923,7 +1926,7 @@ V.l3=`<div class="eyebrow">Lesson 3</div><h1>Where the information comes from</h
 <div class="step"><div class="shead"><span class="snum">PATH 3</span><span class="stitle">Paste from any source</span></div>
 <p>Copy anything — a Slack thread, an email, a stray thought — and paste it into the chat. It gets classified, filed with a timestamp, and processed like everything else. Try it (editable — paste anything real):</p>
 ${term('paste','haiku','From #cs-escalations: Harbor Dental asked if scorecard exports can go to a shared drive instead of email. Second account asking this month.','area')}
-<p class="note">Pasted text requires no special integration. When Cursor is closed, a one-click OS shortcut (a <span data-os="mac">macOS Quick Action in the right-click menu</span><span data-os="win">right-click "Send to" entry</span>) moves the current clipboard into <code>inbox/</code>.</p></div>
+<p class="note">Pasted text requires no special integration. When Cursor is closed, install right-click capture once from your live folder: <code>bash scripts/install_clipboard_service.sh</code> (or double-click <code>tools/clipboard-capture/Install Right-Click Capture.command</code>). Enable <b>Send to PM Workbench</b> under <b>System Settings → Keyboard → Keyboard Shortcuts → Services</b> → Text (not Privacy &amp; Security). Then select text → right-click → Services → <b>Send to PM Workbench</b>. If Slack hides Services on right-click, use the menu bar → Slack → Services. Fallback: paste into this chat, or double-click <code>Capture Clipboard.command</code>.</p></div>
 <div class="step"><div class="shead"><span class="snum">PATH 4</span><span class="stitle">Browser, three jobs, in order — capture first, automation last (none needs admin approval)</span></div>
 <p><b>A · Capture what you're looking at (most days):</b> the <b>Workbench Clipper</b> in <code>tools/workbench-clipper/</code>. <span data-os="mac">Chrome → <code>chrome://extensions</code></span><span data-os="win">Chrome or Edge → <code>chrome://extensions</code></span> → Developer mode → Load unpacked → that folder (2 minutes). Right-click any page or selection → <i>Send to PM Workbench</i> → pick a category → it lands in <code>Downloads/pm-workbench-inbox/</code> with URL, title, and timestamp in the frontmatter; <code>/capture process-inbox</code> pulls it in. You clicked, so there is no automation to govern.</p>
 <p><b>B · Let Claude read pages for you (discovery scans, OKR pulls, Jira views):</b> install Anthropic's <b>Claude in Chrome</b> extension, sign in, then type <code>/chrome</code> in Claude Code (or launch <code>claude --chrome</code>). Test: "in read-only mode, tell me what's on my current tab; don't click or type." Beta, Chrome/Edge only, needs a claude.ai login; an org can disable the extension — then use C.</p>
@@ -1938,13 +1941,15 @@ V.l4=`<div class="eyebrow">Lesson 4</div><h1>One meeting, every follow-through</
 
 <div class="lesson-orientation"><p>Trace decisions to the meeting source and coordinate every downstream update without relying on memory. The transcript remains the source; state compounds across workflows.</p></div>
 <h3>Close out the seeded roadmap review</h3>
-<p>You organized the meeting, so a transcript exists (Teams, Zoom, Meet — whichever your company records). Open <code>inbox/meetings/2026-07-14-roadmap-review.txt</code> first, then trace every extraction to a source line. An AI meeting summary or typed notes follow the same workflow.</p>
+<p>You organized the meeting, so a transcript exists (Teams, Zoom, Meet — whichever your company records). Open <code>inbox/meetings/2026-07-14-roadmap-review.txt</code> first, then trace every extraction to a source line. An AI meeting summary or typed notes follow the same workflow. Registers stay PM-scoped: product decisions and commitments you own or chase — not eng-only chores overheard in the room.</p>
 ${term('closeout','sonnet','<b>/capture meeting-closeout</b> inbox/meetings/2026-07-14-roadmap-review.txt')}
 <h3>Close out notes from your own meeting</h3>
 <p>The seeded transcript proves nothing if it only works on seeded files. Paste notes from a real meeting of yours (or edit the sample) — same parsing, cumulative rows:</p>
 ${term('yourmeeting','sonnet','Synced with Priya. Agreed to move the analytics review to monthly.\nPriya will share the instrumentation checklist by Tuesday.\nHeard the data team might lose a contractor next quarter.','area')}
 <h3>Reconcile the board with the meeting decision</h3>
 ${term('jira','sonnet','<b>/sync jira-reconcile</b>')}
+<h3>When the meeting implies new Jira work</h3>
+<p>Drafts are paste-ready for people who never see your workbench. Each ticket needs a <b>descriptive summary</b> (what changes and why), <b>initiative/epic</b>, <b>priority</b>, and <b>target date</b> (or an explicit gap). <b>Related</b> means other Jira tickets only — never local file paths or register ids. Full shape: <code>reference/templates/jira-ticket-draft.md</code>.</p>
 <h3>Draft the weekly update</h3>
 <p>Note what happens after the draft: it checks your <i>previous</i> commitments against this draft, and you can ask for format changes — which it remembers.</p>
 ${term('weekly','sonnet','<b>/report weekly-update</b>')}

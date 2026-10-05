@@ -19,4 +19,5 @@ browser-profiles/
 .claude/CLAUDE.local.md
 .claude/settings.local.json
 __pycache__/
+tools/clipboard-capture/SendToPMWorkbench/build/
 # reference/links.csv and roadmap/*.csv are trackable; review for company data before committing.

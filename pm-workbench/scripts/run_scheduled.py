@@ -7,9 +7,10 @@ guardrails (Plan D):
   * more than --max-runs-per-day  -> nothing runs; logged as skipped-cap
   * the previous run still holds state/.scheduled.lock -> skipped-running (stale after 2 hours)
   * --if-new-inbox and nothing new in inbox/ since the last successful run -> skipped-nothing-new
-  * otherwise it runs `claude -p` in this folder with no permission prompts (anything that would need an
-    answer is denied), an append-system-prompt that says nobody can answer (CLAUDE.md rule 22), and a
-    narrow allow-list. A non-zero exit appends a BLOCKED row to logs/run-log.csv so tomorrow's brief shows it.
+  * otherwise it runs `claude -p` in this folder with `--permission-mode dontAsk` (anything that would need
+    an answer is denied; Claude Code 2.1+ has no `--permission-prompts` flag), an append-system-prompt that
+    says nobody can answer (CLAUDE.md rule 22), and a narrow allow-list. A non-zero exit appends a BLOCKED
+    row to logs/run-log.csv so tomorrow's brief shows it.
 Every invocation, run or skipped, is one row in logs/scheduled-runs.csv.
 
   python3 scripts/run_scheduled.py daily-brief
@@ -159,7 +160,9 @@ def drop_lock():
 
 
 def build_command(claude, prompt):
-    return [claude, "-p", prompt, "--permission-mode", "acceptEdits", "--permission-prompts", "none",
+    # dontAsk: unattended runs must not hang on permission prompts. Claude Code 2.1+
+    # rejects the older --permission-prompts flag (unknown option).
+    return [claude, "-p", prompt, "--permission-mode", "dontAsk",
             "--allowedTools", ",".join(ALLOWED_TOOLS), "--append-system-prompt", UNATTENDED_NOTE]
 
 

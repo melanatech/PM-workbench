@@ -10,7 +10,7 @@ Registers and local files are an INDEX and working memory — never the ultimate
 | Official metrics | OKR dashboard / behavior analytics / experiment tool / OKR site | Never recalculate; a stale export loses to the live dashboard |
 | Support history | Jira support cases | |
 | Launch commitments | The approved launch record | Slack cannot override |
-| Customer problems | Direct research + support evidence + observed behavior | A stakeholder's opinion is input, not evidence |
+| Customer problems | Direct research + support evidence + observed behavior | A stakeholder's opinion or proposed enhancement is **input**: log it on `registers/evidence.csv` as `inferred` (or `reported` if they are relaying users). It must not be treated as proof of a customer problem when answering discovery questions or writing PRDs |
 | Meeting interpretation | Local notes, until validated or formally recorded | |
 | Prototype behavior | The prototype repo itself | |
 

@@ -6,7 +6,7 @@ argument-hint: [meeting-closeout|process-inbox] [notes, a file in inbox/meetings
 
 Input: $ARGUMENTS
 
-Read `.claude/workflows/_protocol.md` and follow it with CLUSTER = `capture`. Do not run anything before you have read it.
+Read `.claude/workflows/_protocol.md` and follow it with CLUSTER = `capture`. Do not run anything before you have read it. Do not narrate that read (or `routes.json`) in chat — keep plumbing in thinking. If prep finishes and the next step is obvious (e.g. inbox staged to reprocess), dispatch that workflow in the **same turn** — never end on "Ready to reprocess." After the runner returns: paste its RESULT/PROPOSALS/QUESTIONS once and stop — no "Done." wrap-up.
 
 ## What this command covers
 

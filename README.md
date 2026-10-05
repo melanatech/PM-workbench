@@ -5,7 +5,8 @@ meetings, evidence, and decisions into traceable work—not just more documents.
 
 **[Take the course](https://melanatech.github.io/PM-workbench/)** ·
 **[Read the essay](https://melanatech.github.io/PM-workbench/blog/ai-system-worked/)** ·
-**[Start with the toolkit](pm-workbench/START%20HERE.md)**
+**[Start with the toolkit](pm-workbench/START%20HERE.md)** ·
+**[New-user setup](pm-workbench/NEW-USER-SETUP.md)**
 
 ## What this project is
 
@@ -36,7 +37,9 @@ For the story behind the project, read
 
 ### 2. Try the toolkit with fictional data
 
-Start with a disposable workspace before using real material.
+Start with a disposable workspace before using real material. For the full
+first-run path (live folder + fixture + troubleshooting), see
+[NEW-USER-SETUP](pm-workbench/NEW-USER-SETUP.md).
 
 **Prerequisites**
 
@@ -45,16 +48,18 @@ Start with a disposable workspace before using real material.
   and require no additional Python packages.
 - Claude Code for running the command prompts. Verify that your installed
   version recognizes the workbench's `.claude/commands/` and settings.
+  Open the live workspace or isolate folder in Claude Code—not only the git root.
 
 If you have Git installed, get a local copy with:
 
 ```sh
 git clone https://github.com/melanatech/PM-workbench.git
 cd PM-workbench
+python3 pm-workbench/scripts/create_live_workspace.py ~/pm-live
 ```
 
 Alternatively, download and extract the repository ZIP from GitHub's **Code**
-menu.
+menu, then run the same `create_live_workspace.py` command.
 
 From the **repository root**, run the local safety tests:
 
@@ -203,6 +208,7 @@ Ctrl+C when finished.
 
 | Topic | Guide |
 | --- | --- |
+| First-run live workspace + troubleshooting | [NEW-USER-SETUP](pm-workbench/NEW-USER-SETUP.md) |
 | Onboarding and workflow menu | [START HERE](pm-workbench/START%20HERE.md) |
 | Context, capture, permissions, and hooks | [SETUP](pm-workbench/SETUP.md) |
 | Operating rules | [CLAUDE.md](pm-workbench/CLAUDE.md) |

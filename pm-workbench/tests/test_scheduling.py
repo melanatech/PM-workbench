@@ -120,8 +120,9 @@ class WrapperTests(unittest.TestCase):
     def test_command_has_no_prompts_and_a_narrow_allow_list(self):
         result = self.run_task("todo-sweep", "--dry-run")
         self.assertEqual(result.returncode, 0)
-        for text in ("--permission-prompts none", "--permission-mode acceptEdits", "rule 22", "never Deep"):
+        for text in ("--permission-mode dontAsk", "rule 22", "never Deep"):
             self.assertIn(text, result.stdout)
+        self.assertNotIn("--permission-prompts", result.stdout)
         self.assertNotIn("--dangerously-skip-permissions", result.stdout)
         self.assertNotIn("--bare", result.stdout)
         allowed = result.stdout.split("--allowedTools")[1].split()[0].strip("'")

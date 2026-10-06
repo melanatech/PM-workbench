@@ -38,11 +38,30 @@ Chat is not storage. **You write the file yourself** before returning to the par
 
 1. `mkdir -p state/competitive` (Bash).
 2. Slug the competitor name (lowercase, hyphens): e.g. `shopify-pos`, `paypal-zettle`.
-3. Write **`state/competitive/YYYY-MM-DD-<slug>.md`** with Edit (today's date). Include:
-   - competitor name, scope, access path used
-   - resolved URL list actually fetched
-   - observations / not-confirmed / inferences (separated)
-   - change report vs prior file if one existed
+3. Write **`state/competitive/YYYY-MM-DD-<slug>.md`** with Edit (today's date). Use this **heading order** so runs stay comparable:
+
+```
+# <Competitor> — YYYY-MM-DD
+## Summary
+## By product area
+## Changes
+## Inferences
+## BLOCKED / UNVERIFIED
+```
+
+   Under **Summary:** competitor name, scope, access path used, resolved URL list actually fetched.
+
+   Under **By product area:** one subsection per watchlist product area in scope. For each area cover (use N/A with reason when missing — do not invent from training memory):
+   1. **Direct offering** — what they ship here (sourced URL + date)
+   2. **Positioning / packaging** — pricing gates, SKU/plan limits, named bundles if visible on fetched pages
+   3. **Gaps vs watch areas** — not-confirmed if the page is missing
+   4. **Customer alternatives / workarounds** — only if stated on fetched pages, otherwise leave to **Inferences** and label them
+
+   Under **Changes:** change report vs prior capture file if one existed (or "first capture — no prior to diff").
+
+   Under **Inferences:** labeled separately from observations; never unaudited background knowledge as a dated observation.
+
+   Under **BLOCKED / UNVERIFIED:** tool failures, empty fetches, or thin pages — or omit the section if none.
 4. **BLOCKED runs still get a file:** same path with a clear `Status: BLOCKED` and the tool error — so the parent never has to re-ask "where did the capture go?" Never call a BLOCKED file a baseline in the log.
 5. Do **not** ask the PM or parent whether to save. Do **not** say "you'll need to save this." Do **not** leave the full capture only in your return text.
 
@@ -53,3 +72,8 @@ Chat is not storage. **You write the file yourself** before returning to the par
 3. The resolved URL list (for watchlist backfill).
 
 Keep scraped marketing copy out of the main session — the file holds the capture; the return is the pointer + digest.
+
+## Provenance tagging
+
+In FAIL / PASS WITH CONDITIONS / findings, mark unverified claims `[hypothesis: …]` and unsourced model-knowledge claims `[external::training]`. Do not invent stakeholder names. Tags are not evidence — they flag what still needs a source or an assumptions bullet.
+

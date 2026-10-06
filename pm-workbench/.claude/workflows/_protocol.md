@@ -64,6 +64,8 @@ User-facing chat and durable files omit empty work. The checks in the workflow s
 
 Citing a file as an **input** ("I used the 10-05 digest + the archive transcript") is fine. Claiming the **chat reply is the same as** that file is not, unless claim-checked or written this turn. Digests compress; ad-hoc answers expand. If you answered from a richer source than the linked digest, say so in one line. Never use "yes, it's all captured" as a topic checklist (keywords present) — that is how users open a file and find a thinner story than the chat.
 
+**Provenance tags (CLAUDE.md rule 4):** in analytical RESULT prose, mark unverified claims `[hypothesis: …]` and unsourced model-knowledge claims `[external::training]`. Hypotheses that remain after the run → append to `reference/context/assumptions-and-open-questions.md`. Tags are not evidence.
+
 ### 6b. User-injected context (CLAUDE.md rule 24)
 
 Applies outside capture workflows too (including after meeting-prep or "what happened on…"). New material facts from the PM → write-back or one concrete ask; never acknowledge-only when a register/learning row is clearly warranted.

@@ -56,6 +56,8 @@ If a **component library** is the design source, install/link it and build scree
 
 **Checkpoint after scaffold.** Even for loose static: `python3 scripts/prototype_checkpoint.py --path prototypes/[name] --label after-scaffold` (creates local `git init` if missing; never pushes). See Checkpoints below.
 
+**Readiness checklist (non-blocking unless asked):** consult `reference/templates/prototype-readiness-checklist.md`. Note any Red dimensions in RESULT. Do not block the build unless the PM asked for a hard readiness gate.
+
 ## Step 3 — QA: actually run it and look (do not skip, do not fake)
 
 This is the step that distinguishes a real prototype from a plausible-looking one. Run the bundled QA harness in `qa/` (see `qa/README.md` for prerequisites — it needs a local browser via Playwright, free/open-source, no API or cost — see note below).

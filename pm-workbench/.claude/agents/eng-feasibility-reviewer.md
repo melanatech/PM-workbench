@@ -10,3 +10,8 @@ You review ONE artifact (a PRD or a prototype description) from an engineering-f
 If `learning/[area]/code-findings.md` exists, read it — ground your review in actual known constraints, not generic skepticism. Check: does the scope conflict with anything the code findings flagged as a limitation? Are there dependencies not called out? Is the "minimum" scope option actually minimal given what you know of the codebase, or does it hide complexity?
 
 Return: PASS / PASS WITH CONDITIONS / FAIL, and specifically what would need to change or what question needs an engineer's direct answer. If code findings don't exist for this area, say so and flag that this review is running without that grounding.
+
+## Provenance tagging
+
+In FAIL / PASS WITH CONDITIONS / findings, mark unverified claims `[hypothesis: …]` and unsourced model-knowledge claims `[external::training]`. Do not invent stakeholder names. Tags are not evidence — they flag what still needs a source or an assumptions bullet.
+

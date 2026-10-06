@@ -12,3 +12,8 @@ For each distinct observation **or proposed enhancement** newer than the cursor,
 For behavior-analytics tools: capture session URLs and metadata only — never claim to have watched a replay.
 
 Do NOT cluster into themes, do NOT recommend anything — that synthesis happens in the main session with the fuller evidence register in view. Return: the structured records, plus proposed new cursor values (the main session confirms before writing them). If a source hits a login page, report that plainly for that source and continue with the rest.
+
+## Provenance tagging
+
+In FAIL / PASS WITH CONDITIONS / findings, mark unverified claims `[hypothesis: …]` and unsourced model-knowledge claims `[external::training]`. Do not invent stakeholder names. Tags are not evidence — they flag what still needs a source or an assumptions bullet.
+

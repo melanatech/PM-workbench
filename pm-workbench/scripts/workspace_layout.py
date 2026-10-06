@@ -22,7 +22,9 @@ ROOT_MUTABLE_DIRS = {
 # Real directories every live workspace needs (created empty; not symlinks).
 DATA_DIRS = (
     "inbox/meetings", "inbox/captures", "inbox/exports", "inbox/documents",
-    "archive", "state", "logs", "registers", "outputs/daily", "outputs",
+    "inbox/competitive",
+    "archive", "state", "state/competitive", "logs", "registers",
+    "outputs/daily", "outputs", "outputs/monthly",
     "outputs/todo-proposals", "outputs/todo-drafts",
     "repos", "learning", "drafts", "prototypes", "roadmap", "reference/context",
     "reference/templates", "reference/metric-definitions", "reference/user-research",

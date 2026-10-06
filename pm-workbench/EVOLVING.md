@@ -45,6 +45,20 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 
 ## Changelog (newest first; one line per real architectural decision — not every edit)
 
+- 2026-10-06 — Metrics sources + recency nuance: CLAUDE.md rule 5 and SOURCE-POLICY Official metrics no longer dashboard-only — dated internal decks/MBRs/PPPs/wiki/exports may append `okr-history.csv` with provenance. Recency≠authority stays for decisions/ideas; **dated internal numbers** prefer newer as_of_date (still surface definition conflicts; not web search). process-inbox + `_fan-out` surface 12 + okr-refresh updated. Trigger: MBR clip numbers skipped because "dashboard only."
+
+- 2026-10-06 — `extract_document.sh` no longer a stub: text/csv/md copy-through, Word/RTF/HTML via textutil, PDF via pdftotext or PDFKit. process-inbox uses it first and fails fast (ask re-export) on exit 2/3 — one-offs still allowed for true gaps, but not retry loops. Cuts the common “script error” noise from invented extractors.
+
+- 2026-10-06 — `/sync context-reconcile`: backfill fan-out from already-processed archive/outputs into living surfaces; refreshes todo-proposals + open questions; todo.csv edits stay PROPOSALS. For "todos feel wrong" / context not propagated after early capture runs. Distinct from jira-reconcile and single-change ripple-check.
+
+- 2026-10-06 — **Fan-out checklist** (`.claude/workflows/_fan-out.md`): capture/discovery/competitive/ripple must update every durable surface that applies in the same run (registers + assumptions + priorities + learning + user-research + competitive + todo-proposals + cross-INIT notes), not stop at DEC-/EV- rows. End with Surfaces updated / N/A / Cross-initiative. Fixes cross-cutting insights dying in chat or daily digests.
+
+- 2026-10-05 — Competitive-scan scope discipline: customer evidence may prioritize a subsection, must not collapse the monthly log to one question when the watchlist/research cover broader reporting themes (exports, payouts, pricing, AI, integrations). No "should I expand?" when scope was already in-run.
+
+- 2026-10-05 — Competitive-scan **must persist in-run**: capture agent writes `state/competitive/YYYY-MM-DD-<slug>.md` (has Edit); parent verifies file exists, writes log same run, never asks "should I create the competitive-log?" Chat-only captures were a rule-20 defect. `state/competitive`, `inbox/competitive`, `outputs/monthly` added to DATA_DIRS.
+
+- 2026-10-05 — **Bedrock WebSearch gap fixed for competitive-scan:** Amazon Bedrock rejects Claude's native `web_search` tool. Added stdlib `scripts/web_search.py` (DuckDuckGo → Bing fallback; optional SERPER_API_KEY / BRAVE_API_KEY) as the primary URL discovery path; capture agent uses Bash → that script, then WebFetch. Native WebSearch optional. Seed URLs optional; guessing forbidden; watchlist backfill after good runs.
+
 - 2026-10-05 — Optional Claude Code plugins documented (user install, not kit deps): atlassian, frontend-design, slack, github, figma, chrome-devtools-mcp via `/plugin install …@claude-plugins-official`. NEW-USER-SETUP §2b + SETUP Part 1 pointer. No superpowers.
 
 - 2026-10-05 — Prototype **checkpoints** (not Plans): `scripts/prototype_checkpoint.py` commits inside `prototypes/[name]/` only; label index in `logs/prototype-checkpoints/[name].md`. Wired into prototype-build at after-scaffold / after-qa / after-revision-qa. Restore by label or hash; never push. Claude Code Plans deliberately not adopted.
@@ -116,4 +130,4 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 - Whether `claude --chrome` or the Playwright/CDP fallback is actually in use, and whether that's changed since setup.
 - Whether your ticketing/wiki has gained a direct API path Claude can call (an approved integration or token) — would simplify several commands if so.
 - Register file sizes — check whether `/rotate-registers` has actually been run.
-- Whether `scripts/log_metrics.py` and `scripts/extract_document.sh` have been filled in past their stub state, and for which formats/metrics.
+- Whether `scripts/log_metrics.py` and `scripts/render_template.py` have been filled in past their stub state; `extract_document.sh` covers common formats (pptx/xlsx and encrypted Office still manual).

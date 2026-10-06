@@ -5,7 +5,7 @@ Three different things live in `.claude/`, and they solve different problems:
 | Mechanism | Where | What it is | Why use it |
 |---|---|---|---|
 | **Command** | `.claude/commands/*.md` | A prompt template you invoke by name. Eight exist: six thin cluster routers (`/capture`, `/brief`, `/sync`, `/discover`, `/build`, `/report`), `/quick-close`, `/todo` | What you type |
-| **Workflow** | `.claude/workflows/*.md` | The original command texts, moved unchanged; not registered as commands. A router reads one and the `workflow-runner` subagent carries it out | Keeps 26 workflows behind 8 commands without rewriting their logic |
+| **Workflow** | `.claude/workflows/*.md` | The original command texts, moved unchanged; not registered as commands. A router reads one and the `workflow-runner` subagent carries it out | Keeps 27 workflows behind 8 commands without rewriting their logic |
 | **Skill** | `.claude/skills/*/SKILL.md` | Same idea, but Claude can auto-invoke it from plain language | Once a command is stable and you'd rather just describe the task (see SKILLS.md) |
 | **Subagent** | `.claude/agents/*.md` | A separate Claude instance with its OWN context window and tool access, spawned mid-task | When a step needs isolation — either to stay unbiased, or to keep heavy reading out of your main session |
 
@@ -23,7 +23,7 @@ The test is: does this step need **isolation** — either independence from bias
 **Heavy-read isolation (keep large raw material out of the main session):**
 - `launch-drift-detector` (`/build launch-package`) — PRD + Jira + prototype + docs + marketing at once
 - `discovery-source-reader` (`/discover discovery`) — chat channels + support pages + behavior-analytics segments
-- `competitive-capture-agent` (`/discover competitive-scan`) — several competitor sites at once
+- `competitive-capture-agent` (`/discover competitive-scan`) — several competitors at once; discovers URLs via **`scripts/web_search.py`** (Bedrock-safe), WebFetch, then **writes `state/competitive/YYYY-MM-DD-<slug>.md` itself** (chat is not storage); watchlist seed URLs optional
 - `return-window-scanner` (`/brief return-brief`) — weeks of chat/Jira/wiki/shared-drive history; the single heaviest read in the kit
 - `strategy-synthesizer` (`/report strategy-refresh`) — evidence register + OKR history + competitive log + learning files together
 - `code-repo-explorer` (`/discover code-dive`, reused by `/build prototype-build`) — a whole cloned repo's file tree

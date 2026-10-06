@@ -74,6 +74,68 @@ class RoutesTableTests(unittest.TestCase):
         inbox = (WORKBENCH / ".claude" / "workflows" / "process-inbox.md").read_text(encoding="utf-8")
         self.assertIn("PM-scope filter", inbox)
 
+    def test_discovery_synthesis_checklist_for_modes_1_3_4(self):
+        text = (WORKBENCH / ".claude" / "workflows" / "discovery.md").read_text(encoding="utf-8")
+        self.assertIn("Synthesis checklist", text)
+        self.assertIn("modes 1, 3, and 4", text)
+        self.assertIn("Channel mix named", text)
+        self.assertIn("Theme cards", text)
+        self.assertIn("Independent-account count", text)
+        self.assertIn("inferred never counted as customer proof", text)
+        self.assertIn("Proactive", text)
+        self.assertIn("Reactive", text)
+        self.assertIn("Competitive", text)
+
+    def test_competitive_scan_landscape_and_capture_taxonomy(self):
+        scan = (WORKBENCH / ".claude" / "workflows" / "competitive-scan.md").read_text(encoding="utf-8")
+        self.assertIn("Landscape", scan)
+        self.assertIn("direct", scan)
+        self.assertIn("adjacent", scan)
+        self.assertIn("emerging", scan)
+        self.assertIn("white-space", scan)
+        self.assertIn("grounded in", scan)
+        self.assertIn("state/competitive", scan)
+        self.assertIn("web_search.py", scan)
+        self.assertIn('Should I create the competitive-log?', scan)
+        capture = (WORKBENCH / ".claude" / "agents" / "competitive-capture-agent.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("heading order", capture)
+        self.assertIn("## Summary", capture)
+        self.assertIn("## By product area", capture)
+        self.assertIn("## Changes", capture)
+        self.assertIn("## Inferences", capture)
+        self.assertIn("## BLOCKED / UNVERIFIED", capture)
+        self.assertIn("Direct offering", capture)
+        self.assertIn("Positioning / packaging", capture)
+        self.assertIn("Gaps vs watch areas", capture)
+        self.assertIn("Customer alternatives / workarounds", capture)
+        self.assertIn("web_search.py", capture)
+        self.assertIn("state/competitive", capture)
+
+    def test_optional_company_product_ui_base_docs(self):
+        """Org-agnostic recipe for private UI mocks under live repos/ — no company remotes in kit."""
+        setup = (WORKBENCH / "NEW-USER-SETUP.md").read_text(encoding="utf-8")
+        self.assertIn("## 2a. Optional: company product UI base", setup)
+        self.assertIn("Product UI base (optional)", setup)
+        self.assertIn("ln -s", setup)
+        self.assertIn("CLAUDE.local.md", setup)
+        self.assertIn("links.csv", setup)
+        self.assertIn("prototypes/", setup)
+        self.assertIn("repos/", setup)
+        self.assertIn("private npm registry", setup)
+        self.assertIn("re-clone", setup)
+        self.assertNotIn("gdcorp-commerce", setup)
+        self.assertNotIn("pm-ch-mockup", setup)
+        claude = (WORKBENCH / "CLAUDE.md").read_text(encoding="utf-8")
+        self.assertIn("product UI base", claude)
+        self.assertIn("NEW-USER-SETUP §2a", claude)
+        dive = (WORKBENCH / ".claude" / "workflows" / "code-dive.md").read_text(encoding="utf-8")
+        self.assertIn("symlink", dive)
+        evolving = (WORKBENCH / "EVOLVING.md").read_text(encoding="utf-8")
+        self.assertIn("product UI base", evolving)
+        self.assertIn("symlink into live `repos/`", evolving)
+
     def test_jira_ticket_draft_template_is_paste_ready(self):
         path = WORKBENCH / "reference" / "templates" / "jira-ticket-draft.md"
         self.assertTrue(path.is_file(), path)

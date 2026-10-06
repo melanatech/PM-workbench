@@ -16,3 +16,8 @@ You gather grounding for one feature/problem, reading all at once so this doesn'
 - `prototypes/[feature]/` — if a prototype already exists, note that it exists and summarize its current state (the main session will run full reconciliation separately)
 
 Return ONE grounding brief: evidence strength (with citations), what's already known technically, current metric baseline, competitive context if any, relevant prior decisions/risks, and — critically — an explicit list of what's NOT covered by existing context (gaps). Don't draft anything. This brief is what the main session uses for the readiness score and the PRD itself, instead of re-reading five files from scratch.
+
+## Provenance tagging
+
+In FAIL / PASS WITH CONDITIONS / findings, mark unverified claims `[hypothesis: …]` and unsourced model-knowledge claims `[external::training]`. Do not invent stakeholder names. Tags are not evidence — they flag what still needs a source or an assumptions bullet.
+

@@ -21,6 +21,36 @@ Across every mode: cross-check against `registers/initiatives.csv` and name when
 
 **Fan-out after ingest or a material answer (required).** Read `.claude/workflows/_fan-out.md`. Mode 2 (ingest) and any mode that surfaces a contradicted assumption or cross-initiative theme must update assumptions/learning/priorities/competitive/INIT notes as they apply — not only `evidence.csv`. End with the Surfaces updated block.
 
+## Synthesis checklist (modes 1, 3, and 4)
+
+Modes **1 (answer), 3 (delta), and 4 (opportunity map)** must structure synthesis with the checklist below. Mode **2 (ingest)** stays single-interview first; after rows are written, note whether any new row strengthens an existing theme (link `proposed` until reviewed) — do not skip minority signals by averaging into a cross-interview blur.
+
+**Channel mix named.** State which channel classes were in the read set this run, mapped to workbench paths:
+
+| Channel class | Typical workbench sources |
+|---|---|
+| Proactive | Interviews, `reference/user-research/`, planned research notes |
+| Reactive | Support/clips in `archive/` or inbox discovery, ticket exports |
+| Passive | Behavior analytics (only if configured in CLAUDE.md) |
+| Community | Slack/Teams/community paste or clips |
+| Competitive | `outputs/monthly/competitive-log.md`, `state/competitive/` |
+
+If a class was empty, say so (a gap) — do not invent coverage. Do not run sentiment/NLP scoring or invent dashboards.
+
+**Theme cards.** For each theme in the answer, delta, or opportunity map:
+
+- Name + one-line problem statement
+- Supporting evidence IDs / paths with dates
+- Evidence class mix (counts of `direct` vs `reported` vs `inferred` — **inferred never counted as customer proof**)
+- Independent-account count (not message count)
+- Strength vs volume callout (volume ≠ strength still applies)
+- One representative verbatim when available (redact identifiers per rule 15)
+- Edge case or minority signal kept separate (do not average away)
+- INIT- touch if any
+
+**Mode 3 (delta):** themes gaining / losing / newly contradicted, using the same card fields where possible.
+
+**Mode 4 (opportunity map):** keep well-evidenced vs thin, and opportunity-without-solution / solution-without-opportunity; use theme cards as the cluster units. Never invent opportunities the evidence does not support.
 
 ## Relationship durability & known biases
 

@@ -13,3 +13,8 @@ Check specifically:
 - Is there a way to reduce blast radius (smaller %, specific segment, kill-switch) that isn't already in the design?
 
 Return: PASS, or PASS WITH CONDITIONS (name them), or FAIL with the specific harm and what would mitigate it.
+
+## Provenance tagging
+
+In FAIL / PASS WITH CONDITIONS / findings, mark unverified claims `[hypothesis: …]` and unsourced model-knowledge claims `[external::training]`. Do not invent stakeholder names. Tags are not evidence — they flag what still needs a source or an assumptions bullet.
+

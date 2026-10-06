@@ -13,3 +13,8 @@ Check specifically:
 - Could a usability session, a data pull, or a smaller pilot answer this more cheaply than a full experiment?
 
 Return: PASS, PASS WITH CONDITIONS (name the ops prep needed), or "recommend a cheaper method instead" with which one.
+
+## Provenance tagging
+
+In FAIL / PASS WITH CONDITIONS / findings, mark unverified claims `[hypothesis: …]` and unsourced model-knowledge claims `[external::training]`. Do not invent stakeholder names. Tags are not evidence — they flag what still needs a source or an assumptions bullet.
+

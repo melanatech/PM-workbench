@@ -119,6 +119,29 @@ Also try one **plain-language** ask (e.g. "catch me up" or "process any waiting 
 If they are missing, the project directory is wrong (git clone is first, or you
 are in Cursor Agent) or Claude Code did not load `.claude/commands/`.
 
+## 2a. Optional: company product UI base
+
+Some PMs have a **private company mock or replica** of the real product UI (design-system fidelity, no production backend) used as the shell for demos. That is different from greenfield prototypes under `prototypes/`. Keep company code **out of the kit git clone**.
+
+| Bucket | Live path | Use for |
+|---|---|---|
+| Eng / product clones | `~/pm-live/repos/<name>/` | `/discover code-dive` — read-only; never push |
+| Product UI base (optional) | Clone at e.g. `~/my-product-mock`, then **symlink** into `~/pm-live/repos/<name>/` | Demos that must look like the real app; extend per that repo’s conventions (often “add a page”) |
+| Greenfield prototypes | `~/pm-live/prototypes/<feature>/` | `/build prototype-build` scaffolds |
+
+Steps:
+
+1. Clone with your org’s git access to a path **outside** the PM-workbench git tree (home directory is fine).
+2. `mkdir -p ~/pm-live/repos` if needed, then:
+   `ln -s ~/my-product-mock ~/pm-live/repos/my-product-mock`
+   Treat the symlink as “repo present” — `/discover code-dive` must **not** re-clone over it.
+3. If the mock uses a **private npm registry** (Artifactory / GitHub Packages / etc.), authenticate before `npm install` (project `.npmrc` + your user token). Without auth, install fails with `E401` and `npm start` cannot run — source-only code-dive still works via the symlink.
+4. Record in `.claude/CLAUDE.local.md` (gitignored): absolute path, how to run (`npm start` / port), private-registry auth note if any, when to use the UI base vs `prototypes/`, and that agents must not push.
+5. Log the remote once in `reference/links.csv` (an L- row).
+6. Point `/discover code-dive` at `repos/<name>`. Do **not** copy the whole tree into `prototypes/` or commit it into the kit (`repos/**` is gitignored for a reason).
+
+Skip this section if you have no UI base yet — `repos/` and `prototypes/` can stay empty.
+
 ## 2b. Optional Claude Code plugins (user install — not in git)
 
 These install into **your Claude Code user config**, not into the kit or

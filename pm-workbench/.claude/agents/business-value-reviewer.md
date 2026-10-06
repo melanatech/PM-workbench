@@ -13,3 +13,8 @@ Check specifically:
 - Would a null result get treated as "no effect" when it might just mean "underpowered"?
 
 Return: PASS or FAIL, and if FAIL, name the missing decision mapping specifically.
+
+## Provenance tagging
+
+In FAIL / PASS WITH CONDITIONS / findings, mark unverified claims `[hypothesis: …]` and unsourced model-knowledge claims `[external::training]`. Do not invent stakeholder names. Tags are not evidence — they flag what still needs a source or an assumptions bullet.
+

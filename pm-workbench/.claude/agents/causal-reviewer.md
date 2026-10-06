@@ -14,3 +14,8 @@ Check specifically:
 - Is the comparison actually isolating the variable of interest, or conflating it with something else (a simultaneous launch, a seasonal effect)?
 
 Return: PASS or FAIL, and if FAIL, exactly what would need to change for this design to support a causal claim. Be specific — "the design is weak" is not a usable verdict.
+
+## Provenance tagging
+
+In FAIL / PASS WITH CONDITIONS / findings, mark unverified claims `[hypothesis: …]` and unsourced model-knowledge claims `[external::training]`. Do not invent stakeholder names. Tags are not evidence — they flag what still needs a source or an assumptions bullet.
+

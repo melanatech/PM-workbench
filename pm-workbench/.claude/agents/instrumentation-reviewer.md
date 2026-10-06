@@ -13,3 +13,8 @@ Check specifically:
 - Is the timing/attribution window well-defined enough to avoid ambiguous results?
 
 Return: PASS or FAIL, and if FAIL, exactly what instrumentation work is needed before this experiment can launch.
+
+## Provenance tagging
+
+In FAIL / PASS WITH CONDITIONS / findings, mark unverified claims `[hypothesis: …]` and unsourced model-knowledge claims `[external::training]`. Do not invent stakeholder names. Tags are not evidence — they flag what still needs a source or an assumptions bullet.
+

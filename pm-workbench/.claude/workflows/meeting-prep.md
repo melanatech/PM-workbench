@@ -13,6 +13,7 @@ Pull together, fast — this is meant to be ready before you sit down, not a res
 4. **Check recent `outputs/daily/*-meeting.md`** for the last time you met with these people on this topic — what was decided last time, what you told them would happen by now.
 5. **Check open to-dos for this topic:** `python3 scripts/todo_register.py list --initiative "<topic>"` (skip if `registers/todos.csv` does not exist). Report open or overdue ones as a line under "Watch for" — a to-do is mine, not a promise to them, so keep it separate from commitments.
 6. **Check `reference/links.csv`** for a relevant template, doc, or dashboard link worth having open.
+7. **Stakeholder lenses (optional):** if `.claude/CLAUDE.local.md` has filled rows from `reference/templates/stakeholder-lenses.md`, add one line per relevant Role under "Watch for" (Focus / Watch-for only). If empty, skip.
 
 Return one tight brief, not a report:
 ```

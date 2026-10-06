@@ -18,7 +18,15 @@ Competitive findings **must land on disk in the same run**. Asking "Should I cre
 1. Before dispatch: `mkdir -p state/competitive outputs/monthly`.
 2. Dispatch each competitor to `competitive-capture-agent`. The agent **writes** `state/competitive/YYYY-MM-DD-<slug>.md` itself (including BLOCKED stubs) and returns the path.
 3. After each agent returns: **verify the file exists** (Read or `ls`). If the agent returned capture body **without** a written path, **you write** `state/competitive/YYYY-MM-DD-<slug>.md` immediately from that body — still no asking.
-4. **In the same run**, append (or create) [`outputs/monthly/competitive-log.md`](outputs/monthly/competitive-log.md) with today's section: competitors scanned, paths to capture files, summary table, initiative cross-check, BLOCKED list. Show the path (rule 20).
+4. **In the same run**, append (or create) [`outputs/monthly/competitive-log.md`](outputs/monthly/competitive-log.md) with today's section. Required shape:
+   - Competitors scanned + paths to capture files
+   - **Landscape** — one row (or bullet) per competitor: role (**direct** / **adjacent** / **emerging**) + strongest move this scan
+   - Summary table
+   - Body structured by **watchlist product areas** (see Scope discipline). Under each area, optional **white-space / opportunity** bullet only when grounded in this run's captures — never TAM/SAM/SOM or invented market size
+   - Initiative cross-check
+   - **Second-hand / needs URL verification** for any market research folded in (separate from live captures)
+   - BLOCKED list
+   Show the path (rule 20).
 5. Backfill discovered URLs into `reference/competitive-watchlist.md`.
 6. Cross-check `registers/initiatives.csv` and note any initiative impact in the log.
 7. Do **not** store a BLOCKED stub as a "baseline" in narrative — label it BLOCKED. Do **not** re-fetch a competitor solely because the prior run left text only in chat; if the PM pastes that text into `inbox/competitive/`, process it into `state/competitive/` then the log.
@@ -32,6 +40,8 @@ Competitive findings **must land on disk in the same run**. Asking "Should I cre
 Customer evidence (e.g. EV-007 four-line sales/tax/fees/tips) may **prioritize** a section or a comparison table. It must **not** become the only question the competitive log answers when the watchlist or available research covers more (exports, payout reconciliation, pricing gates, mobile vs desktop, AI/analytics, accounting integrations, etc.).
 
 - Structure `outputs/monthly/competitive-log.md` by **watchlist product areas** (and any durable research themes already in `reference/user-research/` or `archive/documents/`).
+- Include the **landscape** role line (direct / adjacent / emerging) per competitor before or beside the summary table.
+- Under each product area, white-space / opportunity notes only when grounded in captures — not as free-form market sizing.
 - Put the customer-specific question in its own clearly labeled subsection — not as the sole "Key question" for the whole scan.
 - If market research is in scope for the run, fold its themes into the log as **second-hand / needs URL verification**, separate from live captures. Do not leave them only in a "reference context" footnote while the lead narrative stays one-gap-narrow.
 - Never ask "Should I expand the log to cover X?" when X was already in the watchlist or the research you read this run — expand it in the same write.

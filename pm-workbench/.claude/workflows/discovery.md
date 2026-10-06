@@ -19,6 +19,8 @@ This is a continuous-discovery tool, not a one-shot report. Discovery is the ong
 
 Across every mode: cross-check against `registers/initiatives.csv` and name when a finding touches something already being built. Name your sources and access paths. Recommend a next step only when the evidence warrants one — sometimes the honest output is "we don't know enough yet; here's the question to go answer."
 
+**Fan-out after ingest or a material answer (required).** Read `.claude/workflows/_fan-out.md`. Mode 2 (ingest) and any mode that surfaces a contradicted assumption or cross-initiative theme must update assumptions/learning/priorities/competitive/INIT notes as they apply — not only `evidence.csv`. End with the Surfaces updated block.
+
 
 ## Relationship durability & known biases
 

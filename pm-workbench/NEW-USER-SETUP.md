@@ -52,6 +52,13 @@ proxy that cannot reach the API, `claude -p` will fail there even when the
 Claude Code panel works after `/login`. That is an environment issue, not proof
 the kit is broken — verify slash commands in the panel first.
 
+**Amazon Bedrock and native WebSearch:** Bedrock does not implement Claude's
+server-side `web_search` tool (errors like "Bedrock does not support the
+web_search tool"). For `/discover competitive-scan`, the kit uses
+`python3 scripts/web_search.py` (local DuckDuckGo search) instead — no
+Bedrock support and no PM-supplied URL list required. Other workflows that
+still call native WebSearch may need the same pattern if you see that error.
+
 ## 1. Clone once, then create a live workspace
 
 ```sh
@@ -258,8 +265,9 @@ Do these on non-sensitive data. Record pass/fail in `logs/setup-findings.md`.
 5. **Backup:** on the **isolated fixture only**, set `PM_STATE_BACKUP` to a
    non-git path outside the workbench and run `scripts/snapshot-state.sh`. Leave
    live backup unset until company storage is approved.
-6. **Stubs:** `log_metrics.py`, `extract_document.sh`, `render_template.py` exit as
-   stubs—use documented fallbacks.
+6. **Stubs / extract:** `log_metrics.py` and `render_template.py` still exit as
+   stubs. `extract_document.sh` is live for common formats; on failure re-export
+   or paste rather than retrying inventively.
 
 ## 8. Read next
 

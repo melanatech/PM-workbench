@@ -51,7 +51,7 @@ python3 -m unittest discover -s tests -v
 | **Ready to try locally** | `scripts/load_fixture.py`, `scripts/check_run.py`, and the safety tests are runnable local tools. `/quick-close` and `/capture meeting-closeout` are prompts for pasted notes or local files; they still require Claude Code and have not been verified end-to-end against a real workspace. The other command prompts and `prototype-build` skill are present, but many depend on populated data or external sources. |
 | **Needs your configuration** | Real company context, templates, saved views, browser access, and scheduled runs require your tools, URLs, permissions, and policy review. Nothing here is connected to a real company system by default. Browser paths described in SETUP.md are options to test, not verified integrations. |
 | **Requires an approved destination** | `scripts/snapshot-state.sh` creates a local copy only after `PM_STATE_BACKUP` is set to an approved, access-controlled, non-Git location. `scripts/restore-state.sh` previews and restores missing files from an explicitly selected snapshot without replacing differing records. Neither script encrypts or uploads the snapshot. See `STATE-BACKUP.md` for the recovery flow. |
-| **Known script stubs** | `scripts/log_metrics.py`, `scripts/extract_document.sh`, and `scripts/render_template.py` intentionally exit as stubs. Use the documented manual/markdown fallbacks until each needed implementation is tested. |
+| **Known script stubs** | `scripts/log_metrics.py` and `scripts/render_template.py` intentionally exit as stubs. `scripts/extract_document.sh` extracts .txt/.md/.csv, Word/RTF/HTML via `textutil`, and PDF via `pdftotext` or PDFKit — on exit 2/3, re-export or paste. |
 | **Not yet verified** | Browser reads, hook behavior in your Claude Code version, scheduled runs, and any external-system write path. Do not treat examples or allow-lists as evidence that an integration works or is approved. |
 
 `Run PM Workflow.command` and scheduling are optional. Desktop-app capture
@@ -93,7 +93,7 @@ The six cluster commands (`/capture`, `/brief`, `/sync`, `/discover`, `/build`, 
 | Finding & recruiting users | `/discover research-plan` (dashboards/behavior analytics/Jira + existing persona/research docs — produces criteria and questions, never a list of people) |
 | PRDs + leadership/tech buy-in | `/build prd-package` (grounded context → readiness gate → draft → bounded stakeholder pre-review: 1–2 angles in Standard, all five in Deep → prototype reconciliation) |
 | Prototypes + testing | `/build prototype-build` (same bounded review + real browser QA + PRD reconciliation) + `/discover research-package`; `/build prd-prototype-sync` anytime the two need a manual re-check |
-| OKR gathering/monitoring/reporting | `/report okr-refresh` (retrieves already-calculated dashboard values, logs and validates freshness, drafts 3 destinations — never recomputes a metric itself) |
+| OKR gathering/monitoring/reporting | `/report okr-refresh` (logs already-calculated values from dashboards or dated internal docs — never recomputes a metric itself) |
 | Docs, release notes, launch coordination | `/build launch-package` (drift report first, then all audience docs) |
 | Experiments | `/build experiment-package` (adversarial gate) + `/build experiment-analyze` |
 | Meeting summaries | `/capture meeting-closeout` (feeds the registers — the keystone habit) |

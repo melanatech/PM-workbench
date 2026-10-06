@@ -249,7 +249,7 @@ Two access paths, use whichever is real for you:
 
 **If it doesn't sync, or the doc is Confluence-hosted beyond your Jira/support views:** use an approved browser path only after it has been configured and tested. The browser bridge and `internal-docs-reader` are not connected or verified by default.
 
-**Binary formats** (.docx, .pptx, .xlsx) don't extract cleanly through a plain text read. `scripts/extract_document.sh` is currently a stub; it does not perform conversion yet. Use an approved export to plain text/CSV or paste relevant content until a specific format implementation has been tested.
+**Binary formats:** run `bash scripts/extract_document.sh <file>` — it writes `<file>.extracted.txt` for text/csv/md, Word/RTF/HTML (`textutil`), and PDF (`pdftotext` or PDFKit). Exit 2/3 means re-export as txt/csv/pdf or paste (pptx/xlsx and encrypted Office files are not in-kit). Prefer that script over inventing extractors; one-offs are fine only for a true gap you will promote or abandon in one attempt.
 
 Drop anything durable-but-unprocessed into `inbox/documents/`; `/capture process-inbox`
 is a prompt workflow that may index it into `reference/user-research/` or the

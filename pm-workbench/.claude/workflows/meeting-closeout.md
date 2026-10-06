@@ -53,4 +53,7 @@ Meeting input: $ARGUMENTS
 
 If the meeting produced follow-ups that are mine to do but are not commitments to anyone: write them as a numbered candidate table to `outputs/todo-proposals/[date]-proposals.md` (create folder if needed; start with `QUEUED — nothing added` if new file; if today's file exists, add a section). Do **not** add rows to `registers/todos.csv` from here — I pick via `/todo propose`. One line in the reply: path + count. If there are none, skip.
 
+**Fan-out (required).** After registers/initiatives/assumptions/learning/todo-proposals above, read and apply `.claude/workflows/_fan-out.md`. Update every surface that applies in this same run (including `current-priorities.md` when week pressure/dates moved; competitive log/`state/competitive/` when a competitor was named with a durable claim; every INIT- touched, not only the primary). End with the Surfaces updated / N/A / Cross-initiative block from that file.
+
+
 The measure of this command is not the summary — it's that the registers stay true *for PM work*. A meeting isn't closed out until its product-relevant decisions and commitments are reconciled with the system of record.

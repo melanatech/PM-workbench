@@ -37,7 +37,7 @@ Everything below is a template. The architecture assumes only that Claude Code r
 2. **Reconciliation before generation.** External systems are authoritative (see SOURCE-POLICY.md); registers are an index. Every consequential output (weekly update, PRD revision, launch package, Jira changes) begins by refreshing the volatile sources it depends on and flagging where local state disagrees with reality. **Assume the workbench may have been ignored for days** — meetings missed, Jira edited directly, decisions made in Slack. The system's job is to recover gracefully from imperfect use, never to require perfect hygiene. If local state is stale, say so and reconcile; never generate polished output from state you haven't checked.
 3. **Evidence sufficiency applies even when the request is clear.** Never invent a status, owner, date, metric, customer statement, or decision. Every factual claim carries its source (URL, filename, ticket ID) and date. Before completing any consequential artifact, check whether its material claims and recommendations are supported by the provided information or an approved, accessible source. If an unknown or unverified fact could materially change the conclusion, recommendation, scope, or commitment, ask a short, batched set of focused questions and wait before presenting the artifact as complete. Never guess merely to fill the requested format. If a provisional draft would still help, label it provisional, mark each gap `[NEEDS INPUT: ...]`, and keep assumptions separate from facts. Don't interrupt for low-impact details; use a visible placeholder instead.
 4. **Separate three things explicitly in analytical output:** direct observation / inference / recommendation.
-5. **OKR metrics are already calculated by their source dashboards.** Retrieve and log only the displayed value; `scripts/log_metrics.py` is currently a stub. Until an implementation is tested, manually append a verified row to `state/okr-history.csv` with `metric,value,as_of_date,retrieved_date,source` columns, valid CSV quoting, and a header if the file is new. Compare any configured freshness/change thresholds manually and state that automated checks did not run. Never recompute a metric from raw rows. If a metric genuinely has no dashboard aggregate and needs calculation, create a separate, explicitly named workflow.
+5. **OKR / metric values are already calculated somewhere — log the displayed number, never recompute from raw rows.** The usual source is an OKR dashboard, but that is not the only allowed source. Also valid: an internal deck, MBR, PPP, Confluence metric page, or export that shows a named metric with an **as-of / report date** (and ideally the same definition as the KR). Append a verified row to `state/okr-history.csv` with `metric,value,as_of_date,retrieved_date,source` (valid CSV quoting; header if new). Put the concrete source path or URL in `source` (e.g. dashboard bookmark, `archive/documents/….pdf` slide/section). Prefer a live dashboard read when both exist and disagree on the same metric+definition; otherwise prefer the **newer as_of_date** from an internal doc and still **report the conflict** (rule 8) if definitions or cohorts differ. `scripts/log_metrics.py` is currently a stub — until tested, append manually and state that automated freshness checks did not run. Web-search / external public pages are not metric sources. If a metric has no pre-calculated aggregate anywhere and needs calculation, create a separate, explicitly named workflow.
 6. **Raw inbox files are immutable.** Process, then move to `archive/` — never edit or delete originals.
 7. **Separate immutable history from current state.**
    - Immutable history: `registers/decisions.csv`, `registers/evidence.csv`,
@@ -124,13 +124,13 @@ A router adds a pause, never removes one: a Standard run prints one line before 
 You can always override for one session — type `/model opus` before a gnarly ad hoc question, or `/model haiku` if you're burning through simple lookups and want to conserve usage — then `/model sonnet` to go back to normal. This is a Claude Code session command, not something you ask me to do; I can't switch my own model mid-response.
 
 ## Eight commands — the workflows are arguments
-You type one of eight commands. Six are routers over 26 workflows; `/quick-close` (the 60-second capture) and `/todo` stand alone.
+You type one of eight commands. Six are routers over 27 workflows; `/quick-close` (the 60-second capture) and `/todo` stand alone.
 
 | Command | Workflows behind it |
 |---|---|
 | `/capture` | `meeting-closeout`, `process-inbox` |
 | `/brief` | `daily-brief`, `return-brief`, `meeting-prep` |
-| `/sync` | `jira-reconcile`, `ripple-check`, `roadmap-update`, `rotate-registers` |
+| `/sync` | `jira-reconcile`, `ripple-check`, `context-reconcile`, `roadmap-update`, `rotate-registers` |
 | `/discover` | `discovery`, `research-plan`, `research-package`, `competitive-scan`, `learn-product-flow`, `code-dive` |
 | `/build` | `prd-package`, `prototype-build`, `prd-prototype-sync`, `experiment-package`, `experiment-analyze`, `launch-package` |
 | `/report` | `weekly-update`, `okr-refresh`, `strategy-refresh`, `workbench-health`, `monthly-review` |
@@ -165,6 +165,7 @@ If I say what I want in plain language, match it to the closest command below an
 | "Build a prototype of X" | `/build prototype-build` |
 | "Do the PRD and prototype for X still match" | `/build prd-prototype-sync` |
 | "What else does this affect" / a decision that didn't go through a normal command | `/sync ripple-check` |
+| "Propagate context everywhere" / "backfill from archive" / "todos feel wrong" / open questions scattered | `/sync context-reconcile` |
 | "Set up a test for X" | `/discover research-package` |
 | "Design an experiment for X" | `/build experiment-package` |
 | "What did the experiment results say" | `/build experiment-analyze` |

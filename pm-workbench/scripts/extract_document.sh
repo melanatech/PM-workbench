@@ -9,6 +9,10 @@
 #   .doc .docx .rtf .rtfd .html .htm .odt — textutil
 #   .pdf                  — pdftotext if installed, else PDFKit via swift
 #
+# Charts / image-only slides are NOT in the text output. For those, also run:
+#   scripts/rasterize_pdf.sh <path.pdf>   → <stem>.pages/page-NN.png
+# process-inbox and internal-docs-reader Read those PNGs with vision.
+#
 # Exit codes:
 #   0 success (path printed)
 #   1 usage / missing file

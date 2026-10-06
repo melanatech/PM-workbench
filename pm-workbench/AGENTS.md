@@ -44,3 +44,6 @@ An earlier pass of this kit only built two of these (the experiment reviewers an
 
 ## What subagents are NOT
 Not the "agent teams" feature you may see mentioned elsewhere (multiple agents coordinating with each other, assigning work back and forth) — that's a separate, more experimental Claude Code feature. Subagents here are simpler and one-directional: dispatch, isolated work, a result comes back. Stable, not experimental, and the right scope for this kit.
+
+## Failure mode to reject
+If a session says the material is "too comprehensive for context" and plans to skim, write a thinner summary, or only selectively update initiatives — **that is wrong**. Context pressure is a **dispatch signal** for the agents above, not a quality downgrade. Bounded sources (max 12) only choose *which* files; each chosen file still gets a complete pass via a subagent when it is heavy.

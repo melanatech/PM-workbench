@@ -20,6 +20,8 @@ Read `.claude/workflows/_protocol.md` and follow it with CLUSTER = `sync`. Do no
 
 ## Choosing
 
+**Plain language:** follow `.claude/workflows/_plain-language.md` — match → run; never improvise a lighter path.
+
 - "Check the board", "is anything stale": `jira-reconcile`.
 - "What else does this affect", or a decision that did not go through a normal command: `ripple-check`.
 - "Propagate context everywhere", "backfill fan-out", "todos feel wrong", "reconcile the archive", open questions scattered: `context-reconcile`.

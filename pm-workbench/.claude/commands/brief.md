@@ -18,6 +18,8 @@ Read `.claude/workflows/_protocol.md` and follow it with CLUSTER = `brief`. Do n
 
 ## Choosing
 
+**Plain language:** follow `.claude/workflows/_plain-language.md` — match → run; never improvise a lighter path.
+
 - "Morning", "what's new", "catch me up", or a scheduled run: `daily-brief`.
 - "What changed while I was out", or two dates: `return-brief`. If the dates are missing, ask for them before dispatching.
 - "Prep me for", a meeting name, or people and a topic: `meeting-prep`.

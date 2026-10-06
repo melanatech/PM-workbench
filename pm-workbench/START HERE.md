@@ -68,6 +68,7 @@ select text → right-click → Services. Writes into the live `inbox/`
 4. **SCHEDULING.md** — after 2-3 manual cycles per workflow
 5. **SKILLS.md** — the later upgrade path
 6. **AGENTS.md** — where and why subagents are used (isolated review panels + heavy-read isolation), and which commands deliberately stay plain
+7. **`.claude/workflows/_plain-language.md` + skills** — how everyday phrasing maps to workflows (primetime: users will not memorize slash commands)
 7. **CONNECTIONS.md** — the full write/read map: what every command feeds and cross-checks against
 8. **SOURCE-POLICY.md** — who wins when Jira, Confluence, Slack, and code disagree (short; worth reading early)
 9. **EVOLVING.md** + **BACKLOG.md** — read before adding or changing anything; the system's own changelog and friction log

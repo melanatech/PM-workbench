@@ -29,9 +29,11 @@ Read (relevant rows / recent sections only):
 
 ## Step 2 — sample sources for gaps
 
-From the window, pick up to 12 highest-signal files (prefer customer calls, roadmap/board exports, research summaries, competitive log, strategy baselines). Prefer `reference/user-research/` and `learning/` summaries over re-reading raw binaries when a summary exists.
+From the window, pick up to 12 highest-signal files (prefer customer calls, roadmap/board exports, research summaries, competitive log, strategy baselines). Prefer `reference/user-research/` and `learning/` summaries over re-reading raw binaries when a summary exists. Prefer an existing `<stem>.vision.md` over re-visioning every PNG when the vision file is fresh.
 
-For each source, ask: what durable claims exist here that are **missing** from the surfaces in `_fan-out.md`?
+**If any selected source is a long strategy/deck/research pack** (multi-page PDF, large `.vision.md`, strategy memo, initiative-list sheet): **dispatch `internal-docs-reader`** with those paths + the reconcile focus before writing INIT notes. Work from its brief. Do **not** skim "for context constraints" or replace a full fan-out with a thinner vision-only summary (CLAUDE.md: no context shortchanging).
+
+For each source (or for the reader brief), ask: what durable claims exist here that are **missing** from the surfaces in `_fan-out.md`?
 
 ## Step 3 — reconcile (Tier 1 writes in this run)
 

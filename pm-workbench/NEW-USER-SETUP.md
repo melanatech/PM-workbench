@@ -108,11 +108,13 @@ A chat that was started with the git clone first stays on that clone until you
 open a **new** Claude Code session after the folder order is right. `/add-dir`
 can grant extra access; it does not change the primary working directory.
 
-## 2. Verify slash commands
+## 2. Verify slash commands **and** plain language
 
 In the Claude Code panel (with `~/pm-live` as the first folder), type `/` and confirm you see at least:
 
 `capture`, `brief`, `sync`, `discover`, `build`, `report`, `quick-close`, `todo`
+
+Also try one **plain-language** ask (e.g. "catch me up" or "process any waiting clips") — it should route to the matching workflow via the Command menu / skills, not invent a lighter check. See `.claude/workflows/_plain-language.md`.
 
 If they are missing, the project directory is wrong (git clone is first, or you
 are in Cursor Agent) or Claude Code did not load `.claude/commands/`.
@@ -139,7 +141,7 @@ In the Claude Code panel:
 
 | Plugin | Useful for |
 |---|---|
-| `atlassian` | Jira / Confluence reads for `/sync jira-reconcile` and wiki checks |
+| `atlassian` | Jira / Confluence reads for `/sync jira-reconcile` and wiki checks. On first reconcile, record which field(s) mean delivery stage for that board on the `reference/links.csv` row (Status alone is often not enough). Authenticate when the plugin prompts. |
 | `frontend-design` | Visual quality on `/build prototype-build` |
 | `slack` | Channel/thread context when paste/export is not enough |
 | `github` | Repo/PR lookups for prototypes and kit PRs (not a substitute for local `git`) |
@@ -207,7 +209,7 @@ Also try `/quick-close`, `/todo`, `/brief daily-brief`, and
 | CLI much older than Cursor extension | Separate install channels | `claude update` (or npm global update); compare `claude --version` to the extension |
 | `claude -p` ConnectionRefused / timeout | Shell proxy `ANTHROPIC_BASE_URL` unreachable | Use Claude Code panel; or `/login` in a clean shell without that proxy |
 | `claude -p` “Not logged in” | No standalone OAuth in that shell | Run `/login` in Claude Code / the CLI |
-| Clip lands in Downloads, Claude does not see it | Chrome cannot write outside Downloads; pull not run yet | In Claude Code: `/capture process-inbox` (step 0 runs `pull_clips.py`) or ask it to run `python3 scripts/pull_clips.py`. Approve the Bash prompt. No Full Disk Access needed for that path |
+| Clip lands in Downloads, Claude does not see it | Chrome cannot write outside Downloads; pull not run yet **or** plain-language ask improvised a peek | Say "process clips" / `/capture process-inbox` (runs `intake_status.py`). Approve Bash. Fix `~/.pm-workbench/live-root` if it points at a `/tmp` fixture (`bash scripts/fix-live-root.sh`) |
 | Constant Bash / `python3` approval prompts | **Edit automatically** does not auto-run scripts; your mode menu may lack **Auto** | Start a **new** Claude Code chat (user `~/.claude/settings.json` already allows `Bash(python3 *)`). Type `/permissions` to add more. Or extension setting **Allow dangerously skip permissions** → Bypass if it appears |
 | Clip cuts off mid-meeting | Old extension, or **Selection only** used | `chrome://extensions` → **Reload** clipper; use **Meeting notes / summary** (scrapes transcript DOM). Avoid Selection only for Stream |
 | Menu has no "full page" / still 6 flat items | Extension not reloaded after kit update | Reload PM Workbench Clipper on `chrome://extensions` (v0.3+); primary items now always scrape the page/transcript |

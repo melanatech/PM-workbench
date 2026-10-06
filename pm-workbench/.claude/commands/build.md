@@ -21,6 +21,8 @@ Read `.claude/workflows/_protocol.md` and follow it with CLUSTER = `build`. Do n
 
 ## Choosing
 
+**Plain language:** follow `.claude/workflows/_plain-language.md` — match → run; never improvise a lighter path.
+
 - A named workflow wins. Otherwise look up the feature in `registers/initiatives.csv`:
   - no row, or stage `discovery` / `prd`, and the words "spec", "PRD", "write up": `prd-package`
   - words "prototype", "mock", "build", or a PRD exists with no prototype and I asked to see it: `prototype-build`

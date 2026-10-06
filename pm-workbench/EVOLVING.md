@@ -45,6 +45,22 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 
 ## Changelog (newest first; one line per real architectural decision — not every edit)
 
+- 2026-10-06 — **jira-reconcile live lessons (generalized):** Atlassian MCP is a first-class access path; discover+record which field(s) mean delivery stage per board (do not hard-code product/field names); skip AC when field absent; MCP board JQL → snapshot file / compact fields; bulk flags may be tables; Tier 1 local fan-out OK, Jira writes stay PROPOSALS. Trigger: first live board reconcile via MCP; Polaris/`Roadmap` wording was org-specific and was removed.
+
+- 2026-10-06 — **User-injected context (rule 24):** mid-thread PM facts after freeform Q&A → write-back (Tier 1) or one concrete ask/PROPOSAL when ambiguous/Tier 3; never acknowledge-only. Wired in "just ask", `_protocol` §6b, `_fan-out`. Trigger: richer chat then user adds context with no capture command — otherwise facts die in scrollback.
+
+- 2026-10-06 — **Chat ≠ durable equivalence (rule 23):** digests are lossy; ad-hoc answers often expand from transcripts. Forbidden to say "all captured in outputs/…" unless claim-checked or written this turn. Protocol §6a + `_fan-out` ad-hoc enrichment. Trigger: design-meeting chat gave rich 10/2 recall then pointed at thinner `2026-10-05-inbox-meetings-fuller-clips.md`.
+
+- 2026-10-06 — **Plain-language routing (primetime):** `_plain-language.md` + CLAUDE.md Command menu + all six cluster Choosing lists: match → run, never improvise. Thin auto-invoke skills for 23 workflows (+ richer process-inbox / prototype-build). Protocol §1 picks via plain-language rules. Lookups still freeform; operational asks must hit workflows. Trigger: "process web clips" improvisation; generalize for any future user who will not memorize slash commands.
+
+- 2026-10-06 — **Plain-language intake:** failures were NL improvisation ("process web clips" → peek inbox), not missing slash-command Step 0. Added `.claude/skills/process-inbox/SKILL.md` for auto-invoke; CLAUDE.md command menu + `/capture` choosing: intake phrases run process-inbox/intake_status immediately — no confirm, no bare folder peek.
+
+- 2026-10-06 — **Intake gate:** `scripts/intake_status.py` (pull Downloads + list unprocessed inbox) is mandatory Step 0 for process-inbox; capture router maps "process clips/documents/upload" there. `pull_clips.resolve_live_root` rejects ephemeral `/…/once` fixture markers; `write_live_root_marker` no longer overwrites a good marker with isolate temps. Trigger: repeated "nothing found" while clips sat in Downloads or inbox; live-root pointed at deleted tmp fixture.
+
+- 2026-10-06 — **No context shortchanging:** CLAUDE.md execution rules + AGENTS.md + workflow-runner + context-reconcile/`_fan-out` forbid skim/partial-fan-out "because of context constraints." Heavy strategy/research → dispatch `internal-docs-reader` (or named heavy-read agent); bounded sources = file selection only. Compact fallback = real usage-budget only. Trigger: context-reconcile planned a thinner vision summary instead of full reconcile.
+
+- 2026-10-06 — PDF/image vision path: `scripts/rasterize_pdf.sh` (PDFKit → `<stem>.pages/page-NN.png`); process-inbox + internal-docs-reader must Read those PNGs (and clipper viewport PNGs), write `<stem>.vision.md`, and merge with text extract so chart metrics are not lost. Text extract alone is incomplete for decks kept as PDF for images.
+
 - 2026-10-06 — Metrics sources + recency nuance: CLAUDE.md rule 5 and SOURCE-POLICY Official metrics no longer dashboard-only — dated internal decks/MBRs/PPPs/wiki/exports may append `okr-history.csv` with provenance. Recency≠authority stays for decisions/ideas; **dated internal numbers** prefer newer as_of_date (still surface definition conflicts; not web search). process-inbox + `_fan-out` surface 12 + okr-refresh updated. Trigger: MBR clip numbers skipped because "dashboard only."
 
 - 2026-10-06 — `extract_document.sh` no longer a stub: text/csv/md copy-through, Word/RTF/HTML via textutil, PDF via pdftotext or PDFKit. process-inbox uses it first and fails fast (ask re-export) on exit 2/3 — one-offs still allowed for true gaps, but not retry loops. Cuts the common “script error” noise from invented extractors.

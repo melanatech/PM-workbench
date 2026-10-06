@@ -8,7 +8,8 @@ model: sonnet
 You are given a topic/feature and a set of places to check. **Check `reference/links.csv` FIRST** — if a relevant link is already logged there (a template, policy doc, dashboard), note it and fetch it live via the browser bridge (Confluence/Jira links) rather than assuming a local copy is needed; a logged link beats a stale download. Then look in, as relevant:
 
 - `reference/user-research/` — durable, already-processed research summaries from past studies (check here FIRST; no need to re-read a raw document if it's already indexed here)
-- `inbox/documents/` and `archive/` — raw dropped files (PDFs, Word docs, PowerPoint, Excel) from the shared drive/wiki/the local file browser that haven't been indexed into `reference/user-research/` yet — read via the Read tool; if a file's format doesn't extract cleanly, say so rather than guessing at its content
+- `inbox/documents/` and `archive/` — raw dropped files (PDFs, Word docs, PowerPoint, Excel) from the shared drive/wiki/the local file browser that haven't been indexed into `reference/user-research/` yet. For **PDFs**: run `bash scripts/extract_document.sh` for text **and** `bash scripts/rasterize_pdf.sh` for page PNGs under `<stem>.pages/`; **Read the PNGs** (vision) for charts/tables/diagrams — text extract alone misses them. Prefer an existing `<stem>.vision.md` if present. For Word/etc., if extract fails, say so rather than guessing.
+- Clipper viewport PNGs beside a capture `.md` — Read the image; do not ignore it.
 - Your shared drive's web UI or an internal wiki page, if reachable via the browser bridge and a URL is given — navigate and read (read-only; you don't have click/type)
 - Any local synced folder (e.g., a synced shared-drive library) if a path is given
 

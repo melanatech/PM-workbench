@@ -20,5 +20,7 @@ Read `.claude/workflows/_protocol.md` and follow it with CLUSTER = `report`. Do 
 
 ## Choosing
 
+**Plain language:** follow `.claude/workflows/_plain-language.md` — match → run; never improvise a lighter path.
+
 - "Draft my weekly update": `weekly-update`. "Pull this week's or month's numbers": `okr-refresh`. "Update the strategy doc": `strategy-refresh` (Deep: print the usage estimate first). "How is the workbench doing": `workbench-health`. "Monthly review", "is the workbench helping", "dropped balls": `monthly-review`.
 - Audience and cadence words (leadership, weekly, monthly) pick between `weekly-update` and `strategy-refresh`; ask if they do not settle it.

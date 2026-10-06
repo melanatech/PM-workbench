@@ -21,6 +21,8 @@ Read `.claude/workflows/_protocol.md` and follow it with CLUSTER = `discover`. D
 
 ## Choosing
 
+**Plain language:** follow `.claude/workflows/_plain-language.md` — match → run; never improvise a lighter path.
+
 - Evidence, themes, "what are users saying", pasted feedback: `discovery`.
 - "Who should we talk to", "plan research for": `research-plan`. "Set up a test for": `research-package`.
 - Competitors: `competitive-scan`.

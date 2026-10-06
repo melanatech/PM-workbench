@@ -37,7 +37,7 @@ Everything below is a template. The architecture assumes only that Claude Code r
 2. **Reconciliation before generation.** External systems are authoritative (see SOURCE-POLICY.md); registers are an index. Every consequential output (weekly update, PRD revision, launch package, Jira changes) begins by refreshing the volatile sources it depends on and flagging where local state disagrees with reality. **Assume the workbench may have been ignored for days** — meetings missed, Jira edited directly, decisions made in Slack. The system's job is to recover gracefully from imperfect use, never to require perfect hygiene. If local state is stale, say so and reconcile; never generate polished output from state you haven't checked.
 3. **Evidence sufficiency applies even when the request is clear.** Never invent a status, owner, date, metric, customer statement, or decision. Every factual claim carries its source (URL, filename, ticket ID) and date. Before completing any consequential artifact, check whether its material claims and recommendations are supported by the provided information or an approved, accessible source. If an unknown or unverified fact could materially change the conclusion, recommendation, scope, or commitment, ask a short, batched set of focused questions and wait before presenting the artifact as complete. Never guess merely to fill the requested format. If a provisional draft would still help, label it provisional, mark each gap `[NEEDS INPUT: ...]`, and keep assumptions separate from facts. Don't interrupt for low-impact details; use a visible placeholder instead.
 4. **Separate three things explicitly in analytical output:** direct observation / inference / recommendation.
-5. **OKR / metric values are already calculated somewhere — log the displayed number, never recompute from raw rows.** The usual source is an OKR dashboard, but that is not the only allowed source. Also valid: an internal deck, MBR, PPP, Confluence metric page, or export that shows a named metric with an **as-of / report date** (and ideally the same definition as the KR). Append a verified row to `state/okr-history.csv` with `metric,value,as_of_date,retrieved_date,source` (valid CSV quoting; header if new). Put the concrete source path or URL in `source` (e.g. dashboard bookmark, `archive/documents/….pdf` slide/section). Prefer a live dashboard read when both exist and disagree on the same metric+definition; otherwise prefer the **newer as_of_date** from an internal doc and still **report the conflict** (rule 8) if definitions or cohorts differ. `scripts/log_metrics.py` is currently a stub — until tested, append manually and state that automated freshness checks did not run. Web-search / external public pages are not metric sources. If a metric has no pre-calculated aggregate anywhere and needs calculation, create a separate, explicitly named workflow.
+5. **OKR / metric values are already calculated somewhere — log the displayed number, never recompute from raw rows.** The usual source is an OKR dashboard, but that is not the only allowed source. Also valid: an internal leadership/metric deck, wiki metric page, or export that shows a named metric with an **as-of / report date** (and ideally the same definition as the KR). Append a verified row to `state/okr-history.csv` with `metric,value,as_of_date,retrieved_date,source` (valid CSV quoting; header if new). Put the concrete source path or URL in `source` (e.g. dashboard bookmark, `archive/documents/….pdf` slide/section). Prefer a live dashboard read when both exist and disagree on the same metric+definition; otherwise prefer the **newer as_of_date** from an internal doc and still **report the conflict** (rule 8) if definitions or cohorts differ. `scripts/log_metrics.py` is currently a stub — until tested, append manually and state that automated freshness checks did not run. Web-search / external public pages are not metric sources. If a metric has no pre-calculated aggregate anywhere and needs calculation, create a separate, explicitly named workflow.
 6. **Raw inbox files are immutable.** Process, then move to `archive/` — never edit or delete originals.
 7. **Separate immutable history from current state.**
    - Immutable history: `registers/decisions.csv`, `registers/evidence.csv`,
@@ -78,6 +78,10 @@ Everything below is a template. The architecture assumes only that Claude Code r
 
 22. **Unattended runs (scheduled `claude -p`, started through `scripts/run_scheduled.py`) have nobody to ask.** If a run started from cron hits a rule-12 question (missing URL, ambiguous input, unreachable source), it does NOT wait and does NOT guess: it writes what it could finish to `outputs/` with the gap labeled, appends a `BLOCKED: <what it needed>` line to `logs/run-log.csv`, and stops. The next `/brief daily-brief` surfaces every BLOCKED line as a decision for me. A scheduled run that silently substitutes a default has fabricated a decision I never made. Creating an empty `state/PAUSE` file stops every scheduled run, the `/loop` check and every router until I delete it; unattended runs use Fast or Standard mode only and never send or contact anyone.
 
+23. **Chat answer ≠ durable file.** Digests, register rows, and learning notes are lossy on purpose (rule 15). An ad-hoc reply often re-reads a richer source (full transcript, deck) and adds justification the digest never held. **Forbidden:** "it's all captured in `outputs/…`" / "same as the summary" after a richer chat answer, unless you **claim-checked** (every material claim in the reply appears in that file) or you **wrote that content into the file this turn**. Allowed: "Answered from `archive/…` transcript; [digest] has headlines only" / "DEC-007 is in the register; the Antonio/Seamless rationale is chat-only unless we append." When the reply surfaces material facts missing from digests/registers/learning, say the gap and either append (Tier 1, dated source) or list what would be written — do not paper over with a false equivalence. Topic overlap ("fees conflict is mentioned") is not claim coverage.
+
+24. **User-injected context after freeform chat.** When I add new facts mid-thread (corrections, "also X said…", "Antonio confirmed…", hallway/Slack color that wasn't in the capture) outside `/capture` / `/quick-close`, treat that as durable input — do not only acknowledge in chat. **Clear material claims** (decision, commitment, risk, open conflict, durable product fact, assumption): write the matching surface this turn (Tier 1) or present a one-line PROPOSAL of the exact row/append if Tier 2/3 (scope, owner, dates, send). **Ambiguous** (might be color vs decision; unclear owner; might supersede an existing DEC-/COM-): ask one short question naming the candidate surface — not a vague "want me to log that?" **Conversational only** (thanks, scheduling trivia, already-tracked restatement): stay silent on write-back. Source the write as `chat:[date]` or the thread topic plus any archive path I named. Same fan-out surfaces as `_fan-out.md`; `/sync ripple-check` is the explicit command when I want a full cross-check, but I should not need it for an obvious mid-chat fact.
+
 ## Execution modes (cost governance — read before any heavy workflow)
 
 Usage is finite. A workflow that produces an excellent half-finished PRD before
@@ -96,7 +100,15 @@ body — and you can override inline ("run this in fast mode").
 Governing rules for every mode:
 - **Bounded sources.** Default max 12 source files per assembly; if more are
   relevant, report what was included/excluded and offer to widen — never silently
-  fan out across everything.
+  fan out across everything. Bounded sources are a **selection** rule (which files),
+  not a license to skim the ones you selected.
+- **No context shortchanging.** Feeling "context-constrained" is not a reason to
+  shallow-process, selectively update, or replace a full pass with a thinner
+  summary. Dispatch the matching heavy-read subagent (AGENTS.md) so the work
+  still gets a full pass in an isolated window; then fan out from that brief.
+  Forbidden phrasing/behavior: "Given context constraints, I'll efficiently…",
+  "too long so I'll only capture the vision", "selectively update existing
+  initiatives" when the workflow asked for complete reconciliation of the source.
 - **No faux pauses.** "Ready to reprocess" / "About to run" / "I can do X next"
   without starting X in the same turn is not a mode. Fast and Standard continue;
   only Deep waits for an explicit yes (or a required-input question).
@@ -108,10 +120,11 @@ Governing rules for every mode:
   manifest and continues instead of restarting.
 - **No auto-revise loops.** A workflow proposes; it does not silently re-run
   itself to "improve" output and burn usage. Revision is your explicit call.
-- **Compact fallback.** If usage is running low, any workflow can finish in
-  compact mode: no extra agents, extraction/classification on the cheapest
-  model, stronger reasoning reserved only for final synthesis. It says when it
-  has done this.
+- **Compact fallback.** Only when **usage/API budget** is actually running low
+  (limit hit or imminent), not because a document is long. Then finish in compact
+  mode: no extra agents, extraction/classification on the cheapest model, stronger
+  reasoning reserved for final synthesis — and **say so**. Prefer dispatching a
+  heavy-read subagent before ever invoking compact fallback.
 
 ## Model routing (already handled — you don't need to think about this)
 Each workflow runs on the model suited to its actual difficulty. The cluster commands (`/capture`, `/brief`, `/sync`, `/discover`, `/build`, `/report`) are thin haiku routers: they pick a workflow and dispatch it to the `workflow-runner` subagent on the model listed in `.claude/workflows/routes.json` (the single source of truth; change a model there). `/quick-close` and `/todo` are still their own commands. The groups below name the workflows:
@@ -144,37 +157,45 @@ Workflow texts live in `.claude/workflows/` (not registered as commands). Run `/
 ## Not everything needs a command — just ask
 A lot of value here is answering questions directly from what's already tracked, no workflow needed: "what did we decide about X," "pull up the [feature] PRD and tell me current scope," "what feedback have we gotten about Y in the last month," "what's in the Q3 strategy doc about Z," "summarize my last few updates to leadership." Read `registers/`, `outputs/`, `reference/`, and `learning/` directly and answer — don't reach for a command when a direct read answers it faster.
 
+**If I then add context** in that same thread ("also…", a correction, a confirmation from someone), apply rule 24 — write-back or ask; do not leave material new facts only in the chat scrollback.
+
+**Exception — operational asks:** if the phrasing matches the Command menu (or `.claude/workflows/_plain-language.md`), that is **not** a freeform lookup. Run the matched workflow. Improvising a lighter path is a kit defect.
+
 ## Command menu — for when I describe a need instead of typing a slash command
-If I say what I want in plain language, match it to the closest command below and confirm before running if it's not obvious which one I mean:
+
+**Read `.claude/workflows/_plain-language.md` first.** Plain language that matches
+a row below **is** an instruction to run that workflow — not to improvise a
+lighter check. Confirm only when two rows fit equally. Future users of this kit
+will not memorize slash commands; the menu + skills are the product surface.
 
 | I say something like... | Run |
 |---|---|
-| "What changed while I was out" | `/brief return-brief` |
-| "What's new" / "morning" / "catch me up" | `/brief daily-brief` |
-| "Catch up the inbox" | `/capture process-inbox` |
-| "Close out this meeting" / paste notes | `/capture meeting-closeout` |
-| Between meetings, 60 seconds or less | `/quick-close` |
+| "What changed while I was out" / "back from leave" | `/brief return-brief` |
+| "What's new" / "morning" / "catch me up" / "daily brief" | `/brief daily-brief` |
+| "Catch up the inbox" / "process clips" / "web clips" / "process documents" / "I uploaded something" / "new PDFs" / "what's waiting" | `/capture process-inbox` |
+| "Close out this meeting" / paste notes / "log this meeting" | `/capture meeting-closeout` |
+| Between meetings, 60 seconds or less / "quick capture" | `/quick-close` |
 | "Add / update / finish / drop a to-do" / "what's on my list" / "what should I be doing" / "help me do TODO-nnn" / "draft help for what is due" | `/todo` (`sweep` drafts for the few that are due) |
-| Before a meeting, need to walk in ready | `/brief meeting-prep` |
-| "Check the Jira board" / "is anything stale" | `/sync jira-reconcile` |
-| "What's new in discovery" / "any new themes" | `/discover discovery` |
-| "Pull this week's/month's numbers" | `/report okr-refresh` |
-| "Draft my weekly update" | `/report weekly-update` |
-| "Find people to talk to about X" | `/discover research-plan` |
+| Before a meeting, need to walk in ready / "prep me for" | `/brief meeting-prep` |
+| "Check the Jira board" / "is anything stale" / "board hygiene" | `/sync jira-reconcile` |
+| "What's new in discovery" / "any new themes" / "what are users saying" | `/discover discovery` |
+| "Pull this week's/month's numbers" / "OKR refresh" / "update metrics" | `/report okr-refresh` |
+| "Draft my weekly update" / "leadership update" | `/report weekly-update` |
+| "Find people to talk to about X" / "plan research" (criteria only — never names) | `/discover research-plan` |
 | "Spec out X" / "write a PRD for X" | `/build prd-package` |
-| "Build a prototype of X" | `/build prototype-build` |
+| "Build a prototype of X" / "mock this up" | `/build prototype-build` |
 | "Do the PRD and prototype for X still match" | `/build prd-prototype-sync` |
 | "What else does this affect" / a decision that didn't go through a normal command | `/sync ripple-check` |
 | "Propagate context everywhere" / "backfill from archive" / "todos feel wrong" / open questions scattered | `/sync context-reconcile` |
-| "Set up a test for X" | `/discover research-package` |
-| "Design an experiment for X" | `/build experiment-package` |
+| "Set up a test for X" / "research package" | `/discover research-package` |
+| "Design an experiment for X" / "A/B test design" | `/build experiment-package` |
 | "What did the experiment results say" | `/build experiment-analyze` |
-| "Get this ready to launch" | `/build launch-package` |
+| "Get this ready to launch" / "launch package" | `/build launch-package` |
 | "The roadmap changed" / features moved or were added | `/sync roadmap-update` |
-| "Plan research for X" / who to talk to + what to ask | `/discover research-plan` |
-| "What are competitors doing" | `/discover competitive-scan` |
-| "Update the strategy doc" | `/report strategy-refresh` |
-| "I need to understand how X works" | `/discover learn-product-flow` then `/discover code-dive` |
+| "What are competitors doing" / "competitive scan" | `/discover competitive-scan` |
+| "Update the strategy doc" / "strategy refresh" | `/report strategy-refresh` |
+| "I need to understand how X works" (product) | `/discover learn-product-flow` then often `/discover code-dive` |
+| "How does X work in the code" / "code dive" | `/discover code-dive` |
 | "The registers are getting huge" | `/sync rotate-registers` |
 | "How is the workbench itself doing" / "what do I actually use" | `/report workbench-health` |
 | "Is the workbench helping" / monthly check on dropped balls and decision quality | `/report monthly-review` |
@@ -183,7 +204,7 @@ If I say what I want in plain language, match it to the closest command below an
 - Register files (`registers/*.csv`) grow every week. Default to reading **only recent or relevant rows** (e.g., last 60-90 days, or filtered by evidence_id/metric name) rather than the whole file, unless I explicitly ask for full history.
 - If a register or state file gets large enough that reading it fully would be wasteful, tell me and suggest running `/sync rotate-registers` rather than reading it anyway.
 - Within one long session, use Claude Code's own `/compact` (summarizes and trims context) or `/clear` (starts fresh) if things are dragging — this workspace has no auto-RAG the way claude.ai Projects do, so file growth is a real cost here, not handled automatically.
-- Heavy-context tasks (reading many source documents at once — discovery sources, competitor sites, a leave-period's worth of Slack/Jira/Confluence, a strategy refresh, a code repo) dispatch to the matching subagent in `.claude/agents/` — see AGENTS.md for the full list — so heavy reading happens in an isolated context and only the distilled result returns here.
+- Heavy-context tasks (reading many source documents at once — discovery sources, competitor sites, a leave-period's worth of Slack/Jira/Confluence, a strategy refresh, a code repo, multi-page strategy PDFs/decks) **dispatch to the matching subagent** in `.claude/agents/` — see AGENTS.md — so heavy reading happens in an isolated context and only the distilled result returns here. **Do not** shrink the deliverable because this session feels full; that is a dispatch trigger, not a quality downgrade.
 
 ## The registers — connective tissue between all workflows
 - `registers/decisions.csv` — id, date, decision, made_by, source_link, affects

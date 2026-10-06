@@ -24,3 +24,5 @@ Going in, you should know:
 ```
 
 If nothing's tracked on this topic yet, say so plainly — that's useful too (means you're not walking in missing context, there just isn't any yet).
+
+**Cite inputs, not equivalence.** Naming `outputs/daily/…` as a source is fine. If a follow-up question re-reads the archive transcript and your reply is richer than that digest, say so (CLAUDE.md rule 23) — do not claim the digest "has it all."

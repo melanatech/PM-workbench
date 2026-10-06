@@ -52,20 +52,70 @@ def clip_sources():
     ]
 
 
+def _is_ephemeral_path(path: str) -> bool:
+    """True for fixture/temp dirs that must never win as the live-root marker target."""
+    real = os.path.realpath(path)
+    lower = real.lower().replace("\\", "/")
+    base = os.path.basename(real.rstrip("/"))
+    if "pm-workbench-lumenly" in lower:
+        return True
+    # load_fixture --isolate and similar leave …/tmp…/once
+    if base in {"once", "isolate"} or base.startswith("tmpjs"):
+        return True
+    if "/tmp/" in lower or "/private/tmp/" in lower:
+        # intentional names under /tmp are OK (e.g. /tmp/pm-live)
+        if base in {"pm-live", "live"} or base.startswith("pm-live"):
+            return False
+        return True
+    return False
+
+
 def resolve_live_root(explicit=None):
+    """Resolve the live workspace. Rejects missing and ephemeral (temp/fixture) paths."""
+    candidates = []
     if explicit:
-        return os.path.abspath(os.path.expanduser(explicit))
+        candidates.append(os.path.abspath(os.path.expanduser(explicit)))
     env = os.environ.get("PM_LIVE_ROOT")
     if env:
-        return os.path.abspath(os.path.expanduser(env))
+        candidates.append(os.path.abspath(os.path.expanduser(env)))
+    # Prefer cwd when it looks like a live workspace (Claude Code first folder)
+    cwd = os.path.abspath(os.getcwd())
+    if os.path.isdir(os.path.join(cwd, "inbox")) and (
+        os.path.isdir(os.path.join(cwd, "registers")) or os.path.isdir(os.path.join(cwd, "archive"))
+    ):
+        candidates.append(cwd)
     marker = os.path.join(os.path.expanduser("~"), ".pm-workbench", "live-root")
     if os.path.isfile(marker):
         with open(marker, encoding="utf-8") as handle:
             lines = [ln.strip() for ln in handle if ln.strip() and not ln.strip().startswith("#")]
         if lines:
-            return os.path.abspath(os.path.expanduser(lines[0]))
-    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            candidates.append(os.path.abspath(os.path.expanduser(lines[0])))
+    script_parent = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    candidates.append(script_parent)
 
+    seen = set()
+    errors = []
+    for path in candidates:
+        if not path or path in seen:
+            continue
+        seen.add(path)
+        if _is_ephemeral_path(path):
+            errors.append(f"skip ephemeral: {path}")
+            continue
+        if not os.path.isdir(path):
+            errors.append(f"skip missing: {path}")
+            continue
+        if not os.path.isdir(os.path.join(path, "inbox")):
+            # kit checkout without live data — keep looking
+            errors.append(f"skip no inbox/: {path}")
+            continue
+        return path
+    msg = (
+        "Could not resolve a usable live workspace root. "
+        "Pass --root ~/pm-live, or set PM_LIVE_ROOT, or fix ~/.pm-workbench/live-root "
+        f"(must be a real folder with inbox/, not a /tmp fixture). Details: {'; '.join(errors)}"
+    )
+    raise ValueError(msg)
 
 def _notify_macos(message: str) -> None:
     if sys.platform != "darwin":
@@ -162,11 +212,15 @@ def pull_clips(live_root, *, dry_run=False):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", help="live workspace root (default: PM_LIVE_ROOT / marker / script parent)")
+    parser.add_argument("--root", help="live workspace root (default: PM_LIVE_ROOT / marker / cwd / script parent)")
     parser.add_argument("--dry-run", action="store_true", help="list moves without writing")
     args = parser.parse_args(argv)
 
-    root = resolve_live_root(args.root)
+    try:
+        root = resolve_live_root(args.root)
+    except ValueError as err:
+        print(str(err), file=sys.stderr)
+        return 2
     count, detail = pull_clips(root, dry_run=args.dry_run)
     if isinstance(detail, str):
         print(detail, file=sys.stderr if "PermissionError" in detail or "blocked" in detail.lower() else sys.stdout)

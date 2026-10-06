@@ -14,9 +14,10 @@ Do this silently. Do not print "checking routes.json", "reading the protocol", o
 
 1. Read `.claude/workflows/routes.json` and take the entry for your cluster.
 2. If the first word of the input (leading `/` ignored) is one of the cluster's workflow names, that is the workflow and the rest of the input is its arguments. An old command name typed as a slash command inside a request ("run /prd-package on bulk export") means the same thing.
-3. Otherwise use the selection rules in the router file. If more than one workflow fits, or none does, ask one short question that names the options. Never guess between workflows that write different things.
-4. A workflow name that belongs to another cluster: tell me which command owns it (`/build prd-package`, say) and stop.
-5. If the input contains the word `inline`, run in inline mode (step 4) instead of dispatching.
+3. Otherwise use the selection rules in the router file **and** `.claude/workflows/_plain-language.md`. Plain language that matches a Choosing / Command-menu phrase **is** a workflow pick — dispatch it; do not improvise a lighter path outside the workflow.
+4. If more than one workflow fits, or none does, ask one short question that names the options. Never guess between workflows that write different things.
+5. A workflow name that belongs to another cluster: tell me which command owns it (`/build prd-package`, say) and stop.
+6. If the input contains the word `inline`, run in inline mode (step 4) instead of dispatching.
 
 ## 2. Before running
 
@@ -59,8 +60,16 @@ When I say `inline`, or when the runner cannot be dispatched: read the workflow 
 
 User-facing chat and durable files omit empty work. The checks in the workflow still run.
 
+### 6a. Provenance vs equivalence (CLAUDE.md rule 23)
+
+Citing a file as an **input** ("I used the 10-05 digest + the archive transcript") is fine. Claiming the **chat reply is the same as** that file is not, unless claim-checked or written this turn. Digests compress; ad-hoc answers expand. If you answered from a richer source than the linked digest, say so in one line. Never use "yes, it's all captured" as a topic checklist (keywords present) — that is how users open a file and find a thinner story than the chat.
+
+### 6b. User-injected context (CLAUDE.md rule 24)
+
+Applies outside capture workflows too (including after meeting-prep or "what happened on…"). New material facts from the PM → write-back or one concrete ask; never acknowledge-only when a register/learning row is clearly warranted.
+
 - **Silent when empty:** no assumptions stated, no prior-decision change, no Jira/tickets, no drafts, no new register rows, "nothing excluded for relevance," unconfigured access paths. Write those only when they are a finding (a conflict, a missing owner, a ticket that disagrees) or a decision for me. **Exception:** if capture/meeting named PM-scoped product work and `initiatives.csv` has no matching row, that is a finding — seed the INIT- row (do not stay silent because the register was empty).
-- **Do not narrate plumbing.** Do not explain that `/Users/nlee1/PM-workbench` has no `.claude`, that the Stop hook will write the run log, that "the run log row comes from the Stop hook," that you are about to read `routes.json`, or that you skipped a duplicate row — unless the project folder is wrong and work would land in the wrong place. Router setup and run-log bookkeeping stay in thinking; chat gets only the Standard one-liner (when applicable), then the runner's RESULT/PROPOSALS/QUESTIONS pasted once.
+- **Do not narrate plumbing.** Do not explain that the kit clone has no live `.claude` data, that the Stop hook will write the run log, that "the run log row comes from the Stop hook," that you are about to read `routes.json`, or that you skipped a duplicate row — unless the project folder is wrong and work would land in the wrong place. Router setup and run-log bookkeeping stay in thinking; chat gets only the Standard one-liner (when applicable), then the runner's RESULT/PROPOSALS/QUESTIONS pasted once.
 - **Do not announce readiness and wait.** "Ready to reprocess" / "Clean, ready" / "I can run X next" without starting X in the same turn is a protocol failure. Prep that enables a clear next workflow must continue into that workflow immediately (Fast/Standard) unless Deep needs a yes or a required input is missing.
 - **One copy of the artifact.** Show the written file **once**: a Markdown link with a **workspace-relative** href (`[outputs/daily/2026-10-05-topic.md](outputs/daily/2026-10-05-topic.md)`), then the content (or key sections). Do **not** use `file://` or bare absolute `/Users/...` paths — the Claude Code extension does not make those clickable (only relative paths under the first workspace folder work). RESULT does not reprint it, and the router does not add "here's what happened" or "Done. Agent processed…".
 - **No RESULT + Done pair.** A successful run is one message. If you catch yourself about to write a confirmation under the runner paste, delete it.

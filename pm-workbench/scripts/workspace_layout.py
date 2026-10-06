@@ -252,12 +252,36 @@ def ensure_not_symlink_tree(destination, relative_paths):
             raise ValueError(f"data path must be a real directory, not a symlink: {relative}")
 
 
-def write_live_root_marker(destination):
-    """Record the live workspace path so pull_clips / the clip watcher find it."""
+def write_live_root_marker(destination, *, force=False):
+    """Record the live workspace path so pull_clips / the clip watcher find it.
+
+    Refuses to overwrite a good permanent marker with an ephemeral/temp path
+    (fixture isolate runs were clobbering ~/pm-live).
+    """
     dest = os.path.abspath(destination)
     marker_dir = os.path.join(os.path.expanduser("~"), ".pm-workbench")
     os.makedirs(marker_dir, exist_ok=True)
     marker = os.path.join(marker_dir, "live-root")
+
+    # Detect ephemeral the same way pull_clips does (inline to avoid import cycles)
+    lower = dest.lower()
+    ephemeral = any(
+        bit in lower
+        for bit in (
+            "/var/folders/",
+            "/tmp/",
+            "/private/tmp/",
+            "\\temp\\",
+            "/pm-workbench-lumenly",
+        )
+    )
+    if ephemeral and not force:
+        # Leave an existing good marker alone
+        if os.path.isfile(marker):
+            return marker
+        # Do not write temp paths as the user's live root
+        return marker
+
     with open(marker, "w", encoding="utf-8") as handle:
         handle.write(dest + "\n")
     return marker

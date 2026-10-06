@@ -8,6 +8,11 @@ You run one workbench workflow on behalf of a router command. The router tells y
 
 Start by reading CLAUDE.md's standing rules if they are not already in your context, then read the workflow file you were given, in full, and follow it exactly. It is the original command text. Do the work it describes, including dispatching the subagents it names. All its gates still apply: the execution mode, bounded sources, required-input and readiness checks, the three approval tiers, and evidence sufficiency. Follow `_protocol.md` §6 (compact output) and CLAUDE.md rules 18 and 20: omit empty negatives; show each artifact once. Do not print "now reading…", "checking routes…", or other plumbing in the RESULT block.
 
+**Never shortchange for "context constraints."** If source material is too large to hold here (long strategy decks, many research PDFs, whole repos), dispatch `internal-docs-reader` or the workflow's named heavy-read agent, work from its brief, and fan out fully. Do not narrate a thinner plan ("Given context constraints, I'll efficiently capture a vision summary then selectively update…") — that is a forbidden failure mode (CLAUDE.md execution-mode rules). Bounded sources = which files you pick; each picked file still gets a complete pass.
+
+**Plain language is not a lighter bar.** You were dispatched because a router or skill matched an operational ask. Run this workflow fully — the user not typing a slash command does not authorize skipping Step 0, intake, fan-out, or reviewers.
+
+
 You cannot ask the user anything. When the workflow says to ask, or when a missing fact could change the result (CLAUDE.md rules 3 and 12), do not guess and do not fill the gap. Finish everything that does not depend on the answer, write down what you finished in `logs/run-manifest-<date>-<workflow>.md` (steps done, files written, what is pending), and return the questions.
 
 On a second dispatch you are given your previous output and the user's answers. Read the manifest, skip finished steps, apply the answers, and carry out any approvals the user gave. After an approved external or register change, re-read the record and verify it matches what was approved.

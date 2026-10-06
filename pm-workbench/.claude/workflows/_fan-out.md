@@ -10,6 +10,10 @@ must still fan out in the same run so backfill stays rare.
 
 Registers are an **index**, not the whole memory. After you extract facts, walk
 every durable surface below. **Update what applies in the same run** (Tier 1).
+
+**Ad-hoc enrichment:** if a later chat answer (meeting recall, "what happened on…", brief follow-up) pulls material claims from a transcript that the daily digest or registers do not hold, that is a fan-out gap — append the missing claims (or say what is chat-only). Do not point at the old digest and claim equivalence (CLAUDE.md rule 23).
+
+**User-injected context (rule 24):** if the PM adds new material facts in chat (not via `/capture` / `/quick-close`), apply the same surfaces below this turn — write Tier 1, or one concrete PROPOSAL/ask when ambiguous or Tier 3. Do not wait for them to remember `/sync ripple-check`.
 Do not ask "should I also update learning/?" when the content clearly belongs
 there. Ask only for Tier 3 (scope/owner/dates/send) or genuine ambiguity.
 
@@ -53,3 +57,6 @@ next consumer — do not leave the insight only in the daily output markdown.
   checklist row clearly applies — just update
 - Putting cross-cutting insight only in `outputs/daily/` (those are digests;
   living files and registers must hold what next week's commands need)
+- Skimming a long strategy/research source "because of context constraints"
+  instead of dispatching `internal-docs-reader` (or the workflow's heavy-read
+  agent) and then applying this checklist from the brief

@@ -56,10 +56,55 @@ class PullClipsTests(unittest.TestCase):
         os.environ["HOME"] = str(self.tmp / "marker-home")
         self.addCleanup(os.environ.__setitem__, "HOME", home if home is not None else "")
         os.environ.pop("PM_LIVE_ROOT", None)
+        old = os.getcwd()
+        os.chdir(self.tmp)  # not a live-looking cwd
+        self.addCleanup(os.chdir, old)
         self.assertEqual(
             os.path.realpath(pull_clips.resolve_live_root()),
             os.path.realpath(self.live),
         )
+
+    def test_resolve_skips_once_fixture_marker(self):
+        marker_dir = self.tmp / "marker-home" / ".pm-workbench"
+        marker_dir.mkdir(parents=True)
+        bad = self.tmp / "tmpjsdqwvse" / "once"
+        bad.mkdir(parents=True)
+        (bad / "inbox").mkdir()
+        (marker_dir / "live-root").write_text(str(bad) + "\n", encoding="utf-8")
+        good = self.tmp / "pm-live"
+        good.mkdir()
+        (good / "inbox").mkdir()
+        (good / "archive").mkdir()
+        home = os.environ.get("HOME")
+        os.environ["HOME"] = str(self.tmp / "marker-home")
+        self.addCleanup(os.environ.__setitem__, "HOME", home if home is not None else "")
+        os.environ.pop("PM_LIVE_ROOT", None)
+        old = os.getcwd()
+        os.chdir(good)
+        self.addCleanup(os.chdir, old)
+        self.assertEqual(
+            os.path.realpath(pull_clips.resolve_live_root()),
+            os.path.realpath(good),
+        )
+
+    def test_is_ephemeral_once(self):
+        self.assertTrue(pull_clips._is_ephemeral_path("/var/folders/xx/T/tmpjs/once"))
+        self.assertFalse(pull_clips._is_ephemeral_path(str(self.live)))
+
+
+class IntakeStatusTests(unittest.TestCase):
+    def test_intake_status_lists_pending(self):
+        import intake_status
+
+        tmp = Path(tempfile.mkdtemp(prefix="pmwb-intake-"))
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        live = tmp / "live"
+        (live / "inbox" / "documents").mkdir(parents=True)
+        (live / "state").mkdir()
+        (live / "inbox" / "documents" / "new.pdf").write_bytes(b"%PDF")
+        (live / "state" / "processed-files.txt").write_text("old.pdf\n", encoding="utf-8")
+        pending = intake_status._pending_inbox(live)
+        self.assertEqual(pending, ["inbox/documents/new.pdf"])
 
 
 if __name__ == "__main__":

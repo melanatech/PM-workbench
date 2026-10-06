@@ -16,7 +16,7 @@ Meeting input: $ARGUMENTS
    **Log a commitment when** at least one is true:
    - The PM is the owner, audience, or the person who must follow up
    - It is a promise about product scope, UX, requirements, research, launch, metrics, stakeholders, or design deliverables the PM depends on
-   - Missing it would cause the PM to drop a ball (e.g. "Sabrine sends Figma links", "groom cash-discount tickets before the 14 Oct release" when that release is in the PM's area)
+   - Missing it would cause the PM to drop a ball (e.g. "designer sends Figma links", "groom tickets before the next release" when that release is in the PM's area)
 
    **Do not log as a commitment** (mention at most as one "eng-only, not tracked" line in the output, with no COM- id):
    - Pure engineering / ops / infra work with no PM dependency (SSL/cert/secret rotation, DB vacuum/index cleanup, cluster cutovers, on-call chores, "ping Charlie about DP test")

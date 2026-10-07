@@ -16,6 +16,8 @@ Registers and local files are an INDEX and working memory — never the ultimate
 
 Corollary: **recency ≠ authority for decisions and ideas.** A hallway Slack comment does not override an approved PRD; newer opinion earns a "possible pending change" flag, not a silent scope update.
 
+**Learning pages** (`learning/[area].md`, `learning/entities/`) are compiled summaries with source paths — never invent entity resolvers for unnamed gaps, and never treat them as overrides of DEC/COM/RISK/EV registers or approved PRDs.
+
 **Exception — dated internal numbers:** for metric values from internal documents (leadership/metric decks, wiki metric pages, exports) that carry an as-of or report date, treat the **most recent as_of_date** as the best available reading of that series unless a same-definition live dashboard contradicts it. Still surface definition conflicts (e.g. one KR vs a split cohort of the same name) and ask which is official — do not silently merge unlike metrics. This exception does **not** apply to web search or unverified external pages.
 
 

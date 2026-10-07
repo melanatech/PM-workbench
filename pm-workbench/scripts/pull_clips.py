@@ -26,7 +26,16 @@ import os
 import shutil
 import sys
 
-CATEGORIES = ("discovery", "competitive", "meetings", "metrics", "documents", "captures")
+CATEGORIES = (
+    "discovery",
+    "competitive",
+    "meetings",
+    "slack",
+    "metrics",
+    "documents",
+    "captures",
+    "walkthroughs",
+)
 
 # Meetings are transcript text only — do not pull leftover viewport PNGs into inbox.
 SKIP_PNG_CATEGORIES = frozenset({"meetings"})

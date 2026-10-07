@@ -57,3 +57,19 @@ Use the transcript panel’s **Download** control in Stream, drop the file in
 ## Do not use Selection only for long meetings
 
 That path saves only the highlight and will stop wherever your selection ends.
+
+## Walkthrough recorder (v0.5.0+)
+
+| Symptom | Check |
+|---|---|
+| No Start/Mark/Stop menus | Reload extension; confirm version **0.5.0+** on `chrome://extensions` |
+| REC badge but no steps in Downloads | Restricted page (`chrome://`)? Screenshot fails — try an https product tab |
+| Only top of long page | Viewport-only API — scroll, then **Mark step**; scroll-settle also snaps if you moved >~40% viewport |
+| Service worker “asleep” mid-walk | Alarms keep session; if events stop, Mark step once or Stop & save — state is in `chrome.storage` |
+| Playwright still failing SSO | Expected — use walkthrough in daily Chrome instead of the automation profile |
+
+After Stop, expect under `~/Downloads/pm-workbench-inbox/walkthroughs/`:
+
+- `<stem>.md`
+- `<stem>.events.jsonl`
+- `<stem>.step-01.png` …

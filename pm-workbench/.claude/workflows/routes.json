@@ -119,6 +119,10 @@
       "monthly-review": {
         "path": ".claude/workflows/monthly-review.md",
         "model": "sonnet"
+      },
+      "ship-signal": {
+        "path": ".claude/workflows/ship-signal.md",
+        "model": "sonnet"
       }
     }
   }

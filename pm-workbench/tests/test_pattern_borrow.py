@@ -133,6 +133,73 @@ class PatternBorrowTests(unittest.TestCase):
         self.assertIn("self-improv", lower)
         self.assertIn("docs-hub", lower)
 
+    def test_learning_compile_and_entity_backprop_in_process_inbox(self):
+        inbox = (WORKFLOWS / "process-inbox.md").read_text(encoding="utf-8")
+        self.assertIn("Learning compile / entity back-propagation", inbox)
+        self.assertIn("learning/entities/", inbox)
+        self.assertIn("Forbidden:", inbox)
+        readme = (WORKBENCH / "learning" / "README.md").read_text(encoding="utf-8")
+        self.assertIn("Entity pages", readme)
+        self.assertIn("Registers remain source of truth", readme)
+        fan = (WORKFLOWS / "_fan-out.md").read_text(encoding="utf-8")
+        self.assertIn("learning/entities/", fan)
+
+    def test_ship_signal_workflow_and_templates(self):
+        wf = (WORKFLOWS / "ship-signal.md").read_text(encoding="utf-8")
+        self.assertIn("DATA GAP", wf)
+        self.assertIn("data-request", wf)
+        self.assertIn("One stage per pass", wf)
+        self.assertIn("MOVED", wf)
+        routes = (WORKFLOWS / "routes.json").read_text(encoding="utf-8")
+        self.assertIn('"ship-signal"', routes)
+        for name in ("shipped-changes", "metric-proposals", "data-request", "readout", "report", "baseline"):
+            path = TEMPLATES / "ship-signal" / f"{name}.md"
+            self.assertTrue(path.is_file(), name)
+        meth = TEMPLATES.parent / "methodology" / "experimentation"
+        self.assertTrue((meth / "README.md").is_file())
+        self.assertTrue((meth / "common-pitfalls.md").is_file())
+        exp = (WORKFLOWS / "experiment-package.md").read_text(encoding="utf-8")
+        self.assertIn("methodology/experimentation", exp)
+        self.assertIn("ship-signal", exp)
+
+    def test_clipper_screenshot_only_and_slack_category(self):
+        bg = (WORKBENCH / "tools" / "workbench-clipper" / "background.js").read_text(encoding="utf-8")
+        self.assertIn("pmwb-shot-", bg)
+        self.assertIn("Screenshot only", bg)
+        self.assertIn("captureKind = 'screenshot'", bg)
+        inbox = (WORKFLOWS / "process-inbox.md").read_text(encoding="utf-8")
+        self.assertIn("capture_kind: screenshot", inbox)
+        self.assertIn("inbox/slack/", inbox)
+        import sys
+        sys.path.insert(0, str(WORKBENCH / "scripts"))
+        import capture_clipboard
+        import pull_clips
+        self.assertIn("slack", [c[0] for c in capture_clipboard.CATEGORIES])
+        self.assertIn("slack", pull_clips.CATEGORIES)
+
+    def test_wiki_s2s_hygiene_no_company_strings(self):
+        paths = [
+            WORKFLOWS / "ship-signal.md",
+            WORKFLOWS / "process-inbox.md",
+            WORKBENCH / "learning" / "README.md",
+            WORKBENCH / ".claude" / "skills" / "ship-signal" / "SKILL.md",
+            TEMPLATES / "ship-signal" / "data-request.md",
+            TEMPLATES.parent / "methodology" / "experimentation" / "README.md",
+            TEMPLATES.parent / "methodology" / "experimentation" / "common-pitfalls.md",
+        ]
+        evolving = (WORKBENCH / "EVOLVING.md").read_text(encoding="utf-8")
+        borrow_line = next(
+            (ln for ln in evolving.splitlines() if "Wiki + Ship" in ln or "Ship→Signal borrow" in ln),
+            "",
+        )
+        self.assertTrue(borrow_line, "missing Wiki/Ship-Signal EVOLVING line")
+        for bad in FORBIDDEN:
+            self.assertNotIn(bad, borrow_line, f"EVOLVING line contains {bad}")
+        for path in paths:
+            text = path.read_text(encoding="utf-8")
+            for bad in FORBIDDEN:
+                self.assertNotIn(bad, text, f"{path} contains {bad}")
+
 
 if __name__ == "__main__":
     unittest.main()

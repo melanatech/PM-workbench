@@ -45,6 +45,17 @@ class CaptureClipboardTests(unittest.TestCase):
         files = list((self.live / "inbox" / "captures").glob("*.md"))
         self.assertEqual(len(files), 1)
 
+    def test_slack_category_in_list_and_writes(self):
+        ids = [c[0] for c in capture_clipboard.CATEGORIES]
+        self.assertIn("slack", ids)
+        self.assertEqual(dict(capture_clipboard.CATEGORIES)["slack"], "Slack communication")
+        path = capture_clipboard.write_capture(
+            str(self.live), "slack", "thread paste about exports", title="slack"
+        )
+        self.assertIn("/inbox/slack/", path.replace("\\", "/"))
+        text = Path(path).read_text(encoding="utf-8")
+        self.assertIn("category: slack", text)
+
 
 if __name__ == "__main__":
     unittest.main()

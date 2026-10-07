@@ -26,7 +26,7 @@ there. Ask only for Tier 3 (scope/owner/dates/send) or genuine ambiguity.
 | 3 | `registers/initiatives.csv` | Named product work — seed/update **and** append cross-cutting notes to **every** INIT- the finding touches (not only the primary one) |
 | 4 | `reference/context/assumptions-and-open-questions.md` | Assumptions, open questions, unresolved conflicts |
 | 5 | `reference/context/current-priorities.md` | Changes this week's top 3, leadership pressure, watched risks, or dated milestones — dated one-liners, do not invent a new priority without evidence |
-| 6 | `learning/[area].md` | Durable product/how-it-works facts |
+| 6 | `learning/[area].md` **and** `learning/entities/<slug>.md` when claims attach to named entities | Durable product/how-it-works facts: area file gets a short digest; back-propagate claims into entity stubs (see process-inbox learning compile). Registers stay SoT for DEC/COM/RISK/EV — do not invent entity resolvers for unnamed gaps |
 | 7 | `reference/user-research/[dated]-*.md` | Research reports / synthesis docs (per that folder's README) |
 | 8 | `state/competitive/` + `outputs/monthly/competitive-log.md` | Competitor behavior, pricing, parity, market gaps (even if the source was a meeting or research doc, not a formal scan) |
 | 9 | `outputs/todo-proposals/` | My follow-ups (never silent `/todo` add) |

@@ -26,6 +26,7 @@ from pull_clips import resolve_live_root  # noqa: E402
 CATEGORIES = [
     ("discovery", "Discovery signal (customer / support / feedback)"),
     ("meetings", "Meeting notes / summary"),
+    ("slack", "Slack communication"),
     ("captures", "Just capture it (classify later)"),
     ("competitive", "Competitive"),
     ("documents", "Internal document"),
@@ -71,7 +72,7 @@ def choose_category_gui() -> str | None:
     listed = ", ".join(f'"{label}"' for label in labels)
     script = f'''
 set theChoices to {{{listed}}}
-set thePick to choose from list theChoices with prompt "Save clipboard to PM Workbench as:" default items {{"{labels[2]}"}}
+set thePick to choose from list theChoices with prompt "Save clipboard to PM Workbench as:" default items {{"{dict(CATEGORIES)['captures']}"}}
 if thePick is false then
     return ""
 end if
@@ -95,7 +96,7 @@ def choose_category_tty() -> str | None:
     for i, (cid, label) in enumerate(CATEGORIES, 1):
         print(f"  {i}) {label}")
     try:
-        raw = input("Category [1-6]: ").strip()
+        raw = input(f"Category [1-{len(CATEGORIES)}]: ").strip()
     except EOFError:
         return None
     if raw.isdigit() and 1 <= int(raw) <= len(CATEGORIES):

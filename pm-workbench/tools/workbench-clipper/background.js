@@ -3,6 +3,9 @@
 // Stream/SharePoint transcripts are virtualized lists: only a window of
 // entries exists in the DOM at once (see aria-setsize vs mounted nodes).
 // Meeting capture scrolls that panel and accumulates entries by id.
+// Walkthrough session: importScripts → walkthrough-session.js (Start/Mark/Stop).
+
+importScripts('walkthrough-session.js');
 
 const CATEGORIES = [
   ['discovery',   'Discovery signal (customer / support / feedback)'],
@@ -50,12 +53,38 @@ function rebuildMenus() {
         contexts: ['selection']
       });
     }
+    chrome.contextMenus.create({
+      id: 'pmwb-shot-sep',
+      parentId: 'pmwb-root',
+      type: 'separator',
+      contexts: ['page']
+    });
+    chrome.contextMenus.create({
+      id: 'pmwb-shot-root',
+      parentId: 'pmwb-root',
+      title: 'Screenshot only (no page text)',
+      contexts: ['page']
+    });
+    for (const [id, title] of CATEGORIES) {
+      chrome.contextMenus.create({
+        id: 'pmwb-shot-' + id,
+        parentId: 'pmwb-shot-root',
+        title,
+        contexts: ['page']
+      });
+    }
+    if (typeof wtAppendMenus === 'function') {
+      wtAppendMenus();
+    }
   });
 }
 
 chrome.runtime.onInstalled.addListener(rebuildMenus);
 chrome.runtime.onStartup.addListener(rebuildMenus);
 rebuildMenus();
+if (typeof wtWireWalkthrough === 'function') {
+  wtWireWalkthrough();
+}
 
 // Runs in the page. Async: may scroll a virtualized transcript panel.
 async function extractPagePayload() {
@@ -342,12 +371,30 @@ async function captureVisiblePng(tabId) {
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   const id = info.menuItemId;
-  if (typeof id !== 'string' || !id.startsWith('pmwb-') || id === 'pmwb-root' || id === 'pmwb-sel-root' || id === 'pmwb-sel-sep') {
+  if (
+    typeof id !== 'string'
+    || !id.startsWith('pmwb-')
+    || id === 'pmwb-root'
+    || id === 'pmwb-sel-root'
+    || id === 'pmwb-sel-sep'
+    || id === 'pmwb-shot-root'
+    || id === 'pmwb-shot-sep'
+    || id === 'pmwb-wt-sep'
+  ) {
+    return;
+  }
+
+  if (typeof wtHandleMenu === 'function' && await wtHandleMenu(id, tab)) {
     return;
   }
 
   const selectionOnly = id.startsWith('pmwb-sel-');
-  const category = selectionOnly ? id.slice('pmwb-sel-'.length) : id.slice('pmwb-'.length);
+  const screenshotOnly = id.startsWith('pmwb-shot-');
+  const category = selectionOnly
+    ? id.slice('pmwb-sel-'.length)
+    : screenshotOnly
+      ? id.slice('pmwb-shot-'.length)
+      : id.slice('pmwb-'.length);
   if (!CATEGORIES.some(([c]) => c === category)) return;
 
   let body = '';
@@ -361,7 +408,11 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   let incomplete = false;
   const selection = (info.selectionText || '').trim();
 
-  if (selectionOnly) {
+  if (screenshotOnly) {
+    body = '_(Screenshot only — see sibling PNG; no page text captured.)_';
+    captureKind = 'screenshot';
+    extractSource = 'viewport_png';
+  } else if (selectionOnly) {
     body = selection;
     captureKind = 'selection';
   } else if (tab && tab.id) {
@@ -425,15 +476,28 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   let screenshotName = '';
   let screenshotDataUrl = null;
   if (
-    category !== 'meetings'
-    && tab
+    tab
     && tab.windowId != null
-    && captureKind !== 'selection'
+    && (
+      screenshotOnly
+      || (category !== 'meetings' && captureKind !== 'selection')
+    )
   ) {
     screenshotDataUrl = await captureVisiblePng(tab.id);
     if (screenshotDataUrl) {
       screenshotName = `${stamp}-${slug}.png`;
     }
+  }
+  if (screenshotOnly && !screenshotDataUrl) {
+    if (chrome.notifications && chrome.notifications.create) {
+      chrome.notifications.create('pmwb-shot-fail-' + Date.now(), {
+        type: 'basic',
+        iconUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+        title: 'PM Workbench',
+        message: 'Screenshot failed — tab may be restricted. No file written.'
+      });
+    }
+    return;
   }
 
   const md = [
@@ -476,7 +540,9 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         });
       }
       let note;
-      if (captureKind === 'selection') {
+      if (captureKind === 'screenshot') {
+        note = 'Screenshot only (PNG + stub markdown).';
+      } else if (captureKind === 'selection') {
         note = 'Clipped selection only.';
       } else if (captureKind === 'transcript') {
         note = incomplete

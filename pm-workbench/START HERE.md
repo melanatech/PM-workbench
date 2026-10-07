@@ -97,6 +97,7 @@ The six cluster commands (`/capture`, `/brief`, `/sync`, `/discover`, `/build`, 
 | OKR gathering/monitoring/reporting | `/report okr-refresh` (logs already-calculated values from dashboards or dated internal docs — never recomputes a metric itself) |
 | Docs, release notes, launch coordination | `/build launch-package` (drift report first, then all audience docs) |
 | Experiments | `/build experiment-package` (adversarial gate) + `/build experiment-analyze` |
+| Post-ship release measurement (did it move?) | `/report ship-signal` (one stage per pass; data-request GATE; verdicts MOVED/FLAT/INCONCLUSIVE/DATA GAP) |
 | Meeting summaries | `/capture meeting-closeout` (feeds the registers — the keystone habit) |
 | Run things on a schedule or leave a session watching the inbox | `SCHEDULING.md` (cron/launchd/Task Scheduler through `scripts/run_scheduled.py`, or `/loop` with `.claude/loop.md`; `state/PAUSE` stops everything) |
 | My own to-dos (add, update, finish, drop, list; propose from the inbox; draft the outreach; `sweep`) | `/todo` (`registers/todos.csv`; `propose` and `work` use the `todo-worker` subagent) |

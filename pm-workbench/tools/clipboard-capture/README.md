@@ -20,8 +20,9 @@ That compiles a real Cocoa Services app into `~/Applications/Send to PM Workbenc
 1. Select text in Slack (or Mail / Notes)
 2. Right-click → **Services** → **Send to PM Workbench**  
    If the app hides Services on right-click: menu bar → app name → **Services** → **Send to PM Workbench**
-3. Pick a category → file lands in `inbox/<category>/`
-4. `/capture process-inbox`
+3. Pick a category → file lands in `inbox/<category>/`  
+   Categories: Discovery · Meeting notes · **Slack communication** · Just capture it · Competitive · Internal document · Metric/dashboard
+4. `/capture process-inbox` (`inbox/slack/` routes as discovery-adjacent unless the paste is clearly a meeting summary)
 
 Optional: assign a keyboard shortcut in that same Services list.
 

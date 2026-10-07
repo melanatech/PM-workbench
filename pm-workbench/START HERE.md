@@ -11,10 +11,15 @@ workflow.
 ## First run: create a live folder, then verify with fictional data
 
 Do **not** put real captures into the git clone. Create a non-git live workspace
-first (details and troubleshooting in [NEW-USER-SETUP.md](NEW-USER-SETUP.md)):
+first (details and troubleshooting in [NEW-USER-SETUP.md](NEW-USER-SETUP.md)).
+
+**Prefer Claude:** open this kit folder in Claude Code / Cursor and say
+**"how do I get started"** (or `/brief get-started`). The agent runs the bootstrap
+for you, then tells you to reopen `~/pm-live`.
+
+**Or run it yourself** from the repository root:
 
 ```
-# from the repository root
 python3 pm-workbench/scripts/create_live_workspace.py ~/pm-live
 # contributors who will edit kit files: add --dev-links
 ```

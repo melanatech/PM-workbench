@@ -134,7 +134,7 @@ Governing rules for every mode:
 
 ## Model routing (already handled — you don't need to think about this)
 Each workflow runs on the model suited to its actual difficulty. The cluster commands (`/capture`, `/brief`, `/sync`, `/discover`, `/build`, `/report`) are thin haiku routers: they pick a workflow and dispatch it to the `workflow-runner` subagent on the model listed in `.claude/workflows/routes.json` (the single source of truth; change a model there). `/quick-close` and `/todo` are still their own commands. The groups below name the workflows:
-- **Haiku** (fast, cheap) — `/quick-close`, `/todo`, and the workflows `daily-brief`, `rotate-registers`, `workbench-health`: mechanical logging and digests, no deep reasoning needed. `/todo propose` and `/todo work` hand the thinking to the sonnet `todo-worker` subagent.
+- **Haiku** (fast, cheap) — `/quick-close`, `/todo`, and the workflows `get-started`, `daily-brief`, `rotate-registers`, `workbench-health`: mechanical logging, bootstrap, and digests, no deep reasoning needed. `/todo propose` and `/todo work` hand the thinking to the sonnet `todo-worker` subagent.
 - **Sonnet** (default) — everything else day-to-day: meetings, Jira, discovery, OKRs, updates, prototypes, launches.
 - **Opus** (deepest reasoning, costs more) — the workflows `prd-package`, `strategy-refresh`, `experiment-package`: rare, high-stakes, worth the extra reasoning.
 
@@ -143,12 +143,12 @@ A router adds a pause, never removes one: a Standard run prints one line before 
 You can always override for one session — type `/model opus` before a gnarly ad hoc question, or `/model haiku` if you're burning through simple lookups and want to conserve usage — then `/model sonnet` to go back to normal. This is a Claude Code session command, not something you ask me to do; I can't switch my own model mid-response.
 
 ## Eight commands — the workflows are arguments
-You type one of eight commands. Six are routers over 28 workflows; `/quick-close` (the 60-second capture) and `/todo` stand alone.
+You type one of eight commands. Six are routers over 29 workflows; `/quick-close` (the 60-second capture) and `/todo` stand alone.
 
 | Command | Workflows behind it |
 |---|---|
 | `/capture` | `meeting-closeout`, `process-inbox` |
-| `/brief` | `daily-brief`, `return-brief`, `meeting-prep` |
+| `/brief` | `get-started`, `daily-brief`, `return-brief`, `meeting-prep` |
 | `/sync` | `jira-reconcile`, `ripple-check`, `context-reconcile`, `roadmap-update`, `rotate-registers` |
 | `/discover` | `discovery`, `research-plan`, `research-package`, `competitive-scan`, `learn-product-flow`, `code-dive` |
 | `/build` | `prd-package`, `prototype-build`, `prd-prototype-sync`, `experiment-package`, `experiment-analyze`, `launch-package` |
@@ -176,6 +176,7 @@ will not memorize slash commands; the menu + skills are the product surface.
 
 | I say something like... | Run |
 |---|---|
+| "How do I get started" / "set up the workbench" / "create my pm-live" / "first-time setup" / "new user setup" | `/brief get-started` |
 | "What changed while I was out" / "back from leave" | `/brief return-brief` |
 | "What's new" / "morning" / "catch me up" / "daily brief" | `/brief daily-brief` |
 | "Catch up the inbox" / "process clips" / "web clips" / "process documents" / "I uploaded something" / "new PDFs" / "what's waiting" | `/capture process-inbox` |

@@ -60,6 +60,20 @@ class RoutesTableTests(unittest.TestCase):
         for name in ("prd-package", "strategy-refresh", "experiment-package"):
             self.assertEqual(flat[name], "opus")
 
+    def test_get_started_is_brief_haiku_and_mentions_bootstrap(self):
+        flat = {w: e for ws in clusters().values() for w, e in ws.items()}
+        self.assertIn("get-started", clusters()["brief"])
+        self.assertEqual(flat["get-started"]["model"], "haiku")
+        text = (WORKBENCH / ".claude" / "workflows" / "get-started.md").read_text(encoding="utf-8")
+        self.assertIn("create_live_workspace.py", text)
+        self.assertIn("Open Folder", text)
+        self.assertIn("~/pm-live", text)
+        skill = (WORKBENCH / ".claude" / "skills" / "get-started" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("/brief get-started", skill)
+        claude = (WORKBENCH / "CLAUDE.md").read_text(encoding="utf-8")
+        self.assertIn("/brief get-started", claude)
+        self.assertIn("how do i get started", claude.lower())
+
     def test_gates_survive_the_move(self):
         # The moved files must still carry their execution-mode line or required-input rule.
         for name in ("prd-package", "launch-package", "experiment-package", "strategy-refresh"):

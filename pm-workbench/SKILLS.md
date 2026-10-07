@@ -29,4 +29,4 @@ Only do this when the skill must bundle extra files (see prototype-build). Other
 ## Already special
 - **`prototype-build`** — full skill with QA harness and repo scaffolding.
 - **`process-inbox`** — skill emphasizes Downloads intake; workflow remains the step source of truth.
-- **Thin skills** — meeting-closeout, daily-brief, return-brief, meeting-prep, jira-reconcile, ripple-check, context-reconcile, roadmap-update, discovery, competitive-scan, research-plan, research-package, learn-product-flow, code-dive, weekly-update, okr-refresh, strategy-refresh, prd-package, experiment-package, experiment-analyze, launch-package, workbench-health, monthly-review.
+- **Thin skills** — get-started, meeting-closeout, daily-brief, return-brief, meeting-prep, jira-reconcile, ripple-check, context-reconcile, roadmap-update, discovery, competitive-scan, research-plan, research-package, learn-product-flow, code-dive, weekly-update, okr-refresh, strategy-refresh, prd-package, experiment-package, experiment-analyze, launch-package, workbench-health, monthly-review.

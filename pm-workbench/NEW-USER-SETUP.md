@@ -66,7 +66,12 @@ git clone https://github.com/melanatech/PM-workbench.git
 cd PM-workbench
 ```
 
-**Normal users** (kit code is a snapshot; real data stays local):
+**Chat-first (recommended if you are not comfortable in Terminal):** open the
+clone in Claude Code / Cursor and say **"how do I get started"** or run
+`/brief get-started`. Claude runs the bootstrap script and tells you when to
+open `~/pm-live`.
+
+**Normal users** (kit code is a snapshot; real data stays local) — Terminal:
 
 ```sh
 python3 pm-workbench/scripts/create_live_workspace.py ~/pm-live

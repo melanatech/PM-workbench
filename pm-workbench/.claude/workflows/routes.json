@@ -23,6 +23,10 @@
       "meeting-prep": {
         "path": ".claude/workflows/meeting-prep.md",
         "model": "sonnet"
+      },
+      "get-started": {
+        "path": ".claude/workflows/get-started.md",
+        "model": "haiku"
       }
     },
     "sync": {

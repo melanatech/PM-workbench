@@ -45,6 +45,8 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 
 ## Changelog (newest first; one line per real architectural decision — not every edit)
 
+- 2026-10-07 — **`/brief get-started`**: non-technical onboarding. Detects kit vs live, runs (or guides) `create_live_workspace.py`, insists on Open Folder → live. Thin skill + Command-menu phrases ("how do I get started", "create my pm-live"). Org seed packs stay private — mention unpack after live only. Reason: START HERE required a terminal script chat-only PMs never saw.
+
 - 2026-10-07 — **Walkthrough clipper (auth-safe):** Workbench Clipper v0.5.0 Start/Mark/Stop records clicks + viewport PNGs in the PM’s logged-in Chrome → `Downloads/…/walkthroughs/` (`capture_kind: walkthrough`). Settle debounce + scroll-settle + Mark step; no full-page stitch. process-inbox + learn-product-flow prefer these packages over Playwright SSO. Trigger: browser-bridge cannot read auth’d product UI.
 
 - 2026-10-07 — **Wiki + Ship→Signal borrow + clippers:** (1) process-inbox learning compile — area digests + `learning/entities/` back-propagation (methods from llm-wiki-poc; registers stay SoT). (2) `/report ship-signal` thin loop — shipped-changes → metric-proposals + data-request GATE → baseline/readout (`MOVED`/`FLAT`/`INCONCLUSIVE`/`DATA GAP`) → report; templates under `reference/templates/ship-signal/`; methodology under `reference/methodology/experimentation/`. (3) Chrome clipper **Screenshot only** (`capture_kind: screenshot`). (4) Desktop clipboard category **Slack communication** → `inbox/slack/`. No plugin install required; company remotes/content stay out of kit. Reject: full Obsidian wiki, warehouse auto-query, UXCore/Lab readiness skills.

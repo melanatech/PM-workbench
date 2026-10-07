@@ -4,31 +4,33 @@ description: Pull Downloads clips into inbox/, then process all waiting captures
 
 Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
-**Step 0 — intake gate (required; never skip; never claim empty without this output).**  
+**Step 0 — intake gate (required; never skip; never claim empty without running it).**  
 Clips land in `~/Downloads/pm-workbench-inbox/<category>/` first (Chrome limitation). Users will say "process clips / documents / upload" while files are still there — **Downloads is part of intake**, not optional.
 
-From the live workspace (`~/pm-live` as first folder), run and **paste the full stdout** into the RESULT:
+From the live workspace (`~/pm-live` as first folder), run:
 
 ```bash
 python3 scripts/intake_status.py --root "$(pwd)"
 ```
 
-(If cwd is wrong, use `--root "$HOME/pm-live"`.) That script pulls every file from Downloads into `inbox/`, then lists `inbox_unprocessed=…`. 
+(If cwd is wrong, use `--root "$HOME/pm-live"`.) That script pulls every file from Downloads into `inbox/`, then lists `inbox_unprocessed=…`. Keep the **full stdout in thinking/logs only** — do **not** paste it into user-facing RESULT (no code dumps for users).
+
+In RESULT, one intake line only, e.g. `Intake: pulled 1 from Downloads; 5 unprocessed` or `Intake: nothing waiting` (derive from `moved` / `downloads_pending_before_pull` and `inbox_unprocessed` / `STATUS`).
 
 Hard rules:
 - If stdout says `STATUS: work waiting` → process every `inbox:` path listed. **Forbidden:** "inbox empty" / "nothing found."
 - If `downloads_still_pending` > 0 after pull → say pull failed; retry or report PermissionError; do not proceed as empty.
 - If `STATUS: nothing waiting` → only then say there is nothing to process.
-- If the script exits 2 (bad live-root / blocked) → print the error; tell me to run `echo "$HOME/pm-live" > ~/.pm-workbench/live-root` if the marker points at a `/var/folders` or `/tmp` fixture path.
+- If the script exits 2 (bad live-root / blocked) → surface the error briefly in RESULT; tell me to run `echo "$HOME/pm-live" > ~/.pm-workbench/live-root` if the marker points at a `/var/folders` or `/tmp` fixture path.
 
 Do **not** substitute a bare `ls inbox/` for Step 0.
 
-Each clip’s frontmatter (when `.md`) carries `source_url` and `access_path` — cite them. If `capture_kind: selection`, treat the body as a partial transcript and say so. For `.csv`/`.pdf`/office docs in `inbox/documents/` or `inbox/exports/`, treat as documents (step 3).
+Each clip’s frontmatter (when `.md`) carries `source_url` and `access_path` — cite them. If `capture_kind: selection`, treat the body as a partial transcript and say so. If `capture_kind: screenshot`, the markdown body is a stub — **vision-read the sibling `.png`** (required); do not treat empty/short body as a failed capture. If `capture_kind: walkthrough` (or files in `inbox/walkthroughs/`): treat as a **product UI walkthrough** package — shared stem `*.md` + `*.events.jsonl` + `*.step-NN.png`. Vision-read step PNGs (default up to **20**; say if more remain), merge with the timeline and event log; route to `learning/` (compile + entity back-prop) and note `/discover learn-product-flow` when a full flow deep-dive is warranted. Do not treat short markdown body as failure. For `.csv`/`.pdf`/office docs in `inbox/documents/` or `inbox/exports/`, treat as documents (step 3). Files in `inbox/slack/` are **Slack communication** — discovery-adjacent (step 4 / evidence + PM-scoped COM/RISK if present); only route through meeting-closeout if the paste is clearly a meeting summary.
 
 Work through every unprocessed file listed by intake_status (and any still in `inbox/` not in `state/processed-files.txt`).
 
 For each file:
-1. Identify what it is: discovery signal, meeting notes (including `[timestamp]-quick.md` drops from `/quick-close` — these get the FULL reconciliation treatment now that there's time), metric export, research notes, competitive capture, launch material, or **a document** (PDF/Word/PowerPoint/Excel in `inbox/documents/`) — route by content, not just folder.
+1. Identify what it is: discovery signal, **Slack thread/paste** (`inbox/slack/` or `category: slack`), meeting notes (including `[timestamp]-quick.md` drops from `/quick-close` — these get the FULL reconciliation treatment now that there's time), metric export, research notes, competitive capture, launch material, screenshot-only clip, **walkthrough package** (`inbox/walkthroughs/` / `capture_kind: walkthrough`), or **a document** (PDF/Word/PowerPoint/Excel in `inbox/documents/`) — route by content, not just folder.
 2. **Privacy in durable records:** when writing evidence rows or research summaries, use concise summaries + source links, and redact customer names/identifiers (per CLAUDE.md rule 15) — the exact wording can stay brief and anonymized; the full raw text stays in archive/ as temporary working material, not in the permanent register.
 3. **Documents:** run `bash scripts/extract_document.sh [file]` first (writes a sibling `.extracted.txt`). Use that text as the baseline.
    - Exit **0** → read the printed path; do not invent another extractor.
@@ -38,8 +40,20 @@ For each file:
      1. For each `.pdf`: run `bash scripts/rasterize_pdf.sh [file]` (optional 2nd arg = max pages; default 40). It writes `<stem>.pages/page-NN.png` + `manifest.txt`. Keep that folder with the PDF when archiving.
      2. **Read the PNGs with the Read tool** (Claude vision). Default: every page up to **20**; if the PDF has more, say which pages stay on disk unread and offer to widen. Prefer vision for metric callouts, chart axes/labels, and slide tables; merge with `.extracted.txt` (text wins for prose; vision wins for numbers that only appear in images).
      3. Write a sibling `<stem>.vision.md` with: source path, as-of dates seen, metrics/tables transcribed, diagrams summarized, pages unread if any. Cite `page-NN.png` for claims that came from an image. Route from **text + vision** together into learning / evidence / okr-history / fan-out.
-     4. For clipper captures: if frontmatter has `includes_images: viewport_png` (or a same-stem `.png` sits beside the `.md`), Read that PNG the same way and fold visuals into the capture summary — do not ignore the screenshot.
+     4. For clipper captures: if frontmatter has `includes_images: viewport_png`, `capture_kind: screenshot`, or a same-stem `.png` sits beside the `.md`, Read that PNG the same way and fold visuals into the capture summary — do not ignore the screenshot. Screenshot-only clips: PNG is the primary content; stub body is expected. Walkthrough packages: Read each `*.step-NN.png` (cap 20) with the timeline in the `.md` and optional `.events.jsonl`.
    Then: if it's a user research report, create/update its summary in `reference/user-research/` per that folder's README, and pull any findings that update `registers/evidence.csv`. If it's something else (a strategy doc, a decision record), route it to wherever it's actually about — `learning/[area]/`, `registers/decisions.csv`, or flag it to me if it's unclear where it belongs. **Long strategy/deck packs:** if the text+vision material is too large to hold cleanly in this Fast pass, dispatch `internal-docs-reader` for that file (and its `.vision.md` if present), then fan out from the brief — do not skim for "context constraints" (CLAUDE.md).
+   - **Learning compile / entity back-propagation (required when the source holds durable product knowledge):** do not stop at a single `learning/[area].md` blurb when claims clearly attach to named entities (initiative, metric, JTBD, decision, competitor, feature).
+     1. Write or append a short **digest** section in `learning/[area].md` (dated, source path/archive link, 2–5 highest-signal claims — navigation, not a full dump; raw stays in archive/).
+     2. For each related entity: if `learning/entities/<slug>.md` exists, append a dated `## From <source> (YYYY-MM-DD)` block (2–4 bullets relevant to that entity) and bump `last-updated`. If missing and a stub fits, create from `reference/templates/learning-entity-stubs/` (initiative/metric/jtbd/decision) with answer-preview `summary` in Overview — never invent an entity or resolver for a gap you cannot name; leave unnamed gaps in assumptions.
+     3. Registers remain source of truth for DEC-/COM-/RISK-/EV- events; learning pages are compiled summaries only (CLAUDE.md). Redact PII per rule 15 before durable write.
+     4. **Forbidden:** treating an area-file one-liner as full fan-out when entity pages should have been updated; inventing entity pages for vague themes; reproducing the entire source into learning.
+   - **House-format / template detect (required for documents that look reusable):** if the file is (or contains) a recurring deliverable shape — experiment plan/readout, PPP/weekly update, strategy memo, launch/release checklist, research plan, PRD skeleton, etc. — do **not** silently invent `reference/templates/*.md` and do **not** stop at an index-only bookmark.
+     1. Ensure `reference/templates/found-templates-index.md` exists (create from kit seed / header if missing).
+     2. Append or refresh an index row: Template name | source path (inbox→archive) | one-line what it is | status `index-only` or `templated` (link the `.md` if it already exists).
+     3. If status would be `index-only` (no filled `reference/templates/<slug>.md` yet, or index points only at archive): add a **Tier 2 PROPOSAL** — do not write the template this turn. One line each:  
+        `PROPOSAL: create reference/templates/<slug>.md from <archive-or-inbox path> (house format: <kind>). Full read of source required on approval; show draft diff before finalize.`
+     4. **Forbidden:** treating an index row as “we have a template”; drafting the template from the index blurb alone; auto-writing without approval.
+     5. On a later run when I approve: open the source fully (extract + vision as needed), draft the template, show the diff in PROPOSALS/RESULT, update the index row to `templated` + link, and wire any matching workflow only if I asked.
 4. **Discovery material** → one evidence record per distinct item, appended to `registers/evidence.csv` using its exact schema. That includes **stakeholder-proposed enhancements and solution ideas** (table resize, lock a column, reuse components, in-product guidance) — do **not** skip them because they are not customer quotes. Preserve exact wording in `exact_observation`; your reading goes in `interpreted_problem`. Mark `evidence_type` honestly: **direct** (you heard/saw the user), **reported** (someone relays user feedback), **inferred** (a proposed fix or improvement with no attached observation). Inferred rows stay `confidence=low`. SOURCE-POLICY still holds: inferred/stakeholder ideas are input in the register, not proof of a customer problem — later synthesis must not treat them as equivalent to direct/reported.
 5. **Meeting notes** → route through the `/capture meeting-closeout` logic (decisions/commitments/risks **and initiative seeding** to registers), including that workflow's **PM-scope filter**: do not invent COM-/INIT- rows for eng-only ops (SSL rotation, infra chores, etc.).
 6. **Initiatives from non-meeting discovery** → after writing evidence, ensure each item has a home in `registers/initiatives.csv`: match `related_feature` / theme to an existing INIT- row and append the new `EV-nnn` plus a one-line enhancement note into that row's `notes` (update `last_updated`). If the capture names a PM-scoped product initiative that has no row yet, create one (`discovery` or `building` / `iterating` as fits; see meeting-closeout seeding rules). Do **not** create a new INIT- per small enhancement — fold into the parent initiative's notes. Never seed eng-only infra.
@@ -51,5 +65,5 @@ If any processed file contained follow-ups for me (or discovery that implies my 
 
 **Fan-out (required).** Read and apply `.claude/workflows/_fan-out.md` for the batch. Competitive clips or research that name vendors → `state/competitive/` and/or `outputs/monthly/competitive-log.md` in this run, not "file under competitive later." Cross-cutting themes → every relevant INIT- notes row + assumptions/priorities/learning as they apply.
 
-End with a quality-control report in chat: files processed, records created (including INIT- seeded/updated), duplicates linked, anything skipped and why, anything that looked important but didn't fit a category, **and** the Surfaces updated / N/A / Cross-initiative block from `_fan-out.md`.
+End with a quality-control report in chat: files processed, records created (including INIT- seeded/updated), duplicates linked, anything skipped and why, anything that looked important but didn't fit a category, **template index rows / PROPOSALs to create templates** (or N/A), **and** the Surfaces updated / N/A / Cross-initiative block from `_fan-out.md`. If any template PROPOSALs exist, return them under **PROPOSALS** (Tier 2) — not buried only in the QC list.
 

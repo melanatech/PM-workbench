@@ -1,9 +1,32 @@
 {
   "manifest_version": 3,
   "name": "PM Workbench Clipper",
-  "version": "0.4.1",
-  "description": "Right-click → markdown capture. Meetings scroll virtualized Stream transcripts (scrollIntoView until aria-setsize). No network.",
-  "permissions": ["contextMenus", "downloads", "activeTab", "scripting", "notifications", "tabs"],
+  "version": "0.5.0",
+  "description": "Right-click captures + Walkthrough recorder (clicks, viewport screenshots) in your logged-in Chrome. No network.",
+  "permissions": [
+    "contextMenus",
+    "downloads",
+    "activeTab",
+    "scripting",
+    "notifications",
+    "tabs",
+    "storage",
+    "alarms"
+  ],
+  "host_permissions": ["http://*/*", "https://*/*"],
   "background": { "service_worker": "background.js" },
+  "action": {
+    "default_title": "PM Workbench — Start / Stop walkthrough"
+  },
+  "commands": {
+    "pmwb-wt-mark": {
+      "suggested_key": { "default": "Alt+Shift+M" },
+      "description": "Walkthrough: Mark step (screenshot now)"
+    },
+    "pmwb-wt-stop": {
+      "suggested_key": { "default": "Alt+Shift+S" },
+      "description": "Walkthrough: Stop & save"
+    }
+  },
   "icons": {}
 }

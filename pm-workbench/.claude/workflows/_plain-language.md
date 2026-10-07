@@ -37,6 +37,7 @@ command — never a third improvised path.
 - "Quick look at Jira…" when jira-reconcile matches
 - "Summarize from memory/registers only…" when weekly-update or okr-refresh matches
   and the workflow requires reconciliation first
+- Improvising a "quick release readout" when ship-signal / "did this ship move the needle" matches
 - Skipping Deep usage estimate / required-input gates because the user used
   casual wording
 - Treating "context constraints" as a reason to skip the matched workflow

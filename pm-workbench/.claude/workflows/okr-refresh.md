@@ -33,7 +33,7 @@ Recommended action: ...
    - Weekly-update paragraph → feeds `/report weekly-update`
    - Spreadsheet row(s) matching `state/okr-history.csv` columns, ready to paste
    - OKR-site text block matching prior entries' format; pre-fill the form if browser access allows and I approve, and **stop before submit**
-6. **Cross-check against `registers/initiatives.csv`:** if a metric that moved is the related_okr for an active initiative, name that initiative directly in the narrative — "this is the target metric for [initiative], currently at [stage]" — instead of reporting the number in isolation from the work meant to move it.
+6. **Cross-check against `registers/initiatives.csv`:** if a metric that moved is the related_okr for an active initiative, name that initiative directly in the narrative — "this is the target metric for [initiative], currently at [stage]" — instead of reporting the number in isolation from the work meant to move it. If a recent `/report ship-signal` readout exists under `outputs/releases/` for the same metric window, cite its verdict vocabulary (`MOVED`/`FLAT`/`INCONCLUSIVE`/`DATA GAP`) — do not re-adjudicate the release loop here.
 7. Save the full report to `outputs/monthly/[date]-okr-report.md` (or weekly/ for weekly runs).
 
 When surfaces disagree on **roadmap/status/scope**, resolve by the **Roadmap surface authority** table in `SOURCE-POLICY.md`. Metric authority follows the Official metrics row and the dated-internal-numbers exception there.

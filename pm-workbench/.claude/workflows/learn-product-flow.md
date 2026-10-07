@@ -5,7 +5,7 @@ argument-hint: [workflow, e.g. "refund flow"]
 
 Deep-dive: $ARGUMENTS
 
-1. **Walk the flow** via browser in the product ([PRODUCT_URL]) — I'll drive or you navigate read-only with me watching. Record every screen, decision point, and error state encountered.
+1. **Walk the flow** via browser in the product ([PRODUCT_URL]) — I'll drive or you navigate read-only with me watching. Record every screen, decision point, and error state encountered. **Prefer an existing clipper walkthrough package** in `inbox/walkthroughs/` or `archive/` (`capture_kind: walkthrough` with step PNGs + events) when one covers this flow — that was recorded in the PM’s logged-in Chrome (SSO-safe). Only fall back to Playwright/browser-bridge when no package exists and I ask you to drive live (SSO often fails on the automation profile).
 2. **Compare against the paper trail — dispatch to `internal-docs-reader`** for Confluence docs, Jira tickets, and any shared-drive/file-browser design or architecture docs for this flow, so that reading happens off to the side while you keep walking the live product. The gaps and contradictions between actual behavior and documentation are the primary finding — list each one.
 3. **Map to data:** which dashboard metrics and behavior-analytics segments cover this flow; which steps are dark (no instrumentation).
 4. Output to `learning/[flow]/`: flow walkthrough w/ states; doc-vs-reality differences; metric map; likely bottlenecks worth validating; open questions.

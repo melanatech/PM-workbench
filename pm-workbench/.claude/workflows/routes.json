@@ -75,6 +75,10 @@
       "code-dive": {
         "path": ".claude/workflows/code-dive.md",
         "model": "sonnet"
+      },
+      "explore-brief": {
+        "path": ".claude/workflows/explore-brief.md",
+        "model": "sonnet"
       }
     },
     "build": {

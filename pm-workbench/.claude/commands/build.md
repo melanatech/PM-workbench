@@ -29,5 +29,6 @@ Read `.claude/workflows/_protocol.md` and follow it with CLUSTER = `build`. Do n
   - both PRD and prototype exist and I mention a change, a comment or "still match": `prd-prototype-sync`
   - "test", "experiment", "A/B": `experiment-package`; "results" with an export: `experiment-analyze`
   - "launch", "release notes", "get this ready": `launch-package`
+- **Product brief / check-in brief / explore options / alternatives before a PRD** → `/discover explore-brief`, not `prd-package`.
 - If the stage and my words disagree, or the feature is only a name, ask one short question. A feature name alone is not enough input for `prd-package`; its required-input rule applies.
 - `prototype-build` is a skill, not a workflow file: the runner reads its SKILL.md and follows it.

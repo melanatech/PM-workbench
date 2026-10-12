@@ -1,12 +1,36 @@
-# One file like this per OKR metric. The dashboard has ALREADY calculated
-# this number — this file just tells Claude where to find it and how to
-# sanity-check it. Nothing here computes anything.
-metric: onboarding_completion          # rename to your real metric
-source: quicksight                      # quicksight | fullstory | experiment_tool
+# One file like this per OKR metric (or per series on a multi-metric chart).
+# The source has ALREADY calculated the number — this file tells Claude where
+# to find it and what else to copy. Nothing here computes anything.
+metric: onboarding_completion          # rename to your real metric / series name
+source: quicksight                      # quicksight | fullstory | tableau | experiment_tool | deck | …
 source_url: "[BOOKMARKED DASHBOARD URL]"
 what_to_read: "The 'Activation Rate' KPI card at the top of the dashboard — read the displayed percentage as-is, do not recompute it."
-also_capture: [platform, customer_segment]   # any breakdowns shown alongside the headline number
+
+# Window the number covers (required when logging). Not the same as as_of_date.
+# Prefer the label the source shows: "past 30 days", "2026-09-01 to 2026-09-30", "MTD".
+default_timeframe: "past 30 days as labeled on dashboard"
+
+# Cohort / product / device / campaign filters applied on the view when you read it.
+# Leave [] if the headline is unfiltered. Log the actual filters used each time in okr-history.
+default_filters: []                     # e.g. [platform:web, segment:enterprise]
+
+# Breakdowns shown alongside the headline (still one history row per named series).
+also_capture: [platform, customer_segment]
+
+# Multi-metric charts / stacked series: one YAML (or one clear metric name) PER series.
+# When logging, set the same `chart` label on every series from that chart so they group.
+# chart: "Activation funnel — weekly"
+# Do not collapse multiple series into one okr-history value.
+
 target: 0.45
-max_data_age_days: 3     # flag if the dashboard's own "as of" date is older than this
-flag_if_change_exceeds: 0.10   # flag (don't block) if it moved >10% vs. last logged value — for a second look, not proof of error
+max_data_age_days: 3     # flag if the source's own "as of" date is older than this
+flag_if_change_exceeds: 0.10   # flag (don't block) if displayed or vs-prior move >10% — second look, not proof of error
 owner: me
+
+# When the source shows a change callout (+/- vs prior period, MoM, etc.), log that
+# displayed delta in okr-history `delta` — never invent a delta by subtracting old rows
+# unless the source itself shows that comparison.
+
+# Optional: paste the source's definition / calculation wording into okr-history `notes`
+# (units, numerator/denominator as labeled, exclusions, which KPI card). Still never recompute.
+# notes_hint: "Activation Rate = activated accounts / eligible new accounts (dashboard tooltip)"

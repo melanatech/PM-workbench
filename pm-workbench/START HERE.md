@@ -97,6 +97,7 @@ The six cluster commands (`/capture`, `/brief`, `/sync`, `/discover`, `/build`, 
 | Learning platform/flows/data | `/discover learn-product-flow` + `/discover code-dive` |
 | Discovery → documented strategy input | `/discover discovery` (chat/support/behavior-analytics + user research docs, in parallel) |
 | Finding & recruiting users | `/discover research-plan` (dashboards/behavior analytics/Jira + existing persona/research docs — produces criteria and questions, never a list of people) |
+| Pre-PRD product / check-in brief | `/discover explore-brief` (same `prd-context-gatherer` → problem frame → options → `drafts/…-product-brief.md`; not a full PRD) |
 | PRDs + leadership/tech buy-in | `/build prd-package` (grounded context → readiness gate → draft → bounded stakeholder pre-review: 1–2 angles in Standard, all five in Deep → prototype reconciliation) |
 | Prototypes + testing | `/build prototype-build` (same bounded review + real browser QA + PRD reconciliation) + `/discover research-package`; `/build prd-prototype-sync` anytime the two need a manual re-check |
 | OKR gathering/monitoring/reporting | `/report okr-refresh` (logs already-calculated values from dashboards or dated internal docs — never recomputes a metric itself) |

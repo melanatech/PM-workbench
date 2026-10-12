@@ -32,7 +32,7 @@ there. Ask only for Tier 3 (scope/owner/dates/send) or genuine ambiguity.
 | 9 | `outputs/todo-proposals/` | My follow-ups (never silent `/todo` add) |
 | 10 | `drafts/` (Jira etc.) | When the workflow already drafts tickets |
 | 11 | `reference/context/glossary.md` | New standing acronym/term worth keeping |
-| 12 | `state/okr-history.csv` | Pre-calculated metric with as-of date from dashboard **or** internal deck/doc/export (SOURCE-POLICY dated-internal-numbers exception) |
+| 12 | `state/okr-history.csv` | Pre-calculated metric with as-of date, timeframe, filters, displayed delta, calculation/definition notes, and per-series rows for multi-metric charts — from dashboard **or** internal deck/doc/export (SOURCE-POLICY dated-internal-numbers exception) |
 
 Skip empty negatives in chat, but **do** end the run with one compact block:
 

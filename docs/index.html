@@ -2076,8 +2076,18 @@ V.fin=`<div class="eyebrow">Finale</div><h1>Operate the workbench independently<
 <div class="lesson-orientation"><p>Select the right workflow or plain-language request, inspect the right evidence, make the judgment call, and recover safely when the system is incomplete.</p></div>
 <p class="lede">Open the Workspace one last time — every ● updated file and register row came from the last hour, and Lesson 10 answered a question purely from them. That accumulation is the entire idea.</p>
 <div class="finale-stats"><div class="fstat"><div class="fv" id="stRows">0</div><div class="fl">register rows created</div></div>
-<div class="fstat"><div class="fv" id="stMins">0 min</div><div class="fl">estimated retyping &amp; reconciling you didn't do by hand — a rough estimate, not a measurement, and not the metric that matters (review time is)</div></div>
+<div class="fstat"><div class="fv">2 checks</div><div class="fl">after real use: <code>/report workbench-health</code> (what you use) · <code>/report monthly-review</code> (dropped balls, then decision quality)</div></div>
 <div class="fstat"><div class="fv" id="stFiles">0</div><div class="fl">documents &amp; prototypes produced, all inspectable</div></div></div>
+<h2>Is the workbench helping?</h2>
+<p>Once you are running real work in <code>~/pm-live</code>, measure the system with two report workflows — not with a “minutes saved” guess.</p>
+<div class="lesson-principles">
+<article><b>/report workbench-health</b><p>What you actually use: run-log counts, failed or never-run workflows, dead weight to prune. Answers “am I using the kit?”</p></article>
+<article><b>/report monthly-review</b><p>Whether balls are dropping and decisions are traceable. Runs <code>scripts/workbench_metrics.py</code> (code counts only — no model estimates) and writes a dated review under <code>outputs/monthly/</code>.</p></article>
+</div>
+<p><b>Lead measures:</b> dropped balls first, then decision quality. Time saved is secondary and is <b>not</b> measured.</p>
+<p class="note"><b>Limits (read these once):</b> the first metrics <code>--snapshot</code> starts a 21-day baseline in <code>state/health-history.csv</code>. There are no numbers from before the workbench, so trends only start from that first snapshot — nothing here can prove the kit made you better than your old way of working. It can show whether things are moving the right way from the day you started measuring. Definitions live in <code>reference/workbench-metrics.md</code>.</p>
+<p><b>Optional hand notes:</b> soft signals the scripts cannot count (flags you acted on, corrections before you sent an update, your own read on decision quality) go in <code>logs/review-notes.csv</code> as <code>date,metric,value,note</code>.</p>
+<div class="why"><b>Two different questions:</b> workbench-health = usage hygiene. monthly-review = outcome hygiene. Fixture scoring (<code>score_fixture.py</code>) only guards kit regressions — it does not show the kit helps in real work.</div>
 <h2>Readiness check</h2>
 <p class="note">This self-check measures whether you can select the right workflow, inspect the relevant evidence, evaluate the output, and recover safely from incomplete work.</p>
 <div class="quiz" data-q="1"><p class="q">1 · A meeting produced three decisions and one action item. Two minutes remain before the next call. Which workflow fits?</p><div class="qopts">
@@ -2122,7 +2132,7 @@ const MAPMETA=[
  ['🗺','Keep the roadmap coherent','two initiatives · four surfaces · grouped approval'],
  ['🚢','Close delivery into strategy','launch drift · competition · strategy · recovery'],
  ['🛟','When things go wrong','12 failure modes · unattended runs and the pause file · why it earns trust'],
- ['🎓','Finale','what accumulated + a real readiness check']];
+ ['🎓','Finale','what accumulated · is it helping · readiness check']];
 const LESSON_POSTERS=['SETUP','CONTEXT','CAPTURE','SOURCES','MEETINGS','EVIDENCE','SYSTEMS','DEFINE','RESEARCH','ROADMAP','STRATEGY','RECOVER','READY'];
 const LESSON_SHORT=['Setup','Context','Quick close','Sources','Meetings','Discovery','Code','Define','Research','Roadmap','Strategy','Recover','Finale'];
 function applyPreservedVisualShell(section,id,orderIndex){
@@ -2268,8 +2278,8 @@ function refresh(){
   document.getElementById('plab').textContent=done+'/'+total;
   const sr=document.getElementById('stRows');
   if(sr){sr.textContent=state.rows;
-    document.getElementById('stMins').textContent=state.mins<60?state.mins+' min':(state.mins/60).toFixed(1)+' h';
-    document.getElementById('stFiles').textContent=Math.max(0,Object.keys(FILES).length-SEEDCOUNT)}
+    const sf=document.getElementById('stFiles');
+    if(sf)sf.textContent=Math.max(0,Object.keys(FILES).length-SEEDCOUNT)}
   if(state.quiz.size===5){const rw=document.getElementById('ratewrap');if(rw)rw.style.display='block'}}
 function markDone(btn,key){btn.classList.add('picked');btn.setAttribute('aria-pressed','true');btn.textContent='✓ '+btn.textContent.replace(/^✓ /,'');
   if(!state.simsDone.has(key)){state.simsDone.add(key);refresh()}maybeAdvanceStage(btn.closest('.preserved-stage'))}

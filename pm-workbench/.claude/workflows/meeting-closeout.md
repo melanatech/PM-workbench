@@ -45,9 +45,9 @@ Meeting input: $ARGUMENTS
 
 7. Draft (do not send) follow-up messages or Jira text only when the meeting implies one. Do not write a "no drafts / only attendee / no Jira" section. Do not draft Jira for eng-only chores the filter skipped unless I ask.
 
-   **When drafting Jira tickets**, match `reference/templates/jira-ticket-draft.md` exactly:
+   **When drafting Jira tickets**, match `reference/templates/jira-ticket-draft.md` exactly — paste block **and** its quality checklist (confirm project, verify epic in Jira, search duplicates/conventions, concrete before/after, named surfaces, actionable `[NEEDS INPUT]`, verifiable ACs, formal related links, design links, target-project field values):
    - **Summary** must be descriptive enough that someone who was not in the meeting understands the change and the product reason (not a short label).
-   - Always include **Initiative/Epic**, **Priority**, and **Target date** (use `[NEEDS INPUT]` or `provisional` + why — never omit).
+   - Always include **Project**, **Initiative/Epic**, **Priority**, and **Target date** (use `[NEEDS INPUT]` or `provisional` + why — never omit). Priority/type values must match the **target** project (see CLAUDE.local).
    - **Related tickets** = other Jira keys (or sibling drafts by number) only. Never put workbench paths, COM-/DEC-/RISK-/TODO- ids, meeting titles, or Stream URLs in Related / Source fields that would be pasted into Jira — nobody else can open those. Keep workbench citations in an optional "Workbench notes (do not paste into Jira)" footer of the drafts file only.
    - Write drafts under `drafts/jira-[date]-[topic].md` (or the path I name). Show the paste blocks once.
 

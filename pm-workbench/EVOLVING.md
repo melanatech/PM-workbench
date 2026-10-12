@@ -45,6 +45,14 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 
 ## Changelog (newest first; one line per real architectural decision — not every edit)
 
+- 2026-10-12 — **`/discover explore-brief`:** pre-PRD check-in brief (sonnet). Enrich shared `prd-context-gatherer` (decided vs open, sibling COMs, weak patterns); thin workflow assemble → frame → options → `drafts/…-product-brief.md`. Do **not** fold into opus `prd-package` or invent `explore-context-gatherer`. Trigger: COM-012-style explore asks falling through to generic brainstorm without the INIT pack.
+
+- 2026-10-12 — **Authority-first lookups (rule 25):** freeform factual asks must hit the authoritative surface for the question type first (registers / intake / PRD path / board path / etc.), then secondary sources; coverage line when non-obvious. Commitments ladder kept as worked example. Skills: `authority-lookup` + `commitment-lookup` alias. Trigger: double-ask pattern (partial from one transcript → pushback → register had the answer).
+
+- 2026-10-12 — **Metric history richer capture:** `okr-history.csv` columns add `timeframe`, `filters`, `delta`, `chart`, `notes` (period covered ≠ as_of/retrieved; displayed deltas only; one row per series on multi-metric charts; definition/calculation caveats in `notes`). `metric-definitions/example.yml` + rule 5 / okr-refresh / process-inbox / SOURCE-POLICY updated. Do not invent deltas by subtracting prior rows.
+
+- 2026-10-08 — **Jira draft quality checklist (org-agnostic):** `jira-ticket-draft.md` gains before-write / structure / link rules (verify epic, search duplicates+conventions, concrete before/after, named surfaces, actionable NEEDS INPUT, verifiable ACs, formal links, design URLs, target-project field values). No company project keys or product-area examples in the kit; those stay in CLAUDE.local / live. Wired from meeting-closeout.
+
 - 2026-10-07 — **`/brief get-started`**: non-technical onboarding. Detects kit vs live, runs (or guides) `create_live_workspace.py`, insists on Open Folder → live. Thin skill + Command-menu phrases ("how do I get started", "create my pm-live"). Org seed packs stay private — mention unpack after live only. Reason: START HERE required a terminal script chat-only PMs never saw.
 
 - 2026-10-07 — **Walkthrough clipper (auth-safe):** Workbench Clipper v0.5.0 Start/Mark/Stop records clicks + viewport PNGs in the PM’s logged-in Chrome → `Downloads/…/walkthroughs/` (`capture_kind: walkthrough`). Settle debounce + scroll-settle + Mark step; no full-page stitch. process-inbox + learn-product-flow prefer these packages over Playwright SSO. Trigger: browser-bridge cannot read auth’d product UI.

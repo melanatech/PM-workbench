@@ -40,7 +40,7 @@ Everything below is a template. The architecture assumes only that Claude Code r
    - When a claim is unverified, mark it `[hypothesis: short phrase]`.
    - When a claim rests on model knowledge without a retrieved source, mark it `[external::training]`.
    - Hypotheses that remain after a workflow → append to `reference/context/assumptions-and-open-questions.md` (existing bullet format). Tags do not replace rule 3 — register facts still need real sources.
-5. **OKR / metric values are already calculated somewhere — log the displayed number, never recompute from raw rows.** The usual source is an OKR dashboard, but that is not the only allowed source. Also valid: an internal leadership/metric deck, wiki metric page, or export that shows a named metric with an **as-of / report date** (and ideally the same definition as the KR). Append a verified row to `state/okr-history.csv` with `metric,value,as_of_date,retrieved_date,source` (valid CSV quoting; header if new). Put the concrete source path or URL in `source` (e.g. dashboard bookmark, `archive/documents/….pdf` slide/section). Prefer a live dashboard read when both exist and disagree on the same metric+definition; otherwise prefer the **newer as_of_date** from an internal doc and still **report the conflict** (rule 8) if definitions or cohorts differ. `scripts/log_metrics.py` is currently a stub — until tested, append manually and state that automated freshness checks did not run. Web-search / external public pages are not metric sources. If a metric has no pre-calculated aggregate anywhere and needs calculation, create a separate, explicitly named workflow.
+5. **OKR / metric values are already calculated somewhere — log the displayed number, never recompute from raw rows.** The usual source is an OKR dashboard, but that is not the only allowed source. Also valid: an internal leadership/metric deck, wiki metric page, or export that shows a named metric with an **as-of / report date** (and ideally the same definition as the KR). Append a verified row to `state/okr-history.csv` with `metric,value,as_of_date,retrieved_date,timeframe,filters,delta,chart,notes,source` (valid CSV quoting; header if new). `as_of_date` = the source's report/as-of stamp; `retrieved_date` = when you captured it; `timeframe` = the period the number covers (e.g. past 30 days, 2026-09-01..2026-09-30) — not the same as either date; `filters` = cohort/product/device/etc. applied on that view (empty if none); `delta` = the **displayed** change callout if the source shows one (e.g. +10.8% vs prior) — never invent by subtracting prior history rows; `chart` = shared label when several series come from one multi-metric chart (one row per series — never collapse a chart into a single value); `notes` = how the figure is defined/calculated as the source states it, plus short caveats (units, exclusions, “KPI card X”) — still never recompute; `source` = concrete path or URL. Prefer a live dashboard read when both exist and disagree on the same metric+definition; otherwise prefer the **newer as_of_date** from an internal doc and still **report the conflict** (rule 8) if definitions or cohorts differ. `scripts/log_metrics.py` is currently a stub — until tested, append manually and state that automated freshness checks did not run. Web-search / external public pages are not metric sources. If a metric has no pre-calculated aggregate anywhere and needs calculation, create a separate, explicitly named workflow. See `reference/metric-definitions/example.yml`.
 6. **Raw inbox files are immutable.** Process, then move to `archive/` — never edit or delete originals.
 7. **Separate immutable history from current state.**
    - Immutable history: `registers/decisions.csv`, `registers/evidence.csv`,
@@ -87,6 +87,8 @@ Everything below is a template. The architecture assumes only that Claude Code r
 23. **Chat answer ≠ durable file.** Digests, register rows, and learning notes are lossy on purpose (rule 15). An ad-hoc reply often re-reads a richer source (full transcript, deck) and adds justification the digest never held. **Forbidden:** "it's all captured in `outputs/…`" / "same as the summary" after a richer chat answer, unless you **claim-checked** (every material claim in the reply appears in that file) or you **wrote that content into the file this turn**. Allowed: "Answered from `archive/…` transcript; [digest] has headlines only" / "DEC-007 is in the register; the Antonio/Seamless rationale is chat-only unless we append." When the reply surfaces material facts missing from digests/registers/learning, say the gap and either append (Tier 1, dated source) or list what would be written — do not paper over with a false equivalence. Topic overlap ("fees conflict is mentioned") is not claim coverage.
 
 24. **User-injected context after freeform chat.** When I add new facts mid-thread (corrections, "also X said…", "Antonio confirmed…", hallway/Slack color that wasn't in the capture) outside `/capture` / `/quick-close`, treat that as durable input — do not only acknowledge in chat. **Clear material claims** (decision, commitment, risk, open conflict, durable product fact, assumption): write the matching surface this turn (Tier 1) or present a one-line PROPOSAL of the exact row/append if Tier 2/3 (scope, owner, dates, send). **Ambiguous** (might be color vs decision; unclear owner; might supersede an existing DEC-/COM-): ask one short question naming the candidate surface — not a vague "want me to log that?" **Conversational only** (thanks, scheduling trivia, already-tracked restatement): stay silent on write-back. Source the write as `chat:[date]` or the thread topic plus any archive path I named. Same fan-out surfaces as `_fan-out.md`; `/sync ripple-check` is the explicit command when I want a full cross-check, but I should not need it for an obvious mid-chat fact.
+
+25. **Authority-first lookups (no double-ask).** For any factual "what's the state / what did we decide / what did I promise / is X empty / what does Jira say" ask: name the **authoritative surface** for that question type, read it **first**, then go to raw/secondary sources only for gaps. End with a one-line **coverage** note when the source set is non-obvious. Answering from the first convenient file (`find` hit, one transcript, one folder peek) and waiting for me to push back is a kit defect. See **Authority-first lookups** under "Not everything needs a command." Worked example: commitments → `registers/commitments.csv` before `archive/meetings/`.
 
 ## Execution modes (cost governance — read before any heavy workflow)
 
@@ -150,7 +152,7 @@ You type one of eight commands. Six are routers over 29 workflows; `/quick-close
 | `/capture` | `meeting-closeout`, `process-inbox` |
 | `/brief` | `get-started`, `daily-brief`, `return-brief`, `meeting-prep` |
 | `/sync` | `jira-reconcile`, `ripple-check`, `context-reconcile`, `roadmap-update`, `rotate-registers` |
-| `/discover` | `discovery`, `research-plan`, `research-package`, `competitive-scan`, `learn-product-flow`, `code-dive` |
+| `/discover` | `discovery`, `research-plan`, `research-package`, `competitive-scan`, `learn-product-flow`, `code-dive`, `explore-brief` |
 | `/build` | `prd-package`, `prototype-build`, `prd-prototype-sync`, `experiment-package`, `experiment-analyze`, `launch-package` |
 | `/report` | `weekly-update`, `okr-refresh`, `strategy-refresh`, `workbench-health`, `monthly-review`, `ship-signal` |
 
@@ -166,6 +168,29 @@ A lot of value here is answering questions directly from what's already tracked,
 **If I then add context** in that same thread ("also…", a correction, a confirmation from someone), apply rule 24 — write-back or ask; do not leave material new facts only in the chat scrollback.
 
 **Exception — operational asks:** if the phrasing matches the Command menu (or `.claude/workflows/_plain-language.md`), that is **not** a freeform lookup. Run the matched workflow. Improvising a lighter path is a kit defect.
+
+### Authority-first lookups (stop the double-ask)
+
+**Pattern:** pick the authoritative surface for the *question type* → read it first → secondary sources only to fill gaps or quote wording → one coverage line when non-obvious. Do **not** lead with `find` on raw archive or a single convenient file and present that as complete.
+
+| Question type | Authoritative surface first | Then (only if needed) |
+|---|---|---|
+| Promises / due / "didn't I commit" / meeting action items | `registers/commitments.csv` (open/overdue; filter owner/due/topic) | todos → digests → specific meeting files |
+| My action list / TODO-nnn | `registers/todos.csv` via `scripts/todo_register.py` | digests / source links on the row |
+| What did we decide | `registers/decisions.csv` | digests → transcript for exact wording |
+| Initiative / feature status & links | `registers/initiatives.csv` | linked PRD/outputs; Jira if delivery dates disputed |
+| Risks | `registers/risks.csv` | digests |
+| Metric value / trend | `state/okr-history.csv` (+ metric YAML if present) | dashboard/deck only to refresh or resolve conflict |
+| PRD / current scope | initiative row → `outputs/prds/…` | prototype, Jira — report conflicts (rule 8) |
+| "Inbox empty?" / what's waiting | `scripts/intake_status.py` / process-inbox Step 0 | never a bare `inbox/` peek |
+| Board / ticket hygiene | `/sync jira-reconcile` path (live board or export) | local notes are not Jira truth |
+| Strategy / priorities this week | `reference/context/current-priorities.md` + latest strategy outputs | older decks only with dates |
+
+**Worked example (commitments):** do not start in `archive/meetings/`. Order: `commitments.csv` → `todos.csv` → `decisions.csv` if relevant → recent `outputs/daily/` digests → specific meeting files only to fill a gap or verify wording.
+
+**Forbidden:** one transcript/`find` hit as the whole answer; "source may be incomplete" instead of reading the index; making me ask twice because the first pass skipped the authoritative surface.
+
+**Coverage line (when non-obvious):** what you read and what you skipped — e.g. "From commitments.csv: COM-012 (due 10-13), COM-010, COM-015; digests checked; did not re-read full 10-08 transcript."
 
 ## Command menu — for when I describe a need instead of typing a slash command
 
@@ -190,6 +215,7 @@ will not memorize slash commands; the menu + skills are the product surface.
 | "Draft my weekly update" / "leadership update" | `/report weekly-update` |
 | "Ship signal" / "did this release move the needle" / "advance the release loop" / "release readout" | `/report ship-signal` |
 | "Find people to talk to about X" / "plan research" (criteria only — never names) | `/discover research-plan` |
+| "Product brief" / "explore brief" / "check-in brief" / "options for INIT-/COM-" / "alternatives before a PRD" | `/discover explore-brief` |
 | "Spec out X" / "write a PRD for X" | `/build prd-package` |
 | "Build a prototype of X" / "mock this up" | `/build prototype-build` |
 | "Do the PRD and prototype for X still match" | `/build prd-prototype-sync` |

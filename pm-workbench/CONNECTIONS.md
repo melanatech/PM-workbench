@@ -24,7 +24,7 @@ Pass only if none of the three recommendations changes either register while unc
 
 ## Full write/read map
 
-The first column is the workflow name. Run it through its cluster command: `/capture` (meeting-closeout, process-inbox), `/brief` (daily-brief, return-brief, meeting-prep), `/sync` (jira-reconcile, ripple-check, context-reconcile, roadmap-update, rotate-registers), `/discover` (discovery, research-plan, research-package, competitive-scan, learn-product-flow, code-dive), `/build` (prd-package, prototype-build, prd-prototype-sync, experiment-package, experiment-analyze, launch-package), `/report` (weekly-update, okr-refresh, strategy-refresh, workbench-health, monthly-review). `/todo` is its own command. Writes and reads are unchanged by the routing.
+The first column is the workflow name. Run it through its cluster command: `/capture` (meeting-closeout, process-inbox), `/brief` (daily-brief, return-brief, meeting-prep), `/sync` (jira-reconcile, ripple-check, context-reconcile, roadmap-update, rotate-registers), `/discover` (discovery, research-plan, research-package, competitive-scan, learn-product-flow, code-dive, explore-brief), `/build` (prd-package, prototype-build, prd-prototype-sync, experiment-package, experiment-analyze, launch-package), `/report` (weekly-update, okr-refresh, strategy-refresh, workbench-health, monthly-review). `/todo` is its own command. Writes and reads are unchanged by the routing.
 
 | Command | Writes to | Reads / cross-checks against |
 |---|---|---|
@@ -35,6 +35,7 @@ The first column is the workflow name. Run it through its cluster command: `/cap
 | `/discover discovery` | `registers/evidence.csv` | chat/support/behavior-analytics (`discovery-source-reader`) + internal docs (`internal-docs-reader`) + `registers/initiatives.csv` (relevance flag) |
 | `/report okr-refresh` | `state/okr-history.csv` | Dashboard and/or dated internal metric surfaces + `registers/initiatives.csv` (which initiative this metric belongs to) |
 | `/discover research-plan` | `outputs/research/[topic]/plan.md` (criteria, outreach drafts, guide, decision rules — never names), (later) `registers/research-participants.csv` | dashboards/behavior analytics/Jira + internal docs (personas/prior research) |
+| `/discover explore-brief` | `drafts/[slug]-product-brief.md`, light `registers/initiatives.csv` notes update | same gatherer as prd-package (`prd-context-gatherer` + optional `internal-docs-reader`); stops before full PRD |
 | `/build prd-package` | `outputs/prds/[feature]/`, `registers/initiatives.csv` (creates/updates) | `evidence.csv`, `learning/`, `okr-history.csv`, competitive log, `decisions.csv`/`risks.csv` (via `prd-context-gatherer` + `internal-docs-reader`) + `prototypes/[feature]/` if it exists |
 | `/build prototype-build` | `prototypes/[feature]/` (incl. local git checkpoints via `scripts/prototype_checkpoint.py`), `logs/prototype-checkpoints/[feature].md`, `registers/initiatives.csv` (updates) | `learning/`, repo patterns (`code-repo-explorer`) + `outputs/prds/[feature]/` if it exists |
 | `/build prd-prototype-sync` | (report only, no writes) | Both `outputs/prds/[feature]/` and `prototypes/[feature]/` directly |

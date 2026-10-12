@@ -119,6 +119,43 @@ class RoutesTableTests(unittest.TestCase):
         self.assertIn("Reactive", text)
         self.assertIn("Competitive", text)
 
+    def test_explore_brief_reuses_gatherer_and_frames_before_options(self):
+        flat = {w: e for ws in clusters().values() for w, e in ws.items()}
+        self.assertIn("explore-brief", clusters()["discover"])
+        self.assertEqual(flat["explore-brief"]["model"], "sonnet")
+        path = WORKBENCH / flat["explore-brief"]["path"]
+        self.assertTrue(path.is_file())
+        text = path.read_text(encoding="utf-8")
+        self.assertIn("prd-context-gatherer", text)
+        self.assertIn("Assemble before options", text)
+        self.assertIn("Step 2 — Frame", text)
+        self.assertIn("Step 4 — Options", text)
+        self.assertLess(text.index("Step 2 — Frame"), text.index("Step 4 — Options"))
+        self.assertIn("drafts/", text)
+        self.assertNotIn("explore-context-gatherer", text)
+        gatherer = (WORKBENCH / ".claude" / "agents" / "prd-context-gatherer.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("explore-brief", gatherer)
+        self.assertIn("Decided vs open", gatherer)
+        skill = (WORKBENCH / ".claude" / "skills" / "explore-brief" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("/discover explore-brief", skill)
+        claude = (WORKBENCH / "CLAUDE.md").read_text(encoding="utf-8")
+        self.assertIn("/discover explore-brief", claude)
+        self.assertIn("check-in brief", claude.lower())
+        plain = (WORKBENCH / ".claude" / "workflows" / "_plain-language.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("explore-brief", plain)
+        prd = (WORKBENCH / ".claude" / "workflows" / "prd-package.md").read_text(encoding="utf-8")
+        self.assertIn("/discover explore-brief", prd)
+        # No second gatherer agent
+        self.assertFalse(
+            (WORKBENCH / ".claude" / "agents" / "explore-context-gatherer.md").exists()
+        )
+
     def test_competitive_scan_landscape_and_capture_taxonomy(self):
         scan = (WORKBENCH / ".claude" / "workflows" / "competitive-scan.md").read_text(encoding="utf-8")
         self.assertIn("Landscape", scan)
@@ -174,11 +211,18 @@ class RoutesTableTests(unittest.TestCase):
         self.assertTrue(path.is_file(), path)
         text = path.read_text(encoding="utf-8")
         for phrase in ("Summary:", "Initiative / Epic", "Priority:", "Target date:",
-                       "Related tickets:", "do not paste into Jira", "COM-"):
+                       "Related tickets:", "do not paste into Jira", "COM-",
+                       "Quality checklist", "Find the right epic",
+                       "Check what already exists", "verifiable",
+                       "Link related tickets formally", "Verify Jira field values"):
             self.assertIn(phrase, text)
+        # Org project keys and product-area examples stay out of the kit template
+        for banned in ("REPORT", "CP-", "all interactive reports", "Commerce Reporting"):
+            self.assertNotIn(banned, text)
         closeout = (WORKBENCH / ".claude" / "workflows" / "meeting-closeout.md").read_text(encoding="utf-8")
         self.assertIn("reference/templates/jira-ticket-draft.md", closeout)
         self.assertIn("Related tickets", closeout)
+        self.assertIn("quality checklist", closeout)
 
     def test_course_catalog_shows_the_full_router_invocation_for_every_workflow(self):
         course = (WORKBENCH.parent / "docs" / "index.html").read_text(encoding="utf-8")

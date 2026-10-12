@@ -4,8 +4,14 @@ log_metrics.py — logs metric values that are ALREADY CALCULATED by their
 source dashboards (your OKR dashboard, behavior-analytics tool, experiment tool). This script
 never computes, derives, or re-derives a metric from raw rows. Its only jobs:
 
-  1. Append {metric, value, as_of_date, retrieved_date, source} to
-     state/okr-history.csv
+  1. Append {metric, value, unit, as_of_date, retrieved_date, timeframe,
+     filters, delta, chart, definition, definition_source, notes, source}
+     to state/okr-history.csv
+     (unit = what the value is measured in; timeframe = period covered;
+     filters = view cohort; delta = displayed change only; chart = shared
+     label for multi-series charts — one row each; definition = what the
+     number counts and its base, as the source states it; definition_source =
+     where that wording came from, or "Not defined in source"; notes = caveats)
   2. Flag if as_of_date is older than the metric's max_data_age_days
      (the dashboard's own data is stale, not that anything needs recalculating)
   3. Flag if the new value differs from the last logged value for that

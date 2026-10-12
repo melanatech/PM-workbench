@@ -16,6 +16,10 @@ intake gates, fan-out, or subagent dispatches.
 - **Ambiguous → one short question**, then run. Do not improvise while waiting.
 - **No menu match →** answer from registers/`outputs/`/`learning/` if it is a
   lookup; otherwise ask which workflow or what outcome they want.
+- **Factual lookups** (commit / due / decide / initiative status / metric /
+  inbox empty / PRD scope / board) → CLAUDE.md **Authority-first lookups**
+  (rule 25): authoritative surface first, then secondary sources. Never lead
+  with `find` on raw archive or one convenient file as if complete.
 
 ## Why this exists
 
@@ -42,5 +46,13 @@ command — never a third improvised path.
   casual wording
 - Treating "context constraints" as a reason to skip the matched workflow
   (dispatch a heavy-read subagent instead — CLAUDE.md)
+- Answering a factual lookup from one transcript, `find` hit, or folder peek
+  without reading the authoritative surface first (CLAUDE.md rule 25 —
+  commitments.csv for promises; intake_status for inbox; initiatives/PRD path
+  for scope; etc.)
+- When INIT-/COM- is named and the ask is a product brief / check-in brief /
+  explore options / alternatives before a PRD: improvising a generic brainstorm
+  skill or freeform chat that skips `prd-context-gatherer` — run
+  `/discover explore-brief` instead
 
 Routers: after choosing a workflow, dispatch per `_protocol.md` immediately.

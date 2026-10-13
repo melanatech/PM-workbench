@@ -16,10 +16,10 @@ When a prototype ships a piece worth stealing later, **append a row** in the sam
 
 | Date | Name | Source path | Reuse when | Notes |
 |---|---|---|---|---|
-| _(example)_ | Report page shell | `prototypes/example-report/src/layout/ReportShell.tsx` | New report-style web prototypes | Copy, then rename; do not import across packages |
-| | | | | |
+| 2026-10-13 | Scenario Guide (evaluator panel) | `prototypes/explanations-transactions/src/components/ScenarioGuide.jsx` | Multi-concept / multi-persona demos; optional with prototype-build | Key scripts by variant; look/do/try; desktop sidebar + mobile sheet; see `_scenario-guide.md` |
+| 2026-10-13 | Report explanations shell | `prototypes/explanations-transactions/src/` | Transactions-style report concept tests | Concept + state bar; drawers; KPI strip; see README |
 
-_Add real rows below the example (or replace the example once you have one)._
+_Add rows when a build ships something worth stealing._
 
 ## Out of scope (this file)
 

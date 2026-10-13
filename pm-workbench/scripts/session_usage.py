@@ -7,7 +7,8 @@ Layers
   L0  Per assistant-message tokens from message.usage + session id + timestamp
   L1  Attach to preceding non-meta user turn (excerpt)
   L2a Rules-first category from user text (free; default)
-  L2b Optional Haiku classify for unlabeled turns (--classify; opt-in)
+  L2b Optional Haiku classify for unlabeled turns (--classify; opt-in).
+      Uses the local `claude -p` CLI (existing Claude Code login) — not ANTHROPIC_API_KEY.
 
 Usage
   python3 scripts/session_usage.py --root ~/pm-live --backfill
@@ -23,6 +24,8 @@ import csv
 import json
 import os
 import re
+import shutil
+import subprocess
 import sys
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -288,28 +291,39 @@ def _log_classify_run(
         )
 
 
+def _resolve_claude_bin(claude_bin: str = "") -> str:
+    candidate = (claude_bin or os.environ.get("CLAUDE_BIN") or "claude").strip()
+    if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+        return candidate
+    found = shutil.which(candidate)
+    return found or ""
+
+
 def classify_l2b(
     root: Path,
     user_uuid: str,
     user_text: str,
     assistant_first_line: str,
     cache: dict[str, str],
+    *,
+    claude_bin: str = "",
 ) -> tuple[str, str]:
-    """Opt-in Haiku classify. Cached by user_uuid. Logs spend separately.
+    """Opt-in Haiku classify via `claude -p` (existing Claude Code login).
 
-    Without ANTHROPIC_API_KEY (or when classify is unavailable), records a skip
-    and returns other/none — never invents a category from model knowledge.
+    Cached by user_uuid. Classifier spend is logged in usage-classify-runs.csv
+    (token counts are often unavailable from the CLI — status/note still record
+    each call). Never invents a category when classify fails.
     """
     if user_uuid and user_uuid in cache:
         return cache[user_uuid], "l2b"
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-    if not api_key:
+    claude = _resolve_claude_bin(claude_bin)
+    if not claude:
         _log_classify_run(
             root,
             user_uuid=user_uuid,
             status="skipped",
-            note="no ANTHROPIC_API_KEY; L2b not run",
+            note="claude CLI not on PATH; use Claude Code login (CLAUDE_BIN) — no API key",
         )
         return "other", "none"
 
@@ -324,45 +338,48 @@ def classify_l2b(
         "Reply with the label alone, no punctuation.\n\n"
         f"USER:\n{excerpt}\n\nASSISTANT_FIRST_LINE:\n{assistant_bit}\n"
     )
+    cmd = [
+        claude,
+        "-p",
+        prompt,
+        "--model",
+        "haiku",
+        "--permission-mode",
+        "dontAsk",
+    ]
     try:
-        import urllib.request
-
-        body = json.dumps(
-            {
-                "model": "claude-haiku-4-5-20251001",
-                "max_tokens": 32,
-                "messages": [{"role": "user", "content": prompt}],
-            }
-        ).encode("utf-8")
-        req = urllib.request.Request(
-            "https://api.anthropic.com/v1/messages",
-            data=body,
-            headers={
-                "content-type": "application/json",
-                "x-api-key": api_key,
-                "anthropic-version": "2023-06-01",
-            },
-            method="POST",
+        result = subprocess.run(
+            cmd,
+            cwd=str(root),
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=120,
+            check=False,
         )
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-        label = ""
-        for block in data.get("content") or []:
-            if isinstance(block, dict) and block.get("type") == "text":
-                label = (block.get("text") or "").strip().split()[0].lower()
-                break
-        usage = data.get("usage") or {}
-        in_t = int(usage.get("input_tokens") or 0)
-        out_t = int(usage.get("output_tokens") or 0)
+        raw = (result.stdout or "").strip()
+        # Prefer last non-empty line (claude -p sometimes prints chatter first)
+        lines = [ln.strip() for ln in raw.splitlines() if ln.strip()]
+        label = (lines[-1] if lines else "").split()[0].lower() if lines else ""
+        # Strip common wrapping
+        label = label.strip("`\"'.,;:")
+        if result.returncode != 0:
+            err = ((result.stderr or "") + " " + raw).strip()[:200]
+            _log_classify_run(
+                root,
+                user_uuid=user_uuid,
+                status="error",
+                category=label,
+                note=f"claude -p exit {result.returncode}: {err}",
+            )
+            return "other", "none"
         if not _valid_category(label):
             _log_classify_run(
                 root,
                 user_uuid=user_uuid,
                 status="invalid",
                 category=label,
-                input_tokens=in_t,
-                output_tokens=out_t,
-                note="label not in enum",
+                note="label not in enum (via claude -p)",
             )
             return "other", "none"
         cache[user_uuid] = label
@@ -371,10 +388,17 @@ def classify_l2b(
             user_uuid=user_uuid,
             status="ok",
             category=label,
-            input_tokens=in_t,
-            output_tokens=out_t,
+            note="via claude -p haiku (login); token counts not reported by CLI",
         )
         return label, "l2b"
+    except subprocess.TimeoutExpired:
+        _log_classify_run(
+            root,
+            user_uuid=user_uuid,
+            status="error",
+            note="claude -p timed out",
+        )
+        return "other", "none"
     except Exception as e:
         _log_classify_run(
             root,
@@ -403,6 +427,7 @@ def scan_session_file(
     classify: bool,
     root: Path,
     label_cache: dict[str, str],
+    claude_bin: str = "",
 ) -> list[dict]:
     session_id = path.stem
     rows: list[dict] = []
@@ -456,7 +481,12 @@ def scan_session_file(
         first_line = assistant_text.strip().splitlines()[0] if assistant_text.strip() else ""
         if classify and source == "none" and last_user_uuid:
             category, source = classify_l2b(
-                root, last_user_uuid, last_user_text, first_line, label_cache
+                root,
+                last_user_uuid,
+                last_user_text,
+                first_line,
+                label_cache,
+                claude_bin=claude_bin,
             )
 
         excerpt = re.sub(r"\s+", " ", last_user_text).strip()[:EXCERPT_MAX]
@@ -487,6 +517,7 @@ def backfill(
     *,
     projects_dir: Path | None = None,
     classify: bool = False,
+    claude_bin: str = "",
 ) -> tuple[int, int]:
     """Scan jsonl; append new rows. Returns (appended, scanned_files)."""
     ensure_usage(root)
@@ -514,6 +545,7 @@ def backfill(
                 classify=classify,
                 root=root,
                 label_cache=label_cache,
+                claude_bin=claude_bin,
             ):
                 key = (row["session_id"], row["message_uuid"])
                 if key in keys:
@@ -579,7 +611,12 @@ def main(argv=None) -> int:
     p.add_argument(
         "--classify",
         action="store_true",
-        help="opt-in L2b Haiku for turns L2a cannot label (needs ANTHROPIC_API_KEY)",
+        help="opt-in L2b Haiku for turns L2a cannot label (uses claude -p login, not an API key)",
+    )
+    p.add_argument(
+        "--claude",
+        default=os.environ.get("CLAUDE_BIN") or "claude",
+        help="claude CLI binary for --classify (default: CLAUDE_BIN or claude on PATH)",
     )
     p.add_argument("--summary", action="store_true")
     p.add_argument("--days", type=int, default=30)
@@ -590,7 +627,12 @@ def main(argv=None) -> int:
         return 2
     projects = Path(os.path.expanduser(args.projects_dir)).resolve() if args.projects_dir else None
     if args.backfill:
-        backfill(root, projects_dir=projects, classify=args.classify)
+        backfill(
+            root,
+            projects_dir=projects,
+            classify=args.classify,
+            claude_bin=args.claude,
+        )
     if args.summary or not args.backfill:
         summarize(root, days=args.days)
     if not args.backfill and not args.summary:

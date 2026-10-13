@@ -4,7 +4,7 @@ The system needs its own product management. One line per item; move to EVOLVING
 
 ## Known open items (from reviews, not yet built)
 - [x] **Session token usage mining (phase 1):** `scripts/session_usage.py` L0–L2a `--backfill` → `state/usage-history.csv`; `workbench_metrics` Session tokens info rows; docs in `workbench-metrics.md`; monthly-review surfaces them. Claude Code / pm-live only.
-- [ ] **Session usage L2b polish:** exercise `--classify` against a real `ANTHROPIC_API_KEY` once; confirm Haiku model id still valid; optional scheduled `--backfill` (no classify) after a week of use. Still never invent "tokens saved."
+- [ ] **Session usage L2b polish:** exercise `--classify` once via `claude -p` (existing login); optional scheduled `--backfill` (no classify) after a week of use. Still never invent "tokens saved."
 - [ ] **Shared prototype package** (`prototypes/_shared/` + npm `file:` deps): real reuse across greenfield demos. Soft catalog is live (`reference/design/prototype-components.md`). Full checklist: `reference/design/DEFERRED-shared-prototype-package.md`. Trigger: copy-drift or a third similar prototype.
 - [x] First-run live workspace bootstrap (`scripts/create_live_workspace.py` + `NEW-USER-SETUP.md`); scheduled wrapper uses `--permission-mode dontAsk` (Claude Code 2.1+ rejects `--permission-prompts`)
 - [ ] Validate an approved browser read path against real chat/dashboard sources (not tested end-to-end yet); use `npx --yes @playwright/mcp@latest` in live `.mcp.json`, not `npm install -g`

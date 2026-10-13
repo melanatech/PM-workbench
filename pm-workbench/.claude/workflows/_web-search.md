@@ -15,7 +15,9 @@ a reason to ask the PM for URLs or to invent links from training memory.
 python3 scripts/web_search.py --json --max 8 "YOUR QUERY"
 ```
 
-Then **WebFetch** only URLs search (or a watchlist/seed) returned. Native
+The script tries DuckDuckGo → **Startpage** → Bing, then optional Serper/Brave
+API keys. Prefer specific queries (product + "help" / "support" / "docs") over
+bare category nouns — still no API key required for usable hits. Native
 `WebSearch` is optional if it works in-session — never stop after a Bedrock
 failure; fall through to `web_search.py` immediately.
 

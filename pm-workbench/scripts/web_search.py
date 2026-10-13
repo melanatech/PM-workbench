@@ -7,11 +7,12 @@ the local machine so kit workflows can discover official URLs without that
 server tool. Primary path for competitive-scan, explore-brief, prd-package,
 and ad-hoc grounding — see .claude/workflows/_web-search.md.
 
-Providers (tried in order until one returns hits):
+Providers (tried in order until one returns usable hits):
   1. DuckDuckGo HTML POST
-  2. Bing HTML (used when DDG serves an anomaly/captcha page)
-  3. Optional: Serper.dev if SERPER_API_KEY is set
-  4. Optional: Brave Search if BRAVE_API_KEY is set
+  2. Startpage HTML POST (best free fallback when DDG serves captcha)
+  3. Bing HTML (often degraded / dictionary+homepage junk — filtered)
+  4. Optional: Serper.dev if SERPER_API_KEY is set
+  5. Optional: Brave Search if BRAVE_API_KEY is set
 
 Usage:
   python3 scripts/web_search.py "Square POS reporting help"
@@ -39,7 +40,37 @@ USER_AGENT = (
     "Chrome/120.0.0.0 Safari/537.36"
 )
 DDG_HTML = "https://html.duckduckgo.com/html/"
+STARTPAGE_HOME = "https://www.startpage.com/"
+STARTPAGE_SEARCH = "https://www.startpage.com/sp/search"
 BING_SEARCH = "https://www.bing.com/search"
+
+# Hosts that dominate degraded Bing SERPs and almost never help product grounding.
+JUNK_HOST_FRAGMENTS = (
+    "duckduckgo.com",
+    "bing.com",
+    "microsoft.com",
+    "startpage.com",
+    "merriam-webster.com",
+    "dictionary.cambridge.org",
+    "dictionary.com",
+    "oxfordlearnersdictionaries.com",
+    "collinsdictionary.com",
+    "vocabulary.com",
+    "thefreedictionary.com",
+    "wiktionary.org",
+    "translate.google.",
+)
+
+JUNK_PATH_PREFIXES = (
+    "/login",
+    "/signin",
+    "/signup",
+    "/register",
+    "/account/login",
+)
+
+# Path is "homepage-like" (marketing root) — demote / drop when better hits exist.
+HOME_PATHS = {"", "/", "/us", "/us/en", "/en", "/en-us", "/en-US"}
 
 
 def _strip_tags(text: str) -> str:
@@ -54,7 +85,7 @@ def _clean_url(url: str) -> str:
         url = "https:" + url
     parsed = urllib.parse.urlparse(url)
     qs = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
-    for noise in ("msockid", "utm_source", "utm_medium", "utm_campaign"):
+    for noise in ("msockid", "utm_source", "utm_medium", "utm_campaign", "srsltid"):
         qs.pop(noise, None)
     query = urllib.parse.urlencode({k: v[0] for k, v in qs.items()}, doseq=False)
     return urllib.parse.urlunparse(parsed._replace(query=query))
@@ -83,11 +114,19 @@ def _decode_bing_u(value: str) -> str | None:
     return None
 
 
-def _http(url: str, *, data: bytes | None = None) -> str:
+def _http(
+    url: str,
+    *,
+    data: bytes | None = None,
+    referer: str | None = None,
+) -> str:
     headers = {
         "User-Agent": USER_AGENT,
         "Accept-Language": "en-US,en;q=0.9",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     }
+    if referer:
+        headers["Referer"] = referer
     if data is not None:
         headers["Content-Type"] = "application/x-www-form-urlencoded"
     req = urllib.request.Request(
@@ -102,23 +141,108 @@ def _http(url: str, *, data: bytes | None = None) -> str:
         raise RuntimeError(f"network error: {err.reason}") from err
 
 
-def _dedupe(results: list[dict], max_results: int) -> list[dict]:
-    out: list[dict] = []
+def _is_junk_url(url: str) -> bool:
+    if not url.startswith("http"):
+        return True
+    parsed = urllib.parse.urlparse(url)
+    host = (parsed.netloc or "").lower()
+    if not host or host.startswith("."):
+        return True
+    if any(frag in host for frag in JUNK_HOST_FRAGMENTS):
+        return True
+    path = parsed.path or ""
+    if path.startswith("/clev"):
+        return True
+    lower_path = path.lower()
+    if any(lower_path.startswith(p) for p in JUNK_PATH_PREFIXES):
+        return True
+    return False
+
+
+def _is_homepage_url(url: str) -> bool:
+    parsed = urllib.parse.urlparse(url)
+    path = (parsed.path or "").rstrip("/") or "/"
+    if path == "/":
+        return True
+    return path in HOME_PATHS or path.lower() in {p.lower() for p in HOME_PATHS}
+
+
+def _query_tokens(query: str) -> set[str]:
+    stop = {
+        "a", "an", "the", "and", "or", "for", "of", "to", "in", "on", "with",
+        "how", "what", "why", "when", "where", "who", "is", "are", "do", "does",
+    }
+    return {
+        t.lower()
+        for t in re.split(r"[^a-zA-Z0-9]+", query)
+        if len(t) >= 3 and t.lower() not in stop
+    }
+
+
+def _relevance_score(hit: dict, query: str) -> int:
+    """Higher is better. Used to rank and to detect all-junk provider responses."""
+    url = (hit.get("url") or "").lower()
+    title = (hit.get("title") or "").lower()
+    snip = (hit.get("snippet") or "").lower()
+    blob = f"{url} {title} {snip}"
+    score = 0
+    tokens = _query_tokens(query)
+    for tok in tokens:
+        if tok in blob:
+            score += 2
+        if tok in url:
+            score += 1
+    for hint in ("help", "support", "docs", "documentation", "article", "manual", "guide", "blog"):
+        if hint in url or hint in title:
+            score += 3
+    if _is_homepage_url(hit.get("url") or ""):
+        score -= 6
+    if any(x in url for x in ("/login", "/signin", "/signup")):
+        score -= 8
+    if "wikipedia.org" in url and len(tokens) >= 3:
+        score -= 1
+    if snip:
+        score += 1
+    return score
+
+
+def _dedupe(results: list[dict], max_results: int, *, query: str = "") -> list[dict]:
+    scored: list[tuple[int, dict]] = []
     seen: set[str] = set()
     for hit in results:
         url = hit.get("url") or ""
-        if not url.startswith("http"):
-            continue
-        host = urllib.parse.urlparse(url).netloc.lower()
-        if any(x in host for x in ("duckduckgo.com", "bing.com", "microsoft.com")):
+        if _is_junk_url(url):
             continue
         if url in seen:
             continue
         seen.add(url)
+        scored.append((_relevance_score(hit, query), hit))
+    scored.sort(key=lambda pair: (-pair[0], pair[1].get("url") or ""))
+    out: list[dict] = []
+    for score, hit in scored:
+        if _is_homepage_url(hit.get("url") or "") and out:
+            continue
+        if score < 0 and out:
+            continue
         out.append(hit)
         if len(out) >= max_results:
             break
     return out
+
+
+def _usable(hits: list[dict], query: str) -> bool:
+    """False when a provider only returned dictionary/home/login noise."""
+    if not hits:
+        return False
+    scores = [_relevance_score(h, query) for h in hits]
+    if max(scores) >= 2:
+        return True
+    tokens = _query_tokens(query)
+    return any(
+        t in ((h.get("url") or "") + " " + (h.get("title") or "")).lower()
+        for h in hits
+        for t in tokens
+    )
 
 
 def search_duckduckgo(query: str, *, max_results: int) -> list[dict]:
@@ -153,12 +277,86 @@ def search_duckduckgo(query: str, *, max_results: int) -> list[dict]:
         for raw in re.findall(r'href="([^"]+)"', body):
             url = _unwrap_ddg_href(raw)
             results.append({"title": "", "url": url, "snippet": "", "provider": "duckduckgo"})
-    return _dedupe(results, max_results)
+    return _dedupe(results, max_results, query=query)
+
+
+def _startpage_form_fields() -> dict[str, str]:
+    """Pull hidden inputs (esp. sc) from the homepage so Startpage trusts the POST."""
+    try:
+        home = _http(STARTPAGE_HOME, referer=STARTPAGE_HOME)
+    except RuntimeError:
+        return {}
+    fields: dict[str, str] = {}
+    form_m = re.search(
+        r'<form[^>]+id="search"[^>]*>(.*?)</form>',
+        home,
+        re.I | re.S,
+    )
+    blob = form_m.group(1) if form_m else home
+    for m in re.finditer(r'<input[^>]+type="hidden"[^>]*>', blob, re.I):
+        tag = m.group(0)
+        name_m = re.search(r'name="([^"]+)"', tag, re.I)
+        val_m = re.search(r'value="([^"]*)"', tag, re.I)
+        if name_m:
+            fields[name_m.group(1)] = html_lib.unescape(val_m.group(1)) if val_m else ""
+    return fields
+
+
+def search_startpage(query: str, *, max_results: int) -> list[dict]:
+    fields = _startpage_form_fields()
+    fields["query"] = query
+    fields.setdefault("cat", "web")
+    body = _http(
+        STARTPAGE_SEARCH,
+        data=urllib.parse.urlencode(fields).encode("utf-8"),
+        referer=STARTPAGE_HOME,
+    )
+    if "result-title" not in body and "result-link" not in body:
+        return []
+    results: list[dict] = []
+    # Prefer organic div.result blocks (skips ad honeypots like a-bg-result)
+    blocks = re.split(r'<div[^>]+class="[^"]*\bresult\b[^"]*"', body)[1:]
+    if not blocks:
+        blocks = [body]
+    for block in blocks:
+        link_m = re.search(
+            r'<a[^>]*class="[^"]*result-(?:title|link)[^"]*"[^>]*href="([^"]+)"',
+            block,
+            re.I,
+        )
+        if not link_m:
+            link_m = re.search(
+                r'<a[^>]*href="([^"]+)"[^>]*class="[^"]*result-(?:title|link)[^"]*"',
+                block,
+                re.I,
+            )
+        if not link_m:
+            continue
+        href = html_lib.unescape(link_m.group(1).strip())
+        if not href.startswith("http"):
+            continue
+        title_m = re.search(r"<h2[^>]*>(.*?)</h2>", block, re.I | re.S)
+        if not title_m:
+            title_m = re.search(r"<h3[^>]*>(.*?)</h3>", block, re.I | re.S)
+        snip_m = re.search(
+            r'<p[^>]*class="[^"]*description[^"]*"[^>]*>(.*?)</p>',
+            block,
+            re.I | re.S,
+        )
+        results.append(
+            {
+                "title": _strip_tags(title_m.group(1)) if title_m else "",
+                "url": _clean_url(href),
+                "snippet": _strip_tags(snip_m.group(1)) if snip_m else "",
+                "provider": "startpage",
+            }
+        )
+    return _dedupe(results, max_results, query=query)
 
 
 def search_bing(query: str, *, max_results: int) -> list[dict]:
-    url = BING_SEARCH + "?" + urllib.parse.urlencode({"q": query})
-    body = _http(url)
+    url = BING_SEARCH + "?" + urllib.parse.urlencode({"q": query, "setlang": "en", "cc": "US"})
+    body = _http(url, referer="https://www.bing.com/")
     results: list[dict] = []
     for block in body.split('class="b_algo"')[1:]:
         href_m = re.search(r'<h2[^>]*>\s*<a[^>]+href="([^"]+)"', block, re.I)
@@ -182,7 +380,7 @@ def search_bing(query: str, *, max_results: int) -> list[dict]:
                 "provider": "bing",
             }
         )
-    return _dedupe(results, max_results)
+    return _dedupe(results, max_results, query=query)
 
 
 def search_serper(query: str, *, max_results: int, api_key: str) -> list[dict]:
@@ -209,7 +407,7 @@ def search_serper(query: str, *, max_results: int, api_key: str) -> list[dict]:
                 "provider": "serper",
             }
         )
-    return _dedupe(results, max_results)
+    return _dedupe(results, max_results, query=query)
 
 
 def search_brave(query: str, *, max_results: int, api_key: str) -> list[dict]:
@@ -236,7 +434,7 @@ def search_brave(query: str, *, max_results: int, api_key: str) -> list[dict]:
                 "provider": "brave",
             }
         )
-    return _dedupe(results, max_results)
+    return _dedupe(results, max_results, query=query)
 
 
 def search(query: str, *, max_results: int = 8) -> list[dict]:
@@ -244,6 +442,7 @@ def search(query: str, *, max_results: int = 8) -> list[dict]:
     errors: list[str] = []
     providers = [
         ("duckduckgo", lambda: search_duckduckgo(query, max_results=max_results)),
+        ("startpage", lambda: search_startpage(query, max_results=max_results)),
         ("bing", lambda: search_bing(query, max_results=max_results)),
     ]
     serper = os.environ.get("SERPER_API_KEY", "").strip()
@@ -263,9 +462,12 @@ def search(query: str, *, max_results: int = 8) -> list[dict]:
         except Exception as err:  # noqa: BLE001 — try next provider
             errors.append(f"{name}: {err}")
             continue
-        if hits:
+        if _usable(hits, query):
             return hits
-        errors.append(f"{name}: no results")
+        if hits:
+            errors.append(f"{name}: only low-value hits (filtered)")
+        else:
+            errors.append(f"{name}: no results")
     raise RuntimeError("; ".join(errors) if errors else "no search providers")
 
 

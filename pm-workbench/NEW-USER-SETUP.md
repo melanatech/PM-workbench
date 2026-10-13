@@ -55,7 +55,8 @@ the kit is broken — verify slash commands in the panel first.
 **Amazon Bedrock and native WebSearch:** Bedrock does not implement Claude's
 server-side `web_search` tool (errors like "Bedrock does not support the
 web_search tool"). The kit always prefers `python3 scripts/web_search.py`
-(local DuckDuckGo → Bing) via `.claude/workflows/_web-search.md` — used by
+(local DuckDuckGo → Startpage → Bing; optional `SERPER_API_KEY` /
+`BRAVE_API_KEY`) via `.claude/workflows/_web-search.md` — used by
 `/discover competitive-scan` (`state/competitive/`), `/discover explore-brief`
 and `/build prd-package` (`state/web-search/` for problems / market / users /
 solutions). No Bedrock support and no PM-supplied URL list required.

@@ -77,6 +77,8 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 
 - 2026-10-06 — **Discovery synthesis checklist** (modes 1/3/4): channel mix + theme cards (evidence-class mix, independent-account count, verbatim/edge cases, INIT touch). Pattern borrowed from https://github.com/msitarzewski/agency-agents/blob/main/product/product-feedback-synthesizer.md — checklist only; no Agency agent install.
 
+- 2026-10-13 — **Web search providers:** when DDG serves captcha, Bing’s bot SERP returns dictionary/homepages. `web_search.py` now tries Startpage before Bing, filters dictionary/login/homepage junk, and skips unusable provider responses. Optional Serper/Brave keys still win when set.
+
 - 2026-10-13 — **Web search first-class:** `.claude/workflows/_web-search.md` (always `scripts/web_search.py` before native WebSearch), durable `state/web-search/`, fan-out surface 14, analysis-index kind `web-search`, skill `web-search`. explore-brief Step 1.5 + prd-package Step 0.5 search **problems · market/category · users · solutions**. Competitive dumps stay in `state/competitive/`.
 
 - 2026-10-06 — **Competitive capture/log taxonomy:** fixed capture heading order (Summary → By product area → Changes → Inferences → BLOCKED/UNVERIFIED) with direct offering / packaging / gaps / workarounds; monthly log landscape roles (direct/adjacent/emerging) + white-space only when grounded in captures. Pattern borrowed from https://github.com/msitarzewski/agency-agents/blob/main/product/product-trend-researcher.md — checklist only; web_search.py + state/competitive/ persistence unchanged.

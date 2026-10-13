@@ -13,6 +13,7 @@ Layers
 Usage
   python3 scripts/session_usage.py --root ~/pm-live --backfill
   python3 scripts/session_usage.py --root ~/pm-live --backfill --classify
+  python3 scripts/session_usage.py --root ~/pm-live --reclassify   # L2b on existing other/none rows
   python3 scripts/session_usage.py --root ~/pm-live --summary
 
 Idempotent by (session_id, message_uuid). Never invents "tokens saved."
@@ -562,6 +563,53 @@ def backfill(
     return appended, len(files)
 
 
+def reclassify_existing(root: Path, *, claude_bin: str = "") -> int:
+    """Run L2b on existing rows still labeled other/none. Updates CSV in place.
+
+    One claude -p call per distinct user_uuid (cached). Returns rows updated.
+    """
+    path = ensure_usage(root)
+    with path.open(encoding="utf-8", newline="") as fh:
+        rows = list(csv.DictReader(fh))
+    if not rows:
+        print("reclassify_updated=0 (empty history)")
+        return 0
+
+    label_cache = _load_label_cache(root)
+    # first excerpt per user_uuid among unlabeled rows
+    pending: dict[str, str] = {}
+    for r in rows:
+        if (r.get("category") or "") != "other":
+            continue
+        if (r.get("category_source") or "none") not in ("none", "", "other"):
+            continue
+        uid = r.get("user_uuid") or ""
+        if not uid or uid in pending:
+            continue
+        pending[uid] = r.get("user_excerpt") or ""
+
+    print(f"reclassify_pending_user_turns={len(pending)}")
+    for uid, excerpt in pending.items():
+        cat, src = classify_l2b(
+            root, uid, excerpt, "", label_cache, claude_bin=claude_bin
+        )
+        if src != "l2b":
+            continue
+        for r in rows:
+            if r.get("user_uuid") == uid and (r.get("category") or "") == "other":
+                r["category"] = cat
+                r["category_source"] = "l2b"
+
+    _save_label_cache(root, label_cache)
+    with path.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=HEADER, lineterminator="\n")
+        w.writeheader()
+        w.writerows(rows)
+    updated = sum(1 for r in rows if r.get("category_source") == "l2b")
+    print(f"reclassify_rows_with_l2b={updated}")
+    return updated
+
+
 def summarize(root: Path, days: int = 30) -> None:
     path = usage_path(root)
     if not path.is_file():
@@ -611,12 +659,17 @@ def main(argv=None) -> int:
     p.add_argument(
         "--classify",
         action="store_true",
-        help="opt-in L2b Haiku for turns L2a cannot label (uses claude -p login, not an API key)",
+        help="with --backfill: L2b via claude -p for newly scanned unlabeled turns",
+    )
+    p.add_argument(
+        "--reclassify",
+        action="store_true",
+        help="L2b via claude -p on existing other/none rows in usage-history.csv",
     )
     p.add_argument(
         "--claude",
         default=os.environ.get("CLAUDE_BIN") or "claude",
-        help="claude CLI binary for --classify (default: CLAUDE_BIN or claude on PATH)",
+        help="claude CLI binary for classify/reclassify (default: CLAUDE_BIN or claude on PATH)",
     )
     p.add_argument("--summary", action="store_true")
     p.add_argument("--days", type=int, default=30)
@@ -633,10 +686,12 @@ def main(argv=None) -> int:
             classify=args.classify,
             claude_bin=args.claude,
         )
-    if args.summary or not args.backfill:
+    if args.reclassify:
+        reclassify_existing(root, claude_bin=args.claude)
+    if args.summary or not (args.backfill or args.reclassify):
         summarize(root, days=args.days)
-    if not args.backfill and not args.summary:
-        print("pass --backfill and/or --summary", file=sys.stderr)
+    if not args.backfill and not args.summary and not args.reclassify:
+        print("pass --backfill and/or --reclassify and/or --summary", file=sys.stderr)
         return 2
     return 0
 

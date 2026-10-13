@@ -144,24 +144,65 @@ def read_existing_keys(root: Path) -> set[tuple[str, str]]:
     return keys
 
 
-def default_projects_dir(root: Path) -> Path:
-    """Map live root ~/pm-live → ~/.claude/projects/-Users-…-pm-live."""
+def default_projects_dirs(root: Path) -> list[Path]:
+    """Claude Code project dirs that may hold this live workspace's sessions.
+
+    Sessions are keyed by the folder Claude Code / Cursor opened — often the
+    kit multi-root (`…/PM-workbench`) rather than `…/pm-live` alone. We scan
+    both (and any other dir ending in the live folder name).
+    """
     home = Path.home()
     claude = home / ".claude" / "projects"
-    name = root.resolve().name
-    # Claude encodes absolute path: /Users/x/pm-live → -Users-x-pm-live
+    found: list[Path] = []
+    seen: set[str] = set()
+
+    def add(path: Path) -> None:
+        try:
+            path = path.resolve()
+        except OSError:
+            return
+        if not path.is_dir():
+            return
+        # Case-insensitive dedupe (macOS APFS): PM-workbench vs pm-workbench
+        key = str(path).lower()
+        if key in seen:
+            return
+        seen.add(key)
+        found.append(path)
+
+    # Encoded absolute path: /Users/x/pm-live → -Users-x-pm-live
     encoded = str(root.resolve()).replace("/", "-")
-    if encoded.startswith("-"):
-        candidate = claude / encoded
-    else:
-        candidate = claude / f"-{encoded}"
-    if candidate.is_dir():
-        return candidate
-    # fallback: any dir ending with -{name}
-    matches = sorted(p for p in claude.glob(f"*-{name}") if p.is_dir()) if claude.is_dir() else []
-    if matches:
-        return matches[0]
-    return candidate
+    if not encoded.startswith("-"):
+        encoded = f"-{encoded}"
+    add(claude / encoded)
+
+    name = root.resolve().name  # e.g. pm-live
+    if claude.is_dir():
+        for p in sorted(claude.glob(f"*-{name}")):
+            add(p)
+        # Kit / multi-root workspace that commonly hosts the same work
+        parent = root.resolve().parent
+        for kit_name in ("PM-workbench", "pm-workbench"):
+            kit = parent / kit_name
+            if kit.is_dir():
+                kit_enc = str(kit.resolve()).replace("/", "-")
+                if not kit_enc.startswith("-"):
+                    kit_enc = f"-{kit_enc}"
+                add(claude / kit_enc)
+            for p in sorted(claude.glob(f"*-{kit_name}")):
+                add(p)
+    return found
+
+
+def default_projects_dir(root: Path) -> Path:
+    """Backward-compat: first discovered project dir."""
+    dirs = default_projects_dirs(root)
+    if dirs:
+        return dirs[0]
+    encoded = str(root.resolve()).replace("/", "-")
+    if not encoded.startswith("-"):
+        encoded = f"-{encoded}"
+    return Path.home() / ".claude" / "projects" / encoded
 
 
 def _text_from_message(msg: dict) -> str:
@@ -517,50 +558,59 @@ def backfill(
     root: Path,
     *,
     projects_dir: Path | None = None,
+    projects_dirs: list[Path] | None = None,
     classify: bool = False,
     claude_bin: str = "",
 ) -> tuple[int, int]:
     """Scan jsonl; append new rows. Returns (appended, scanned_files)."""
     ensure_usage(root)
     keys = read_existing_keys(root)
-    proj = projects_dir or default_projects_dir(root)
-    if not proj.is_dir():
-        print(f"ERROR: projects dir not found: {proj}", file=sys.stderr)
+    if projects_dirs:
+        projs = [p for p in projects_dirs if p.is_dir()]
+    elif projects_dir is not None:
+        projs = [projects_dir] if projects_dir.is_dir() else []
+    else:
+        projs = default_projects_dirs(root)
+    if not projs:
+        print("ERROR: no Claude Code projects dirs found", file=sys.stderr)
         print(
-            "Pass --projects-dir ~/.claude/projects/<encoded-pm-live-path>",
+            "Pass --projects-dir (comma-separated ok) under ~/.claude/projects/",
             file=sys.stderr,
         )
         return 0, 0
 
     label_cache = _load_label_cache(root) if classify else {}
-    project_name = proj.name
     appended = 0
-    files = sorted(proj.glob("*.jsonl"))
+    files_total = 0
     out_path = usage_path(root)
     with out_path.open("a", encoding="utf-8", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=HEADER, lineterminator="\n")
-        for path in files:
-            for row in scan_session_file(
-                path,
-                project=project_name,
-                classify=classify,
-                root=root,
-                label_cache=label_cache,
-                claude_bin=claude_bin,
-            ):
-                key = (row["session_id"], row["message_uuid"])
-                if key in keys:
-                    continue
-                writer.writerow(row)
-                keys.add(key)
-                appended += 1
+        for proj in projs:
+            files = sorted(proj.glob("*.jsonl"))
+            files_total += len(files)
+            print(f"scanning {proj} ({len(files)} jsonl)")
+            for path in files:
+                for row in scan_session_file(
+                    path,
+                    project=proj.name,
+                    classify=classify,
+                    root=root,
+                    label_cache=label_cache,
+                    claude_bin=claude_bin,
+                ):
+                    key = (row["session_id"], row["message_uuid"])
+                    if key in keys:
+                        continue
+                    writer.writerow(row)
+                    keys.add(key)
+                    appended += 1
     if classify:
         _save_label_cache(root, label_cache)
-    print(f"projects_dir={proj}")
-    print(f"files_scanned={len(files)}")
+    print(f"projects_dirs={len(projs)}")
+    print(f"files_scanned={files_total}")
     print(f"rows_appended={appended}")
     print(f"classify={'yes' if classify else 'no'}")
-    return appended, len(files)
+    return appended, files_total
 
 
 def reclassify_existing(root: Path, *, claude_bin: str = "") -> int:
@@ -654,7 +704,11 @@ def summarize(root: Path, days: int = 30) -> None:
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--root", required=True, help="live workspace root (e.g. ~/pm-live)")
-    p.add_argument("--projects-dir", default="", help="override ~/.claude/projects/…-pm-live")
+    p.add_argument(
+        "--projects-dir",
+        default="",
+        help="override project dir(s); comma-separated. Default: pm-live + PM-workbench encodings",
+    )
     p.add_argument("--backfill", action="store_true")
     p.add_argument(
         "--classify",
@@ -678,11 +732,16 @@ def main(argv=None) -> int:
     if not root.is_dir():
         print(f"ERROR: root not found: {root}", file=sys.stderr)
         return 2
-    projects = Path(os.path.expanduser(args.projects_dir)).resolve() if args.projects_dir else None
+    projects_dirs = None
+    projects = None
+    if args.projects_dir:
+        parts = [p.strip() for p in args.projects_dir.split(",") if p.strip()]
+        projects_dirs = [Path(os.path.expanduser(p)).resolve() for p in parts]
     if args.backfill:
         backfill(
             root,
             projects_dir=projects,
+            projects_dirs=projects_dirs,
             classify=args.classify,
             claude_bin=args.claude,
         )

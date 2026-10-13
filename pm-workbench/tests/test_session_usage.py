@@ -24,6 +24,78 @@ def _write_jsonl(path: Path, records: list[dict]) -> None:
             fh.write(json.dumps(r) + "\n")
 
 
+class ProjectsDiscoveryTests(unittest.TestCase):
+    def test_discovers_live_and_workbench_encodings(self):
+        from unittest.mock import patch
+
+        tmp = Path(tempfile.mkdtemp(prefix="pmwb-proj-"))
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        home = tmp / "home"
+        live = tmp / "pm-live"
+        kit = tmp / "PM-workbench"
+        live.mkdir()
+        kit.mkdir()
+        home_claude = home / ".claude" / "projects"
+        enc_live = home_claude / str(live.resolve()).replace("/", "-")
+        enc_kit = home_claude / str(kit.resolve()).replace("/", "-")
+        enc_live.mkdir(parents=True)
+        enc_kit.mkdir(parents=True)
+
+        with patch.object(session_usage.Path, "home", return_value=home):
+            got = session_usage.default_projects_dirs(live)
+        names = {p.name for p in got}
+        self.assertIn(enc_live.name, names)
+        self.assertIn(enc_kit.name, names)
+
+    def test_backfill_scans_multiple_projects_dirs(self):
+        tmp = Path(tempfile.mkdtemp(prefix="pmwb-multi-"))
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        live = tmp / "live"
+        live.mkdir()
+        (live / "state").mkdir()
+        p1 = tmp / "proj-a"
+        p2 = tmp / "proj-b"
+        p1.mkdir()
+        p2.mkdir()
+        for proj, sid, uid, aid in (
+            (p1, "s1", "u1", "a1"),
+            (p2, "s2", "u2", "a2"),
+        ):
+            _write_jsonl(
+                proj / f"{sid}.jsonl",
+                [
+                    {
+                        "type": "user",
+                        "uuid": uid,
+                        "timestamp": "2026-10-10T12:00:00.000Z",
+                        "message": {
+                            "role": "user",
+                            "content": [{"type": "text", "text": "/brief daily-brief"}],
+                        },
+                    },
+                    {
+                        "type": "assistant",
+                        "uuid": aid,
+                        "timestamp": "2026-10-10T12:00:05.000Z",
+                        "message": {
+                            "role": "assistant",
+                            "usage": {
+                                "input_tokens": 1,
+                                "output_tokens": 1,
+                                "cache_creation_input_tokens": 0,
+                                "cache_read_input_tokens": 0,
+                            },
+                        },
+                    },
+                ],
+            )
+        n, files = session_usage.backfill(
+            live, projects_dirs=[p1, p2], classify=False
+        )
+        self.assertEqual(files, 2)
+        self.assertEqual(n, 2)
+
+
 class ClassifyL2aTests(unittest.TestCase):
     def test_slash_workflow(self):
         cat, src = session_usage.classify_l2a("/brief daily-brief")

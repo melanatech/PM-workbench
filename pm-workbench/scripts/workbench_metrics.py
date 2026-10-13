@@ -30,7 +30,29 @@ import statistics
 import sys
 import tempfile
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+def _resolve_root():
+    """Prefer the live workspace (cwd / CLAUDE_PROJECT_DIR) over the kit clone.
+
+    When `scripts/` is symlinked from ~/pm-live into the kit, abspath(__file__)
+    resolves into the kit — which has no registers or usage-history. Use the
+    project dir the PM actually opened instead.
+    """
+    for candidate in (
+        os.environ.get("CLAUDE_PROJECT_DIR"),
+        os.environ.get("PM_LIVE_ROOT"),
+        os.getcwd(),
+    ):
+        if not candidate:
+            continue
+        path = os.path.abspath(os.path.expanduser(candidate))
+        if os.path.isdir(os.path.join(path, "registers")) or os.path.isdir(
+            os.path.join(path, "state")
+        ):
+            return path
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+ROOT = _resolve_root()
 HISTORY = os.path.join("state", "health-history.csv")
 BASELINE_DAYS = 21
 STALE_INITIATIVE_DAYS = 30
@@ -68,6 +90,14 @@ METRICS = [
     ("scheduled_failed_30d", "Unattended", "Of those, failed (exit code not 0)", "down"),
     ("scheduled_skipped_30d", "Unattended", "Scheduled invocations skipped (paused, capped, already running)", "info"),
     ("todo_drafts_30d", "Unattended", "To-do drafts written in the last 30 days", "info"),
+    # Claude Code session tokens (from state/usage-history.csv via session_usage.py). Info only —
+    # never "tokens saved." n/a until --backfill has been run once.
+    ("usage_msgs_30d", "Session tokens", "Assistant messages with usage in the last 30 days (Claude Code / pm-live)", "info"),
+    ("usage_input_tokens_30d", "Session tokens", "Sum input_tokens (30d)", "info"),
+    ("usage_output_tokens_30d", "Session tokens", "Sum output_tokens (30d)", "info"),
+    ("usage_cache_read_tokens_30d", "Session tokens", "Sum cache_read_input_tokens (30d)", "info"),
+    ("usage_cache_create_tokens_30d", "Session tokens", "Sum cache_creation_input_tokens (30d)", "info"),
+    ("usage_l2a_labeled_pct_30d", "Session tokens", "% of those msgs with an L2a/L2b category other than unlabeled other", "info"),
 ]
 NA = None
 
@@ -212,6 +242,31 @@ def compute(today):
     m["context_files_updated_30d"] = sum(
         1 for f in context if os.path.isfile(f)
         and within(datetime.date.fromtimestamp(os.path.getmtime(f)), today, 30))
+
+    usage = read_csv(p("state", "usage-history.csv"))
+    if usage is not None:
+        recent_u = []
+        for r in usage:
+            day = parse_day(r.get("timestamp"))
+            if day and within(day, today, 30):
+                recent_u.append(r)
+        m["usage_msgs_30d"] = len(recent_u)
+        m["usage_input_tokens_30d"] = sum(int(r.get("input_tokens") or 0) for r in recent_u)
+        m["usage_output_tokens_30d"] = sum(int(r.get("output_tokens") or 0) for r in recent_u)
+        m["usage_cache_read_tokens_30d"] = sum(
+            int(r.get("cache_read_input_tokens") or 0) for r in recent_u)
+        m["usage_cache_create_tokens_30d"] = sum(
+            int(r.get("cache_creation_input_tokens") or 0) for r in recent_u)
+        if recent_u:
+            labeled = sum(
+                1 for r in recent_u
+                if (r.get("category_source") or "") in ("l2a", "l2b")
+                and (r.get("category") or "") not in ("", "other")
+            )
+            # also count l2a "other" that was explicitly rule-matched? only non-other
+            m["usage_l2a_labeled_pct_30d"] = round(100.0 * labeled / len(recent_u), 1)
+        else:
+            m["usage_l2a_labeled_pct_30d"] = 0
     return m
 
 

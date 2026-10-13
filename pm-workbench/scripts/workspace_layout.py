@@ -178,6 +178,23 @@ def seed_empty_registers(destination, dry_run=False):
     if not dry_run and not os.path.exists(os.path.join(target, preflight_log)):
         with open(os.path.join(target, preflight_log), "w", encoding="utf-8") as handle:
             handle.write("timestamp,topic,recommendation,hit_count,allow_repos\n")
+    usage_rel = "state/usage-history.csv"
+    usage_path = os.path.join(target, usage_rel)
+    written.append(usage_rel)
+    if not dry_run and not os.path.exists(usage_path):
+        with open(usage_path, "w", encoding="utf-8") as handle:
+            handle.write(
+                "session_id,message_uuid,timestamp,user_uuid,user_excerpt,category,"
+                "category_source,input_tokens,output_tokens,cache_creation_input_tokens,"
+                "cache_read_input_tokens,model,is_sidechain,project,indexed_date\n"
+            )
+    classify_log = "logs/usage-classify-runs.csv"
+    written.append(classify_log)
+    if not dry_run and not os.path.exists(os.path.join(target, classify_log)):
+        with open(os.path.join(target, classify_log), "w", encoding="utf-8") as handle:
+            handle.write(
+                "timestamp,user_uuid,status,category,input_tokens,output_tokens,note\n"
+            )
     return written
 
 

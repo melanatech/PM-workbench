@@ -1,0 +1,603 @@
+#!/usr/bin/env python3
+"""Mine Claude Code session token usage into state/usage-history.csv.
+
+Claude Code / pm-live only (Cursor Agent transcripts are out of scope).
+
+Layers
+  L0  Per assistant-message tokens from message.usage + session id + timestamp
+  L1  Attach to preceding non-meta user turn (excerpt)
+  L2a Rules-first category from user text (free; default)
+  L2b Optional Haiku classify for unlabeled turns (--classify; opt-in)
+
+Usage
+  python3 scripts/session_usage.py --root ~/pm-live --backfill
+  python3 scripts/session_usage.py --root ~/pm-live --backfill --classify
+  python3 scripts/session_usage.py --root ~/pm-live --summary
+
+Idempotent by (session_id, message_uuid). Never invents "tokens saved."
+"""
+from __future__ import annotations
+
+import argparse
+import csv
+import json
+import os
+import re
+import sys
+from datetime import date, datetime, timezone
+from pathlib import Path
+
+HEADER = [
+    "session_id",
+    "message_uuid",
+    "timestamp",
+    "user_uuid",
+    "user_excerpt",
+    "category",
+    "category_source",  # l2a | l2b | none
+    "input_tokens",
+    "output_tokens",
+    "cache_creation_input_tokens",
+    "cache_read_input_tokens",
+    "model",
+    "is_sidechain",
+    "project",
+    "indexed_date",
+]
+
+# Coarse enum + workflow:<name> (not open-ended topics)
+COARSE = {
+    "lookup",
+    "explore_brief",
+    "code_dive",
+    "prototype",
+    "capture",
+    "rework_correction",
+    "other",
+}
+
+CLUSTERS = ("capture", "brief", "sync", "discover", "build", "report")
+WORKFLOWS = {
+    "meeting-closeout",
+    "process-inbox",
+    "daily-brief",
+    "return-brief",
+    "meeting-prep",
+    "get-started",
+    "jira-reconcile",
+    "ripple-check",
+    "context-reconcile",
+    "roadmap-update",
+    "rotate-registers",
+    "discovery",
+    "research-plan",
+    "research-package",
+    "competitive-scan",
+    "learn-product-flow",
+    "code-dive",
+    "explore-brief",
+    "prd-package",
+    "prototype-build",
+    "prd-prototype-sync",
+    "experiment-package",
+    "experiment-analyze",
+    "launch-package",
+    "weekly-update",
+    "okr-refresh",
+    "strategy-refresh",
+    "workbench-health",
+    "monthly-review",
+    "ship-signal",
+    "quick-close",
+    "todo",
+}
+
+SLASH_RE = re.compile(
+    r"/(?:(?P<cluster>capture|brief|sync|discover|build|report)\s+)?"
+    r"(?P<wf>[a-z][a-z0-9-]*)",
+    re.I,
+)
+COMMAND_NAME_RE = re.compile(
+    r"<command-name>\s*/(?P<cluster>capture|brief|sync|discover|build|report|todo|quick-close)"
+    r"(?:\s+(?P<wf>[a-z][a-z0-9-]*))?\s*</command-name>",
+    re.I,
+)
+COMMAND_ARGS_RE = re.compile(r"<command-args>\s*([a-z][a-z0-9-]*)", re.I)
+INIT_COM_RE = re.compile(r"\b(?:INIT|COM)-\d+\b", re.I)
+REWORK_RE = re.compile(
+    r"\b(you ignored|wrong|fix that|redo|re-?do|try again|that's not what|"
+    r"missed the|circular citation|you cited the brief)\b",
+    re.I,
+)
+LOOKUP_RE = re.compile(
+    r"\b(what did we (decide|commit)|what's due|what do we already know|"
+    r"how did you check|where did .+ come from|is the inbox empty|"
+    r"what'?s the state of)\b",
+    re.I,
+)
+EXCERPT_MAX = 1600
+
+
+def usage_path(root: Path) -> Path:
+    return root / "state" / "usage-history.csv"
+
+
+def ensure_usage(root: Path) -> Path:
+    path = usage_path(root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.is_file():
+        with path.open("w", encoding="utf-8", newline="") as fh:
+            csv.writer(fh, lineterminator="\n").writerow(HEADER)
+    return path
+
+
+def read_existing_keys(root: Path) -> set[tuple[str, str]]:
+    path = ensure_usage(root)
+    keys: set[tuple[str, str]] = set()
+    with path.open(encoding="utf-8", newline="") as fh:
+        for row in csv.DictReader(fh):
+            keys.add((row.get("session_id") or "", row.get("message_uuid") or ""))
+    return keys
+
+
+def default_projects_dir(root: Path) -> Path:
+    """Map live root ~/pm-live → ~/.claude/projects/-Users-…-pm-live."""
+    home = Path.home()
+    claude = home / ".claude" / "projects"
+    name = root.resolve().name
+    # Claude encodes absolute path: /Users/x/pm-live → -Users-x-pm-live
+    encoded = str(root.resolve()).replace("/", "-")
+    if encoded.startswith("-"):
+        candidate = claude / encoded
+    else:
+        candidate = claude / f"-{encoded}"
+    if candidate.is_dir():
+        return candidate
+    # fallback: any dir ending with -{name}
+    matches = sorted(p for p in claude.glob(f"*-{name}") if p.is_dir()) if claude.is_dir() else []
+    if matches:
+        return matches[0]
+    return candidate
+
+
+def _text_from_message(msg: dict) -> str:
+    content = msg.get("content")
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            if isinstance(block, dict) and block.get("type") == "text":
+                parts.append(block.get("text") or "")
+            elif isinstance(block, str):
+                parts.append(block)
+        return "\n".join(parts)
+    return ""
+
+
+def classify_l2a(user_text: str) -> tuple[str, str]:
+    """Return (category, source) with source 'l2a' or 'none'→other."""
+    text = user_text or ""
+    if not text.strip():
+        return "other", "none"
+
+    m = COMMAND_NAME_RE.search(text)
+    if m:
+        cluster = (m.group("cluster") or "").lower()
+        wf = (m.group("wf") or "").lower()
+        if not wf:
+            am = COMMAND_ARGS_RE.search(text)
+            if am:
+                wf = am.group(1).lower()
+        if cluster in ("todo", "quick-close"):
+            return f"workflow:{cluster}", "l2a"
+        if wf in WORKFLOWS:
+            return _coarse_or_workflow(wf), "l2a"
+        if cluster in CLUSTERS and wf:
+            return f"workflow:{wf}", "l2a"
+
+    for m in SLASH_RE.finditer(text):
+        cluster = (m.group("cluster") or "").lower()
+        wf = (m.group("wf") or "").lower()
+        if wf in ("todo", "quick-close"):
+            return f"workflow:{wf}", "l2a"
+        if wf in WORKFLOWS:
+            return _coarse_or_workflow(wf), "l2a"
+        if cluster and wf:
+            return f"workflow:{wf}", "l2a"
+
+    low = text.lower()
+    if "explore-brief" in low or "explore brief" in low or "product brief" in low:
+        return "explore_brief", "l2a"
+    if "code-dive" in low or "code dive" in low or "how does" in low and "code" in low:
+        return "code_dive", "l2a"
+    if "prototype-build" in low or "prototype" in low and ("build" in low or "mock" in low):
+        return "prototype", "l2a"
+    if REWORK_RE.search(text):
+        return "rework_correction", "l2a"
+    if LOOKUP_RE.search(text) or INIT_COM_RE.search(text):
+        return "lookup", "l2a"
+    return "other", "none"
+
+
+def _coarse_or_workflow(wf: str) -> str:
+    if wf == "explore-brief":
+        return "explore_brief"
+    if wf == "code-dive":
+        return "code_dive"
+    if wf == "prototype-build":
+        return "prototype"
+    if wf in ("meeting-closeout", "process-inbox", "quick-close"):
+        return "capture"
+    return f"workflow:{wf}"
+
+
+def _load_label_cache(root: Path) -> dict[str, str]:
+    path = root / "state" / "usage-label-cache.json"
+    if not path.is_file():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+
+
+def _save_label_cache(root: Path, cache: dict[str, str]) -> None:
+    path = root / "state" / "usage-label-cache.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(cache, indent=2) + "\n", encoding="utf-8")
+
+
+def _log_classify_run(
+    root: Path,
+    *,
+    user_uuid: str,
+    status: str,
+    category: str = "",
+    input_tokens: int = 0,
+    output_tokens: int = 0,
+    note: str = "",
+) -> None:
+    log = root / "logs" / "usage-classify-runs.csv"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    new = not log.is_file()
+    with log.open("a", encoding="utf-8", newline="") as fh:
+        w = csv.writer(fh, lineterminator="\n")
+        if new:
+            w.writerow(
+                [
+                    "timestamp",
+                    "user_uuid",
+                    "status",
+                    "category",
+                    "input_tokens",
+                    "output_tokens",
+                    "note",
+                ]
+            )
+        w.writerow(
+            [
+                datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                user_uuid,
+                status,
+                category,
+                input_tokens,
+                output_tokens,
+                note,
+            ]
+        )
+
+
+def classify_l2b(
+    root: Path,
+    user_uuid: str,
+    user_text: str,
+    assistant_first_line: str,
+    cache: dict[str, str],
+) -> tuple[str, str]:
+    """Opt-in Haiku classify. Cached by user_uuid. Logs spend separately.
+
+    Without ANTHROPIC_API_KEY (or when classify is unavailable), records a skip
+    and returns other/none — never invents a category from model knowledge.
+    """
+    if user_uuid and user_uuid in cache:
+        return cache[user_uuid], "l2b"
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    if not api_key:
+        _log_classify_run(
+            root,
+            user_uuid=user_uuid,
+            status="skipped",
+            note="no ANTHROPIC_API_KEY; L2b not run",
+        )
+        return "other", "none"
+
+    excerpt = (user_text or "")[:EXCERPT_MAX]
+    assistant_bit = (assistant_first_line or "")[:400]
+    prompt = (
+        "Classify this PM workbench user turn into exactly one category label.\n"
+        "Allowed labels only:\n"
+        "  workflow:<name>  (name = kebab workflow e.g. daily-brief, prd-package)\n"
+        "  lookup | explore_brief | code_dive | prototype | capture | "
+        "rework_correction | other\n"
+        "Reply with the label alone, no punctuation.\n\n"
+        f"USER:\n{excerpt}\n\nASSISTANT_FIRST_LINE:\n{assistant_bit}\n"
+    )
+    try:
+        import urllib.request
+
+        body = json.dumps(
+            {
+                "model": "claude-haiku-4-5-20251001",
+                "max_tokens": 32,
+                "messages": [{"role": "user", "content": prompt}],
+            }
+        ).encode("utf-8")
+        req = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages",
+            data=body,
+            headers={
+                "content-type": "application/json",
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        label = ""
+        for block in data.get("content") or []:
+            if isinstance(block, dict) and block.get("type") == "text":
+                label = (block.get("text") or "").strip().split()[0].lower()
+                break
+        usage = data.get("usage") or {}
+        in_t = int(usage.get("input_tokens") or 0)
+        out_t = int(usage.get("output_tokens") or 0)
+        if not _valid_category(label):
+            _log_classify_run(
+                root,
+                user_uuid=user_uuid,
+                status="invalid",
+                category=label,
+                input_tokens=in_t,
+                output_tokens=out_t,
+                note="label not in enum",
+            )
+            return "other", "none"
+        cache[user_uuid] = label
+        _log_classify_run(
+            root,
+            user_uuid=user_uuid,
+            status="ok",
+            category=label,
+            input_tokens=in_t,
+            output_tokens=out_t,
+        )
+        return label, "l2b"
+    except Exception as e:
+        _log_classify_run(
+            root,
+            user_uuid=user_uuid,
+            status="error",
+            note=str(e)[:200],
+        )
+        return "other", "none"
+
+
+def _valid_category(label: str) -> bool:
+    if not label:
+        return False
+    if label in COARSE:
+        return True
+    if label.startswith("workflow:"):
+        name = label.split(":", 1)[1]
+        return bool(name) and re.fullmatch(r"[a-z][a-z0-9-]*", name) is not None
+    return False
+
+
+def scan_session_file(
+    path: Path,
+    *,
+    project: str,
+    classify: bool,
+    root: Path,
+    label_cache: dict[str, str],
+) -> list[dict]:
+    session_id = path.stem
+    rows: list[dict] = []
+    last_user_uuid = ""
+    last_user_text = ""
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return rows
+
+    for line in lines:
+        try:
+            obj = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        typ = obj.get("type")
+        msg = obj.get("message") if isinstance(obj.get("message"), dict) else {}
+        role = msg.get("role") or typ
+
+        if typ == "user" or role == "user":
+            if obj.get("isMeta") or obj.get("isSidechain"):
+                continue
+            text = _text_from_message(msg)
+            # skip empty command stdout noise without real ask
+            if not text.strip():
+                continue
+            last_user_uuid = obj.get("uuid") or ""
+            last_user_text = text
+            continue
+
+        if typ != "assistant" and role != "assistant":
+            continue
+        if obj.get("isSidechain"):
+            continue
+        usage = msg.get("usage") or obj.get("usage")
+        if not isinstance(usage, dict):
+            continue
+        in_t = int(usage.get("input_tokens") or 0)
+        out_t = int(usage.get("output_tokens") or 0)
+        cc = int(usage.get("cache_creation_input_tokens") or 0)
+        cr = int(usage.get("cache_read_input_tokens") or 0)
+        if in_t + out_t + cc + cr == 0:
+            continue
+
+        uuid = obj.get("uuid") or ""
+        if not uuid:
+            continue
+
+        category, source = classify_l2a(last_user_text)
+        assistant_text = _text_from_message(msg)
+        first_line = assistant_text.strip().splitlines()[0] if assistant_text.strip() else ""
+        if classify and source == "none" and last_user_uuid:
+            category, source = classify_l2b(
+                root, last_user_uuid, last_user_text, first_line, label_cache
+            )
+
+        excerpt = re.sub(r"\s+", " ", last_user_text).strip()[:EXCERPT_MAX]
+        rows.append(
+            {
+                "session_id": session_id,
+                "message_uuid": uuid,
+                "timestamp": obj.get("timestamp") or "",
+                "user_uuid": last_user_uuid,
+                "user_excerpt": excerpt,
+                "category": category,
+                "category_source": source if source != "none" else ("none" if category == "other" else source),
+                "input_tokens": str(in_t),
+                "output_tokens": str(out_t),
+                "cache_creation_input_tokens": str(cc),
+                "cache_read_input_tokens": str(cr),
+                "model": (msg.get("model") or obj.get("model") or ""),
+                "is_sidechain": "yes" if obj.get("isSidechain") else "no",
+                "project": project,
+                "indexed_date": date.today().isoformat(),
+            }
+        )
+    return rows
+
+
+def backfill(
+    root: Path,
+    *,
+    projects_dir: Path | None = None,
+    classify: bool = False,
+) -> tuple[int, int]:
+    """Scan jsonl; append new rows. Returns (appended, scanned_files)."""
+    ensure_usage(root)
+    keys = read_existing_keys(root)
+    proj = projects_dir or default_projects_dir(root)
+    if not proj.is_dir():
+        print(f"ERROR: projects dir not found: {proj}", file=sys.stderr)
+        print(
+            "Pass --projects-dir ~/.claude/projects/<encoded-pm-live-path>",
+            file=sys.stderr,
+        )
+        return 0, 0
+
+    label_cache = _load_label_cache(root) if classify else {}
+    project_name = proj.name
+    appended = 0
+    files = sorted(proj.glob("*.jsonl"))
+    out_path = usage_path(root)
+    with out_path.open("a", encoding="utf-8", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=HEADER, lineterminator="\n")
+        for path in files:
+            for row in scan_session_file(
+                path,
+                project=project_name,
+                classify=classify,
+                root=root,
+                label_cache=label_cache,
+            ):
+                key = (row["session_id"], row["message_uuid"])
+                if key in keys:
+                    continue
+                writer.writerow(row)
+                keys.add(key)
+                appended += 1
+    if classify:
+        _save_label_cache(root, label_cache)
+    print(f"projects_dir={proj}")
+    print(f"files_scanned={len(files)}")
+    print(f"rows_appended={appended}")
+    print(f"classify={'yes' if classify else 'no'}")
+    return appended, len(files)
+
+
+def summarize(root: Path, days: int = 30) -> None:
+    path = usage_path(root)
+    if not path.is_file():
+        print("no usage-history.csv yet; run --backfill")
+        return
+    today = date.today()
+    by_cat: dict[str, int] = {}
+    totals = {"input": 0, "output": 0, "cache_create": 0, "cache_read": 0, "msgs": 0}
+    with path.open(encoding="utf-8", newline="") as fh:
+        for row in csv.DictReader(fh):
+            ts = (row.get("timestamp") or "")[:10]
+            try:
+                d = date.fromisoformat(ts)
+            except ValueError:
+                continue
+            if (today - d).days > days:
+                continue
+            totals["msgs"] += 1
+            totals["input"] += int(row.get("input_tokens") or 0)
+            totals["output"] += int(row.get("output_tokens") or 0)
+            totals["cache_create"] += int(row.get("cache_creation_input_tokens") or 0)
+            totals["cache_read"] += int(row.get("cache_read_input_tokens") or 0)
+            cat = row.get("category") or "other"
+            tok = (
+                int(row.get("input_tokens") or 0)
+                + int(row.get("output_tokens") or 0)
+                + int(row.get("cache_creation_input_tokens") or 0)
+                + int(row.get("cache_read_input_tokens") or 0)
+            )
+            by_cat[cat] = by_cat.get(cat, 0) + tok
+    print(f"last_{days}d_assistant_msgs={totals['msgs']}")
+    print(f"input_tokens={totals['input']}")
+    print(f"output_tokens={totals['output']}")
+    print(f"cache_creation_input_tokens={totals['cache_create']}")
+    print(f"cache_read_input_tokens={totals['cache_read']}")
+    total_tok = sum(by_cat.values()) or 1
+    print("by_category_tokens (not 'tokens saved'):")
+    for cat, n in sorted(by_cat.items(), key=lambda x: -x[1])[:12]:
+        print(f"  {cat}: {n} ({100.0 * n / total_tok:.1f}%)")
+
+
+def main(argv=None) -> int:
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("--root", required=True, help="live workspace root (e.g. ~/pm-live)")
+    p.add_argument("--projects-dir", default="", help="override ~/.claude/projects/…-pm-live")
+    p.add_argument("--backfill", action="store_true")
+    p.add_argument(
+        "--classify",
+        action="store_true",
+        help="opt-in L2b Haiku for turns L2a cannot label (needs ANTHROPIC_API_KEY)",
+    )
+    p.add_argument("--summary", action="store_true")
+    p.add_argument("--days", type=int, default=30)
+    args = p.parse_args(argv)
+    root = Path(os.path.expanduser(args.root)).resolve()
+    if not root.is_dir():
+        print(f"ERROR: root not found: {root}", file=sys.stderr)
+        return 2
+    projects = Path(os.path.expanduser(args.projects_dir)).resolve() if args.projects_dir else None
+    if args.backfill:
+        backfill(root, projects_dir=projects, classify=args.classify)
+    if args.summary or not args.backfill:
+        summarize(root, days=args.days)
+    if not args.backfill and not args.summary:
+        print("pass --backfill and/or --summary", file=sys.stderr)
+        return 2
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

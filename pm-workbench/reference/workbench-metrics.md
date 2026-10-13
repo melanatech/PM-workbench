@@ -22,6 +22,14 @@ Lead measures: **dropped balls**, then **decision quality**. Time saved is secon
 
 | Scheduled runs, failed, skipped | rows in `logs/scheduled-runs.csv` (ok/failed; paused, capped and already-running skips; a run that found nothing new is not counted) | whether a run's output was useful; a run can exit 0 and still have BLOCKED a step, which shows under Dropped balls |
 | To-do drafts written | `TODO-*.md` files in `outputs/todo-drafts/` by modified date | whether you used a draft; read it by hand |
+| Session tokens (info) | From `state/usage-history.csv`, filled by `python3 scripts/session_usage.py --root <live> --backfill`. Sums Claude Code `message.usage` for the live project under `~/.claude/projects/…-pm-live/` (last 30 days): assistant message count, input/output/cache_* tokens, % labeled by L2a/L2b rules | **Not** "tokens saved," dollars, or Cursor Agent usage. Cache tokens dominate and are not comparable to billable chat tokens without care. Categories are coarse job types (`workflow:…`, `lookup`, `explore_brief`, …), not INIT/topic analytics. Empty/`n/a` until you backfill once. |
+
+### Session usage mining (Claude Code / pm-live only)
+
+1. Default backfill is **L0+L1+L2a** (zero model cost): per assistant message → preceding user turn → rules-based category.
+2. Opt-in **`--classify` (L2b)**: Haiku labels only turns L2a left as unlabeled `other`. Requires `ANTHROPIC_API_KEY`. Spend is logged only in `logs/usage-classify-runs.csv` so it never mixes into product usage rows. Labels cache in `state/usage-label-cache.json` by user-message uuid.
+3. Summary without snapshot: `python3 scripts/session_usage.py --root ~/pm-live --summary`.
+4. Do **not** invent a "tokens saved by cache-first" figure from these rows. Trends vs `logs/context-preflight.csv` reuse share can be compared later by hand; never fabricate a dollar savings.
 
 Not captured by code, so recorded by hand in `logs/review-notes.csv` (`date,metric,value,note`): flags raised that you acted on, corrections you made to an update before sending, your own read on decision quality.
 

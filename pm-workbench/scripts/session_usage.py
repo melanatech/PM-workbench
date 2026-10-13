@@ -7,13 +7,14 @@ Layers
   L0  Per assistant-message tokens from message.usage + session id + timestamp
   L1  Attach to preceding non-meta user turn (excerpt)
   L2a Rules-first category from user text (free; default)
-  L2b Optional Haiku classify for unlabeled turns (--classify; opt-in).
+  L2b Optional Haiku classify for unlabeled turns (--classify / --reclassify).
       Uses the local `claude -p` CLI (existing Claude Code login) — not ANTHROPIC_API_KEY.
+      Classification is **bulk**: many user turns per Haiku call (not one call per turn).
 
 Usage
   python3 scripts/session_usage.py --root ~/pm-live --backfill
   python3 scripts/session_usage.py --root ~/pm-live --backfill --classify
-  python3 scripts/session_usage.py --root ~/pm-live --reclassify   # L2b on existing other/none rows
+  python3 scripts/session_usage.py --root ~/pm-live --reclassify   # L2b bulk on other/none rows
   python3 scripts/session_usage.py --root ~/pm-live --summary
 
 Idempotent by (session_id, message_uuid). Never invents "tokens saved."
@@ -30,6 +31,11 @@ import subprocess
 import sys
 from datetime import date, datetime, timezone
 from pathlib import Path
+
+# Bulk L2b: ~20 turns/call, short excerpts, keep prompt bounded
+BULK_BATCH_SIZE = 20
+BULK_EXCERPT_MAX = 400
+BULK_PROMPT_CHAR_CAP = 14000
 
 HEADER = [
     "session_id",
@@ -341,6 +347,149 @@ def _resolve_claude_bin(claude_bin: str = "") -> str:
     return found or ""
 
 
+def _parse_bulk_labels(raw: str, n: int) -> dict[int, str]:
+    """Parse lines like '1\\tlookup' or '1: lookup' into {1-based index: label}."""
+    out: dict[int, str] = {}
+    for line in (raw or "").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        m = re.match(r"^(\d+)\s*[\:\|\t\-]\s*(\S+)", line)
+        if not m:
+            m = re.match(r"^(\d+)\s+(\S+)", line)
+        if not m:
+            continue
+        idx = int(m.group(1))
+        label = m.group(2).lower().strip("`\"'.,;:")
+        if 1 <= idx <= n and _valid_category(label):
+            out[idx] = label
+    return out
+
+
+def classify_l2b_bulk(
+    root: Path,
+    items: list[tuple[str, str]],
+    cache: dict[str, str],
+    *,
+    claude_bin: str = "",
+    batch_size: int = BULK_BATCH_SIZE,
+) -> int:
+    """Classify many (user_uuid, excerpt) pairs via batched `claude -p` calls.
+
+    Returns number of uuids newly labeled into cache. Skips uuids already cached.
+    """
+    pending = [(uid, ex) for uid, ex in items if uid and uid not in cache]
+    if not pending:
+        return 0
+
+    claude = _resolve_claude_bin(claude_bin)
+    if not claude:
+        _log_classify_run(
+            root,
+            user_uuid="(batch)",
+            status="skipped",
+            note="claude CLI not on PATH; use Claude Code login (CLAUDE_BIN) — no API key",
+        )
+        return 0
+
+    labeled = 0
+    i = 0
+    batch_num = 0
+    while i < len(pending):
+        batch: list[tuple[str, str]] = []
+        prompt_len = 0
+        header = (
+            "Classify each PM workbench user turn. Reply with one line per turn, "
+            "exactly: <n>\\t<label>  (n starts at 1). No other text.\n"
+            "Allowed labels only:\n"
+            "  workflow:<name>  (kebab workflow e.g. daily-brief, prd-package)\n"
+            "  lookup | explore_brief | code_dive | prototype | capture | "
+            "rework_correction | other\n"
+            "Use setup-ish plugin/MCP/auth asks as other; short yes/1/ok as other; "
+            "session-continue summaries as other.\n\n"
+        )
+        prompt_len = len(header)
+        while i < len(pending) and len(batch) < batch_size:
+            uid, excerpt = pending[i]
+            piece = (excerpt or "")[:BULK_EXCERPT_MAX].replace("\n", " ").strip()
+            line = f"{len(batch) + 1}. {piece}\n"
+            if batch and prompt_len + len(line) > BULK_PROMPT_CHAR_CAP:
+                break
+            batch.append((uid, piece))
+            prompt_len += len(line)
+            i += 1
+        if not batch:
+            break
+        batch_num += 1
+        body = "".join(f"{n}. {ex}\n" for n, (_, ex) in enumerate(batch, start=1))
+        prompt = header + body
+        cmd = [
+            claude,
+            "-p",
+            prompt,
+            "--model",
+            "haiku",
+            "--permission-mode",
+            "dontAsk",
+        ]
+        try:
+            result = subprocess.run(
+                cmd,
+                cwd=str(root),
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=180,
+                check=False,
+            )
+            raw = (result.stdout or "").strip()
+            parsed = _parse_bulk_labels(raw, len(batch))
+            if result.returncode != 0 and not parsed:
+                err = ((result.stderr or "") + " " + raw).strip()[:200]
+                _log_classify_run(
+                    root,
+                    user_uuid=f"(batch-{batch_num})",
+                    status="error",
+                    note=f"claude -p exit {result.returncode}: {err}",
+                )
+                continue
+            for n, (uid, _) in enumerate(batch, start=1):
+                label = parsed.get(n)
+                if not label:
+                    _log_classify_run(
+                        root,
+                        user_uuid=uid,
+                        status="invalid",
+                        note=f"missing/invalid in bulk batch-{batch_num}",
+                    )
+                    continue
+                cache[uid] = label
+                labeled += 1
+                _log_classify_run(
+                    root,
+                    user_uuid=uid,
+                    status="ok",
+                    category=label,
+                    note=f"via claude -p haiku bulk batch-{batch_num} size={len(batch)}",
+                )
+            print(f"bulk_batch={batch_num} size={len(batch)} labeled={len(parsed)}/{len(batch)}")
+        except subprocess.TimeoutExpired:
+            _log_classify_run(
+                root,
+                user_uuid=f"(batch-{batch_num})",
+                status="error",
+                note="claude -p bulk timed out",
+            )
+        except Exception as e:
+            _log_classify_run(
+                root,
+                user_uuid=f"(batch-{batch_num})",
+                status="error",
+                note=str(e)[:200],
+            )
+    return labeled
+
+
 def classify_l2b(
     root: Path,
     user_uuid: str,
@@ -350,105 +499,19 @@ def classify_l2b(
     *,
     claude_bin: str = "",
 ) -> tuple[str, str]:
-    """Opt-in Haiku classify via `claude -p` (existing Claude Code login).
-
-    Cached by user_uuid. Classifier spend is logged in usage-classify-runs.csv
-    (token counts are often unavailable from the CLI — status/note still record
-    each call). Never invents a category when classify fails.
-    """
+    """Classify one turn (uses bulk helper with a single-item batch). Prefer reclassify bulk path."""
     if user_uuid and user_uuid in cache:
         return cache[user_uuid], "l2b"
-
-    claude = _resolve_claude_bin(claude_bin)
-    if not claude:
-        _log_classify_run(
-            root,
-            user_uuid=user_uuid,
-            status="skipped",
-            note="claude CLI not on PATH; use Claude Code login (CLAUDE_BIN) — no API key",
-        )
-        return "other", "none"
-
-    excerpt = (user_text or "")[:EXCERPT_MAX]
-    assistant_bit = (assistant_first_line or "")[:400]
-    prompt = (
-        "Classify this PM workbench user turn into exactly one category label.\n"
-        "Allowed labels only:\n"
-        "  workflow:<name>  (name = kebab workflow e.g. daily-brief, prd-package)\n"
-        "  lookup | explore_brief | code_dive | prototype | capture | "
-        "rework_correction | other\n"
-        "Reply with the label alone, no punctuation.\n\n"
-        f"USER:\n{excerpt}\n\nASSISTANT_FIRST_LINE:\n{assistant_bit}\n"
+    classify_l2b_bulk(
+        root,
+        [(user_uuid, user_text or "")],
+        cache,
+        claude_bin=claude_bin,
+        batch_size=1,
     )
-    cmd = [
-        claude,
-        "-p",
-        prompt,
-        "--model",
-        "haiku",
-        "--permission-mode",
-        "dontAsk",
-    ]
-    try:
-        result = subprocess.run(
-            cmd,
-            cwd=str(root),
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            timeout=120,
-            check=False,
-        )
-        raw = (result.stdout or "").strip()
-        # Prefer last non-empty line (claude -p sometimes prints chatter first)
-        lines = [ln.strip() for ln in raw.splitlines() if ln.strip()]
-        label = (lines[-1] if lines else "").split()[0].lower() if lines else ""
-        # Strip common wrapping
-        label = label.strip("`\"'.,;:")
-        if result.returncode != 0:
-            err = ((result.stderr or "") + " " + raw).strip()[:200]
-            _log_classify_run(
-                root,
-                user_uuid=user_uuid,
-                status="error",
-                category=label,
-                note=f"claude -p exit {result.returncode}: {err}",
-            )
-            return "other", "none"
-        if not _valid_category(label):
-            _log_classify_run(
-                root,
-                user_uuid=user_uuid,
-                status="invalid",
-                category=label,
-                note="label not in enum (via claude -p)",
-            )
-            return "other", "none"
-        cache[user_uuid] = label
-        _log_classify_run(
-            root,
-            user_uuid=user_uuid,
-            status="ok",
-            category=label,
-            note="via claude -p haiku (login); token counts not reported by CLI",
-        )
-        return label, "l2b"
-    except subprocess.TimeoutExpired:
-        _log_classify_run(
-            root,
-            user_uuid=user_uuid,
-            status="error",
-            note="claude -p timed out",
-        )
-        return "other", "none"
-    except Exception as e:
-        _log_classify_run(
-            root,
-            user_uuid=user_uuid,
-            status="error",
-            note=str(e)[:200],
-        )
-        return "other", "none"
+    if user_uuid in cache:
+        return cache[user_uuid], "l2b"
+    return "other", "none"
 
 
 def _valid_category(label: str) -> bool:
@@ -519,17 +582,7 @@ def scan_session_file(
             continue
 
         category, source = classify_l2a(last_user_text)
-        assistant_text = _text_from_message(msg)
-        first_line = assistant_text.strip().splitlines()[0] if assistant_text.strip() else ""
-        if classify and source == "none" and last_user_uuid:
-            category, source = classify_l2b(
-                root,
-                last_user_uuid,
-                last_user_text,
-                first_line,
-                label_cache,
-                claude_bin=claude_bin,
-            )
+        # L2b is bulk-only via reclassify_existing / --classify after scan — not per message.
 
         excerpt = re.sub(r"\s+", " ", last_user_text).strip()[:EXCERPT_MAX]
         rows.append(
@@ -604,19 +657,21 @@ def backfill(
                     writer.writerow(row)
                     keys.add(key)
                     appended += 1
-    if classify:
-        _save_label_cache(root, label_cache)
     print(f"projects_dirs={len(projs)}")
     print(f"files_scanned={files_total}")
     print(f"rows_appended={appended}")
-    print(f"classify={'yes' if classify else 'no'}")
+    print(f"classify={'deferred-bulk' if classify else 'no'}")
+    if classify:
+        print("running bulk L2b reclassify on other/none rows…")
+        reclassify_existing(root, claude_bin=claude_bin)
     return appended, files_total
 
 
 def reclassify_existing(root: Path, *, claude_bin: str = "") -> int:
     """Run L2b on existing rows still labeled other/none. Updates CSV in place.
 
-    One claude -p call per distinct user_uuid (cached). Returns rows updated.
+    Bulk: many user turns per `claude -p` call (see BULK_BATCH_SIZE). Returns
+    count of rows now carrying category_source=l2b.
     """
     path = ensure_usage(root)
     with path.open(encoding="utf-8", newline="") as fh:
@@ -626,7 +681,6 @@ def reclassify_existing(root: Path, *, claude_bin: str = "") -> int:
         return 0
 
     label_cache = _load_label_cache(root)
-    # first excerpt per user_uuid among unlabeled rows
     pending: dict[str, str] = {}
     for r in rows:
         if (r.get("category") or "") != "other":
@@ -636,19 +690,25 @@ def reclassify_existing(root: Path, *, claude_bin: str = "") -> int:
         uid = r.get("user_uuid") or ""
         if not uid or uid in pending:
             continue
+        # Skip if cache already has a label from a prior run
+        if uid in label_cache and _valid_category(label_cache[uid]):
+            continue
         pending[uid] = r.get("user_excerpt") or ""
 
     print(f"reclassify_pending_user_turns={len(pending)}")
-    for uid, excerpt in pending.items():
-        cat, src = classify_l2b(
-            root, uid, excerpt, "", label_cache, claude_bin=claude_bin
-        )
-        if src != "l2b":
-            continue
-        for r in rows:
-            if r.get("user_uuid") == uid and (r.get("category") or "") == "other":
-                r["category"] = cat
-                r["category_source"] = "l2b"
+    print(f"reclassify_bulk_batch_size={BULK_BATCH_SIZE}")
+    classify_l2b_bulk(
+        root,
+        list(pending.items()),
+        label_cache,
+        claude_bin=claude_bin,
+    )
+
+    for r in rows:
+        uid = r.get("user_uuid") or ""
+        if uid in label_cache and (r.get("category") or "") == "other":
+            r["category"] = label_cache[uid]
+            r["category_source"] = "l2b"
 
     _save_label_cache(root, label_cache)
     with path.open("w", encoding="utf-8", newline="") as fh:

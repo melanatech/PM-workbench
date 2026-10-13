@@ -6,6 +6,8 @@ Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — 
 
 Ship→Signal for: $ARGUMENTS
 
+**Step 0 — preflight:** `python3 scripts/context_preflight.py --root <live> --topic "ship-signal $ARGUMENTS"`. Reuse prior release notes / instrumentation analyses before inventing measurement plans.
+
 **Purpose.** Typed post-ship measurement loop. One stage per pass. Never invent warehouse queries — emit a data-request, HALT for human fulfillment, then read exports. Verdicts are pre-registered and non-causal for pre/post.
 
 **Artifact root (live):** `outputs/releases/<release-id>/`. Create the folder when starting a release. Templates: `reference/templates/ship-signal/`. Methodology: `reference/methodology/experimentation/`.

@@ -6,6 +6,8 @@ argument-hint: [what we want to test / opportunity id]
 
 Execution mode: **standard** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
+**Step 0 — preflight:** `python3 scripts/context_preflight.py --root <live> --topic "$ARGUMENTS"` before triage/design. Reuse prior experiment designs or related discovery hits; do not blank-slate when the index already covers the opportunity.
+
 ## Uncertainty triage — run this BEFORE designing anything
 
 Most things called "experiments" don't need an experiment, and none of the cheap

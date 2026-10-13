@@ -7,6 +7,8 @@ Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — 
 
 Request: $ARGUMENTS
 
+**Step 0 — preflight:** `python3 scripts/context_preflight.py --root <live> --topic "$ARGUMENTS"`. Reuse indexed discovery/evidence analyses before re-reading all sources blank-slate. Index new durable findings via `analysis_index.py append` (`kind=discovery`).
+
 This is a continuous-discovery tool, not a one-shot report. Discovery is the ongoing work of deciding what to build, grounded in evidence — so this command has four modes, inferred from what I ask (or I can say which):
 
 **1. Answer a question from the whole evidence base.** "What do we know about export reliability?" / "Is there evidence managers want per-location views?" — search ALL of `registers/evidence.csv`, `reference/user-research/`, past interview notes, and support/discovery captures, not just recent files. Answer with the evidence, each point sourced and dated, distinguishing direct customer evidence from stakeholder opinion, and volume from strength (three mentions of one theme from one account is not three independent signals). If the evidence is thin or one-sided, say so — that gap is itself a finding.

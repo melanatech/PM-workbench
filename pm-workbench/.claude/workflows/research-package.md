@@ -7,6 +7,8 @@ Execution mode: **standard** (fast=0 reviewers, standard=1–2, deep=full panel 
 
 Research package for: $ARGUMENTS
 
+**Step 0 — preflight:** `python3 scripts/context_preflight.py --root <live> --topic "$ARGUMENTS"`. If hits already cover this research question, reuse and say so before designing a new study.
+
 **Before designing anything, dispatch `internal-docs-reader`** to check `reference/user-research/` and the shared drive/wiki for prior research on this same question — no point re-running a study that already exists, and prior findings sharpen the screener and moderator guide. Then → `outputs/research/[name]/`:
 
 Objective; participant criteria + screener; moderator guide (tasks in order, what each is meant to learn, follow-up probes); survey variant for scale; consent placeholder; observation sheet; analysis framework; **decision rules written before any session runs**.

@@ -119,6 +119,45 @@ class RoutesTableTests(unittest.TestCase):
         self.assertIn("Reactive", text)
         self.assertIn("Competitive", text)
 
+    def test_gatherer_requires_prior_workspace_analysis_before_repos(self):
+        gatherer = (
+            WORKBENCH / ".claude" / "agents" / "prd-context-gatherer.md"
+        ).read_text(encoding="utf-8")
+        explore = (
+            WORKBENCH / ".claude" / "workflows" / "explore-brief.md"
+        ).read_text(encoding="utf-8")
+        claude = (WORKBENCH / "CLAUDE.md").read_text(encoding="utf-8")
+        self.assertIn("context_preflight", gatherer)
+        self.assertIn("consume preflight", gatherer.lower())
+        self.assertIn("Prior workspace analysis", gatherer)
+        self.assertIn(".context-preflight.json", gatherer)
+        self.assertLess(
+            gatherer.lower().index("preflight"),
+            gatherer.lower().rfind("repos/"),
+        )
+        self.assertIn("context_preflight", explore)
+        self.assertIn("preflight", explore.lower())
+        self.assertIn("instrumentation", claude.lower())
+        self.assertIn("context_preflight", claude)
+        self.assertIn("Cache-first", claude)
+
+    def test_prototype_soft_reuse_catalog_and_deferred_shared_package(self):
+        design = WORKBENCH / "reference" / "design"
+        catalog = (design / "prototype-components.md").read_text(encoding="utf-8")
+        deferred = (design / "DEFERRED-shared-prototype-package.md").read_text(encoding="utf-8")
+        skill = (
+            WORKBENCH / ".claude" / "skills" / "prototype-build" / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("soft reuse", catalog.lower())
+        self.assertIn("prototypes/", catalog)
+        self.assertIn("prototypes/_shared", deferred)
+        self.assertIn("file:", deferred)
+        self.assertIn("prototype-components.md", skill)
+        self.assertIn("Soft reuse", skill)
+        self.assertIn("Catalog update", skill)
+        backlog = (WORKBENCH / "BACKLOG.md").read_text(encoding="utf-8")
+        self.assertIn("DEFERRED-shared-prototype-package.md", backlog)
+
     def test_explore_brief_reuses_gatherer_and_frames_before_options(self):
         flat = {w: e for ws in clusters().values() for w, e in ws.items()}
         self.assertIn("explore-brief", clusters()["discover"])
@@ -188,6 +227,9 @@ class RoutesTableTests(unittest.TestCase):
         setup = (WORKBENCH / "NEW-USER-SETUP.md").read_text(encoding="utf-8")
         self.assertIn("## 2a. Optional: company product UI base", setup)
         self.assertIn("Product UI base (optional)", setup)
+        self.assertIn("Source-derived greenfield", setup)
+        self.assertIn("BASELINE-SOURCES.md", setup)
+        self.assertIn("repo_profile.py", setup)
         self.assertIn("ln -s", setup)
         self.assertIn("CLAUDE.local.md", setup)
         self.assertIn("links.csv", setup)

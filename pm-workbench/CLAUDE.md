@@ -88,7 +88,9 @@ Everything below is a template. The architecture assumes only that Claude Code r
 
 24. **User-injected context after freeform chat.** When I add new facts mid-thread (corrections, "also X said…", "Antonio confirmed…", hallway/Slack color that wasn't in the capture) outside `/capture` / `/quick-close`, treat that as durable input — do not only acknowledge in chat. **Clear material claims** (decision, commitment, risk, open conflict, durable product fact, assumption): write the matching surface this turn (Tier 1) or present a one-line PROPOSAL of the exact row/append if Tier 2/3 (scope, owner, dates, send). **Ambiguous** (might be color vs decision; unclear owner; might supersede an existing DEC-/COM-): ask one short question naming the candidate surface — not a vague "want me to log that?" **Conversational only** (thanks, scheduling trivia, already-tracked restatement): stay silent on write-back. Source the write as `chat:[date]` or the thread topic plus any archive path I named. Same fan-out surfaces as `_fan-out.md`; `/sync ripple-check` is the explicit command when I want a full cross-check, but I should not need it for an obvious mid-chat fact.
 
-25. **Authority-first lookups (no double-ask).** For any factual "what's the state / what did we decide / what did I promise / is X empty / what does Jira say" ask: name the **authoritative surface** for that question type, read it **first**, then go to raw/secondary sources only for gaps. End with a one-line **coverage** note when the source set is non-obvious. Answering from the first convenient file (`find` hit, one transcript, one folder peek) and waiting for me to push back is a kit defect. See **Authority-first lookups** under "Not everything needs a command." Worked example: commitments → `registers/commitments.csv` before `archive/meetings/`.
+25. **Authority-first lookups (no double-ask).** For any factual "what's the state / what did we decide / what did I promise / is X empty / what does Jira say / what instrumentation exists / what did we already conclude" ask: name the **authoritative surface** for that question type, read it **first**, then go to raw/secondary sources only for gaps. End with a one-line **coverage** note when the source set is non-obvious. Answering from the first convenient file (`find` hit, one transcript, one folder peek, a fresh `repos/` read) and waiting for me to push back is a kit defect. See **Authority-first lookups** under "Not everything needs a command." Worked examples: commitments → `registers/commitments.csv` before `archive/meetings/`; instrumentation → `outputs/daily/*events*` before `repos/`.
+
+26. **Cache-first analyses (token + fidelity).** Before re-investigating a topic, run `python3 scripts/context_preflight.py --root <live> --topic "…"`. Reuse dated hits with as_of; if recommendation is `reuse_and_refresh`, spot-check the newer surface and report conflicts (rule 8). Index new durable analyses via `scripts/analysis_index.py append` (or fan-out). **Citations under `drafts/` or `prototypes/` are not evidence** — carry `primary_sources` from the index, or climb SOURCE-POLICY claim-type ladder. Hooks block ungrounded consequential writes and `repos/**` reads without a fresh preflight marker.
 
 ## Execution modes (cost governance — read before any heavy workflow)
 
@@ -185,10 +187,22 @@ A lot of value here is answering questions directly from what's already tracked,
 | "Inbox empty?" / what's waiting | `scripts/intake_status.py` / process-inbox Step 0 | never a bare `inbox/` peek |
 | Board / ticket hygiene | `/sync jira-reconcile` path (live board or export) | local notes are not Jira truth |
 | Strategy / priorities this week | `reference/context/current-priorities.md` + latest strategy outputs | older decks only with dates |
+| Prior analysis / instrumentation / "what do we already know about X" / events / code findings | `python3 scripts/context_preflight.py --topic "…"` (reads `state/analysis-index.csv` + scans outputs/learning) | `repos/` only when recommendation is `investigate` / `reuse_and_refresh` or `--allow-repos` — never blank-slate when hits exist |
+| Verification / "how did you check?" / baseline "today" claims | SOURCE-POLICY claim-type ladder → primary source (capture, repo@commit, locale file) | Never stop at a draft/brief/prototype citation |
+
+### Cache-first analyses
+
+1. Run `context_preflight` (or require a fresh `state/.context-preflight.json`) before investigating.
+2. Cite hits with as_of **and** their `primary_sources` when present.
+3. On `reuse_and_refresh` or conflict → targeted refresh; report conflicts (rule 8).
+4. New durable analysis → `analysis_index.py append` in the same run.
+5. Forbidden: blank-slate re-investigation when hits exist and there is no staleness/conflict signal; answering "the brief says" for a product-fact check.
 
 **Worked example (commitments):** do not start in `archive/meetings/`. Order: `commitments.csv` → `todos.csv` → `decisions.csv` if relevant → recent `outputs/daily/` digests → specific meeting files only to fill a gap or verify wording.
 
-**Forbidden:** one transcript/`find` hit as the whole answer; "source may be incomplete" instead of reading the index; making me ask twice because the first pass skipped the authoritative surface.
+**Worked example (instrumentation):** do not start in `repos/`. Order: `context_preflight --topic instrumentation events` → cite digest + primary commit → clone only if preflight says refresh/investigate.
+
+**Forbidden:** one transcript/`find` hit as the whole answer; "source may be incomplete" instead of reading the index; making me ask twice because the first pass skipped the authoritative surface; re-reading a code clone and claiming fresh findings while ignoring a dated workspace analysis of the same commit/topic; citing only `drafts/` as evidence for what users see today.
 
 **Coverage line (when non-obvious):** what you read and what you skipped — e.g. "From commitments.csv: COM-012 (due 10-13), COM-010, COM-015; digests checked; did not re-read full 10-08 transcript."
 
@@ -234,6 +248,12 @@ will not memorize slash commands; the menu + skills are the product surface.
 | "How is the workbench itself doing" / "what do I actually use" | `/report workbench-health` |
 | "Is the workbench helping" / monthly check on dropped balls and decision quality | `/report monthly-review` |
 
+<!-- BEGIN UX GUARDRAILS MCP -->
+## UX Guardrails MCP
+
+For every user-facing UI, UX, accessibility, or content change or review, call the Guardrails MCP `setup` before the first `check`, then call `check` before reporting completion. Do not claim compliance when validation is unavailable.
+<!-- END UX GUARDRAILS MCP -->
+
 ## Keeping this fast — context/token guardrails
 - Register files (`registers/*.csv`) grow every week. Default to reading **only recent or relevant rows** (e.g., last 60-90 days, or filtered by evidence_id/metric name) rather than the whole file, unless I explicitly ask for full history.
 - If a register or state file gets large enough that reading it fully would be wasteful, tell me and suggest running `/sync rotate-registers` rather than reading it anyway.
@@ -257,4 +277,4 @@ Meetings feed the registers. The registers feed the weekly update, Jira reconcil
 - `outputs/` — reviewed work products by cadence/type; `archive/` — processed raw inputs
 - `reference/` — templates (incl. `templates/formatted/` — tagged Word/Excel templates where the TEMPLATE owns branding/formatting and Claude supplies only content via `scripts/render_template.py`; markdown fallback when none exists), metric definitions (one YAML per OKR metric), product knowledge, `user-research/` (indexed research summaries)
 - `learning/` — per-area product knowledge from deep-dives and code-dives
-- `repos/` — company code clones (and optional UI-base symlinks; see NEW-USER-SETUP §2a); `prototypes/` — greenfield prototype projects from `/build prototype-build`
+- `repos/` — company code clones (and optional UI-base symlinks; see NEW-USER-SETUP §2a); `prototypes/` — greenfield prototype projects from `/build prototype-build`; soft reuse catalog at `reference/design/prototype-components.md` (copy/adapt across demos — shared `_shared/` package is deferred)

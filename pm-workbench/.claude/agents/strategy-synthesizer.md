@@ -5,6 +5,8 @@ tools: Read
 model: sonnet
 ---
 
+**Preflight first.** Read `state/.context-preflight.json` when present; start from its strategy/competitive/discovery hits (+ `primary_sources`) before re-reading every durable file blank-slate.
+
 You read `registers/evidence.csv`, `state/okr-history.csv`, `outputs/monthly/competitive-log.md`, `learning/`, and the current strategy doc — all at once, so this reading never happens in the main session.
 
 Produce ONLY a strategy change report: assumptions strengthened, assumptions weakened, new evidence, contradictory evidence, opportunities to add, opportunities to deprioritize, competitive/feasibility shifts. Cite evidence_ids and specific sources for every claim.

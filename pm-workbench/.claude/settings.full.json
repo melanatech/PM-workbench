@@ -73,6 +73,16 @@
             "timeout": 20
           }
         ]
+      },
+      {
+        "matcher": "Read|Grep|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PY=$(command -v python3 || command -v python); \"$PY\" \"$CLAUDE_PROJECT_DIR/.claude/hooks/require_context_preflight_for_repos.py\"",
+            "timeout": 20
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -82,6 +92,11 @@
           {
             "type": "command",
             "command": "PY=$(command -v python3 || command -v python); \"$PY\" \"$CLAUDE_PROJECT_DIR/.claude/hooks/check_output_provenance.py\"",
+            "timeout": 20
+          },
+          {
+            "type": "command",
+            "command": "PY=$(command -v python3 || command -v python); \"$PY\" \"$CLAUDE_PROJECT_DIR/.claude/hooks/check_context_grounding.py\"",
             "timeout": 20
           }
         ]

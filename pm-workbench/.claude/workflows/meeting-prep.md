@@ -5,6 +5,8 @@ argument-hint: [who/what the meeting is about]
 
 Meeting coming up about: $ARGUMENTS
 
+**Step 0 — preflight:** `python3 scripts/context_preflight.py --root <live> --topic "$ARGUMENTS"`. Lead with cache hits (briefs, digests, decisions already indexed) before a fresh file hunt.
+
 Pull together, fast — this is meant to be ready before you sit down, not a research project:
 
 1. **Check `registers/initiatives.csv`** for anything matching this topic — current stage, linked PRD/prototype/experiment.

@@ -54,5 +54,8 @@ command — never a third improvised path.
   explore options / alternatives before a PRD: improvising a generic brainstorm
   skill or freeform chat that skips `prd-context-gatherer` — run
   `/discover explore-brief` instead
+- Re-reading `repos/` for instrumentation/events/code behavior when
+  `outputs/daily/` or `learning/` already has a dated analysis of that topic —
+  cite the workspace analysis first (CLAUDE.md rule 25)
 
 Routers: after choosing a workflow, dispatch per `_protocol.md` immediately.

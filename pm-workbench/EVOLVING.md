@@ -45,6 +45,12 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 
 ## Changelog (newest first; one line per real architectural decision — not every edit)
 
+- 2026-10-13 — **Cache-first context stitch (root fix):** `state/analysis-index.csv` + `context_preflight.py` + grounding/repos hooks; SOURCE-POLICY claim-type ladder + `primary_sources` (drafts/prototypes never evidence); `repo_profile.py` surface map; prototype source-derived baseline + `BASELINE-SOURCES.md` QA gate; reconciler accepts brief upstream. Rule 26. Token/session_usage mining = separate follow-on (BACKLOG). Trigger: stitch failures (ignored digests; circular brief citation; invented baseline).
+
+- 2026-10-13 — **Workspace-before-repos (stitch failure):** `prd-context-gatherer` must search prior `outputs/`/`learning/` (events, instrumentation, code-dives) before any `repos/` read; explore-brief forbids clone-only technical claims; rule 25 authority table adds prior-analysis row. Trigger: explanations brief ignored Oct 7 events/instrumentation digests and re-derived from cx-reports.
+
+- 2026-10-12 — **Prototype soft reuse:** `reference/design/prototype-components.md` catalog + `prototype-build` copy/adapt from listed `prototypes/` paths; append rows when a piece is reusable. Shared npm `prototypes/_shared/` deferred (`DEFERRED-shared-prototype-package.md` + BACKLOG). Not a second UI-base path.
+
 - 2026-10-12 — **`/discover explore-brief`:** pre-PRD check-in brief (sonnet). Enrich shared `prd-context-gatherer` (decided vs open, sibling COMs, weak patterns); thin workflow assemble → frame → options → `drafts/…-product-brief.md`. Do **not** fold into opus `prd-package` or invent `explore-context-gatherer`. Trigger: COM-012-style explore asks falling through to generic brainstorm without the INIT pack.
 
 - 2026-10-12 — **Authority-first lookups (rule 25):** freeform factual asks must hit the authoritative surface for the question type first (registers / intake / PRD path / board path / etc.), then secondary sources; coverage line when non-obvious. Commitments ladder kept as worked example. Skills: `authority-lookup` + `commitment-lookup` alias. Trigger: double-ask pattern (partial from one transcript → pushback → register had the answer).

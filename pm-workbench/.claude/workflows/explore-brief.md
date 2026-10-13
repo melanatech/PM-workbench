@@ -11,13 +11,16 @@ This is **not** a PRD package. No readiness score-as-PRD-gate, Feature Contract,
 
 **Hard rules**
 - **Assemble before options.** Never lead with a single UI pattern or a solution sketch before the problem frame.
+- **Workspace before repos.** Technical claims (instrumentation, how code works, what exists in product) must cite the gatherer's **Prior workspace analysis** section (paths + dates). Forbidden: "from the clone…" as the only source when `outputs/daily/` or `learning/` already analyzed the same topic. If you must re-check code, say why the prior analysis is insufficient or stale.
 - **Decided vs open from the gatherer** — not from the user's last restatement alone.
 - **Thought-partner:** challenge problem completeness; don't parrot the last user message into "the" problem.
 - Do not invent facts to fill brief sections; use `[NEEDS INPUT: …]` or wait at the gate.
 
-**Step 0 — Resolve.** Parse INIT-/COM-/topic from `$ARGUMENTS`. If the ask is only a vague "brief" with no initiative or commitment, ask once which INIT-/COM-/feature. Resolve COM → related INIT via `registers/commitments.csv` and `registers/initiatives.csv` text/links.
+**Step 0 — Resolve + preflight.** Parse INIT-/COM-/topic from `$ARGUMENTS`. If the ask is only a vague "brief" with no initiative or commitment, ask once which INIT-/COM-/feature. Resolve COM → related INIT via `registers/commitments.csv` and `registers/initiatives.csv` text/links. Then run:
+`python3 scripts/context_preflight.py --root <live> --topic "$ARGUMENTS"`
+(use `--verify` if the PM asked to re-check). Read `state/.context-preflight.json`. One RESULT line: recommendation + hit count. Do not continue until this runs.
 
-**Step 1 — Gather.** Dispatch `prd-context-gatherer` for this feature/INIT/COM. In parallel, dispatch `internal-docs-reader` when wiki, user research, or shared-drive docs are likely relevant. **Do not draft options or the brief body before the gatherer returns** (and the docs reader, if dispatched).
+**Step 1 — Gather.** Dispatch `prd-context-gatherer` with the preflight marker (it consumes `.context-preflight.json` for Prior workspace analysis — do not replace the script with ad-hoc Grep). In parallel, dispatch `internal-docs-reader` when wiki, user research, or shared-drive docs are likely relevant. **Do not draft options or the brief body before the gatherer returns** (and the docs reader, if dispatched). On `reuse_and_refresh`, spot-check the newer surface before locking the frame.
 
 **Step 2 — Frame (show before concepts).** From the grounding brief, write the problem frame in the reply (and later into the draft):
 - Jobs-to-be-done hypotheses
@@ -35,7 +38,7 @@ Show this frame **before** any concepts.
 
 1. Status line (draft, meeting/check-in if known, surfaces/scope if known)
 2. Summary + explicit ask for the meeting
-3. Starting point / what exists (from workspace)
+3. Starting point / what exists (from workspace — cite prior analyses by path/date; do not present a fresh code read as first-line truth when a dated digest exists)
 4. Evidence table (what we know / don't — with strength)
 5. What decided work leaves unsolved (or open problem parts)
 6. Bet or principles (short)

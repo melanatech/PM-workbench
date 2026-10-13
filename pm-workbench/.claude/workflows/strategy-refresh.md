@@ -5,6 +5,8 @@ model: opus
 
 Execution mode: **deep** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
+**Step 0 — preflight:** `python3 scripts/context_preflight.py --root <live> --topic "strategy $ARGUMENTS"`. Pass hits into the synthesizer; index the refresh when written (`kind=strategy`).
+
 **Step 1 — dispatch to the `strategy-synthesizer` subagent** for the change report BEFORE rewriting anything: it reads `registers/evidence.csv`, `state/okr-history.csv`, the competitive log, and `learning/` all at once. **In parallel, dispatch `internal-docs-reader`** for any market research, analyst reports, or strategy documents sitting in the shared drive/Confluence/`reference/user-research/` that aren't yet reflected in those registers. Combine both into assumptions strengthened/weakened, new + contradictory evidence, opportunities to add/deprioritize, competitive/feasibility shifts.
 
 **Evidence sufficiency gate:** before writing the refresh, identify missing, stale, or inaccessible sources and facts that could materially change strategic priorities, revenue/retention estimates, or recommendations. Ask a focused, batched question and wait for the missing evidence or clarification; do not present an updated strategy as complete while the gap remains. If I explicitly ask for a provisional refresh, label it **PROVISIONAL**, mark every affected claim/model/table cell `[NEEDS INPUT: ...]`, and separate sourced facts from assumptions. Do not invent market size, eligible-customer counts, adoption, metric values, or revenue estimates to fill the model.

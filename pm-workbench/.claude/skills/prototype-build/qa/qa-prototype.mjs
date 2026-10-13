@@ -76,7 +76,39 @@ async function bootTarget() {
   return url;
 }
 
+function checkBaselineSources() {
+  // Fail closed when a baseline variant exists without a source map.
+  const hasBaselineHint =
+    fs.existsSync(path.join(proto, 'src', 'baseline')) ||
+    /\bbaseline\b/i.test(states.join(',')) ||
+    (fs.existsSync(path.join(proto, 'src')) &&
+      fs.readdirSync(path.join(proto, 'src'), { recursive: true }).some(
+        (f) => typeof f === 'string' && /baseline/i.test(f)
+      ));
+  if (!hasBaselineHint) {
+    add('BASELINE-SOURCES.md (baseline absent — skipped)', true, 'no baseline variant detected');
+    return true;
+  }
+  const mapPath = path.join(proto, 'BASELINE-SOURCES.md');
+  if (!fs.existsSync(mapPath)) {
+    add('BASELINE-SOURCES.md present for baseline variant', false, 'missing BASELINE-SOURCES.md');
+    return false;
+  }
+  const body = fs.readFileSync(mapPath, 'utf8').trim();
+  if (body.length < 40) {
+    add('BASELINE-SOURCES.md present for baseline variant', false, 'BASELINE-SOURCES.md empty or stub');
+    return false;
+  }
+  add('BASELINE-SOURCES.md present for baseline variant', true, mapPath);
+  return true;
+}
+
 async function main() {
+  if (!checkBaselineSources()) {
+    report.verdict = 'FAIL — baseline variant without BASELINE-SOURCES.md';
+    finish();
+    return;
+  }
   let target;
   try { target = await bootTarget(); }
   catch (e) { report.verdict = 'FAIL — did not boot'; finish(); return; }

@@ -77,6 +77,8 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 
 - 2026-10-06 — **Discovery synthesis checklist** (modes 1/3/4): channel mix + theme cards (evidence-class mix, independent-account count, verbatim/edge cases, INIT touch). Pattern borrowed from https://github.com/msitarzewski/agency-agents/blob/main/product/product-feedback-synthesizer.md — checklist only; no Agency agent install.
 
+- 2026-10-13 — **Scenario Guide + Guardrails lessons:** optional `_scenario-guide.md` / skill `scenario-guide` for prototype-build (evaluator look/do/try panel; reference `explanations-transactions`). Guardrails MCP does not learn across sessions — durable fixes go in `reference/design/ux-guardrails-lessons.md`; prototype-build reads Standing preflight before scaffold and appends lessons after failed checks.
+
 - 2026-10-13 — **Web search providers:** when DDG serves captcha, Bing’s bot SERP returns dictionary/homepages. `web_search.py` now tries Startpage before Bing, filters dictionary/login/homepage junk, and skips unusable provider responses. Optional Serper/Brave keys still win when set.
 
 - 2026-10-13 — **Web search first-class:** `.claude/workflows/_web-search.md` (always `scripts/web_search.py` before native WebSearch), durable `state/web-search/`, fan-out surface 14, analysis-index kind `web-search`, skill `web-search`. explore-brief Step 1.5 + prd-package Step 0.5 search **problems · market/category · users · solutions**. Competitive dumps stay in `state/competitive/`.

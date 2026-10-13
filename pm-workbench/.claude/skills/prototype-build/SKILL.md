@@ -69,6 +69,10 @@ If a **component library** is the design source, install/link it and build scree
 
 **Catalog update.** When this build creates a reusable piece (shell, shared table pattern, state kit) worth stealing later, append a row to `reference/design/prototype-components.md` (date, name, path, reuse-when, notes) in the same run — do not wait for a later cleanup pass.
 
+**UX Guardrails preflight (reduce first-pass failures).** Before inventing controls, read `reference/design/ux-guardrails-lessons.md` and apply every **Standing preflight** item that fits. The MCP does not learn across sessions — only this file (and prior QA notes) carry fixes forward. After a Guardrails `check` with failures: fix the UX, then **append a lesson row** in the same run before claiming done.
+
+**Optional — Scenario Guide (evaluator walkthrough).** If the prototype has multiple concepts/personas or a stakeholder demo soon, offer a Guide panel per `.claude/workflows/_scenario-guide.md` / skill `scenario-guide`. Default **off** for single-screen throwaways; when added, adapt `prototypes/explanations-transactions/src/components/ScenarioGuide.jsx` (or the recipe) and rewrite scripts for this UI. Do not block the build waiting for a Guide.
+
 **Checkpoint after scaffold.** Even for loose static: `python3 scripts/prototype_checkpoint.py --path prototypes/[name] --label after-scaffold` (creates local `git init` if missing; never pushes). See Checkpoints below.
 
 **Readiness checklist (non-blocking unless asked):** consult `reference/templates/prototype-readiness-checklist.md`. Note any Red dimensions in RESULT. Do not block the build unless the PM asked for a hard readiness gate.

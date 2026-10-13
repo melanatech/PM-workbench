@@ -224,6 +224,26 @@ class RoutesTableTests(unittest.TestCase):
         self.assertIn("state/competitive", capture)
         self.assertIn("_web-search.md", capture)
 
+    def test_scenario_guide_optional_prototype_recipe(self):
+        recipe = (WORKBENCH / ".claude" / "workflows" / "_scenario-guide.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("look", recipe)
+        self.assertIn("ScenarioGuide", recipe)
+        skill = (WORKBENCH / ".claude" / "skills" / "scenario-guide" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("_scenario-guide.md", skill)
+        proto = (WORKBENCH / ".claude" / "skills" / "prototype-build" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("scenario-guide", proto)
+        self.assertIn("ux-guardrails-lessons.md", proto)
+        lessons = (WORKBENCH / "reference" / "design" / "ux-guardrails-lessons.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("Standing preflight", lessons)
+
     def test_web_search_first_class_recipe_and_brief_prd_axes(self):
         recipe = (WORKBENCH / ".claude" / "workflows" / "_web-search.md").read_text(encoding="utf-8")
         self.assertIn("web_search.py", recipe)

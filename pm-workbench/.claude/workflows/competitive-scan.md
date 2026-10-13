@@ -9,7 +9,7 @@ Scan: $ARGUMENTS (default: all of `reference/competitive-watchlist.md` — compe
 
 **Step 0 — preflight:** `python3 scripts/context_preflight.py --root <live> --topic "competitive $ARGUMENTS"`. Reuse recent competitive captures when recommendation is `reuse`; refresh on staleness. Index new captures (`kind=competitive`).
 
-**URL policy:** Seed URLs on the watchlist are **optional**. The `competitive-capture-agent` discovers official pages with **`python3 scripts/web_search.py`** (client-side; works when Bedrock rejects native WebSearch), then **WebFetch**es those hits. Do not block the scan waiting for the PM to paste links. If the PM (or a prior capture) already listed URLs, pass them through as accelerators.
+**URL policy:** Seed URLs on the watchlist are **optional**. Shared recipe: `.claude/workflows/_web-search.md`. The `competitive-capture-agent` discovers official pages with **`python3 scripts/web_search.py` first** (client-side; works when Bedrock rejects native WebSearch), then **WebFetch**es those hits. Do not block the scan waiting for the PM to paste links. If the PM (or a prior capture) already listed URLs, pass them through as accelerators. Competitor dumps → `state/competitive/`; brief/PRD problem–market–user–solution grounding → `state/web-search/`.
 
 **Bedrock / proxy note:** Native Claude `WebSearch` often fails with *"Bedrock does not support the web_search tool"*. That is expected on Bedrock-backed Claude Code. The kit search script is the supported fix — not "ask the PM for URLs" and not "give up." Only BLOCK discovery if `web_search.py` itself cannot reach the network.
 

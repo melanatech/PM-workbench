@@ -3,8 +3,9 @@
 
 Amazon Bedrock rejects Claude's native WebSearch tool
 ("Bedrock does not support the web_search tool"). This script searches from
-the local machine so competitive-scan can discover official URLs without that
-server tool.
+the local machine so kit workflows can discover official URLs without that
+server tool. Primary path for competitive-scan, explore-brief, prd-package,
+and ad-hoc grounding — see .claude/workflows/_web-search.md.
 
 Providers (tried in order until one returns hits):
   1. DuckDuckGo HTML POST

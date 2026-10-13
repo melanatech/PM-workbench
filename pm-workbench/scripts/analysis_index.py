@@ -38,6 +38,7 @@ KINDS = {
     "product-flow",
     "discovery",
     "competitive",
+    "web-search",
     "strategy",
     "reconcile",
     "research",

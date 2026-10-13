@@ -23,7 +23,7 @@ The test is: does this step need **isolation** — either independence from bias
 **Heavy-read isolation (keep large raw material out of the main session):**
 - `launch-drift-detector` (`/build launch-package`) — PRD + Jira + prototype + docs + marketing at once
 - `discovery-source-reader` (`/discover discovery`) — chat channels + support pages + behavior-analytics segments
-- `competitive-capture-agent` (`/discover competitive-scan`) — several competitors at once; discovers URLs via **`scripts/web_search.py`** (Bedrock-safe), WebFetch, then **writes `state/competitive/YYYY-MM-DD-<slug>.md` itself** (chat is not storage); watchlist seed URLs optional
+- `competitive-capture-agent` (`/discover competitive-scan`) — several competitors at once; discovers URLs via **`scripts/web_search.py` first** (Bedrock-safe; see `_web-search.md`), WebFetch, then **writes `state/competitive/YYYY-MM-DD-<slug>.md` itself** (chat is not storage); watchlist seed URLs optional. Brief/PRD problem–market–user–solution grounding uses `state/web-search/` in the parent workflow, not this agent.
 - `return-window-scanner` (`/brief return-brief`) — weeks of chat/Jira/wiki/shared-drive history; the single heaviest read in the kit
 - `strategy-synthesizer` (`/report strategy-refresh`) — evidence register + OKR history + competitive log + learning files together
 - `code-repo-explorer` (`/discover code-dive`, reused by `/build prototype-build`) — a whole cloned repo's file tree

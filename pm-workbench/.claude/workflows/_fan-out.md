@@ -34,6 +34,7 @@ there. Ask only for Tier 3 (scope/owner/dates/send) or genuine ambiguity.
 | 11 | `reference/context/glossary.md` | New standing acronym/term worth keeping |
 | 12 | `state/okr-history.csv` | Pre-calculated metric with as-of date, timeframe, filters, displayed delta, calculation/definition notes, and per-series rows for multi-metric charts — from dashboard **or** internal deck/doc/export (SOURCE-POLICY dated-internal-numbers exception) |
 | 13 | `state/analysis-index.csv` | Durable analysis written under `outputs/` or `learning/` — append via `python3 scripts/analysis_index.py append --root <live> --topic-key "…" --path <rel> --kind <kind> --as-of YYYY-MM-DD --one-line "…" --primary-sources "…" --initiative-ids "…" --source-workflow <name>` (idempotent by path) |
+| 14 | `state/web-search/` | External grounding captures (problems / market / users / solutions) per `.claude/workflows/_web-search.md` — not competitor-page dumps (those stay in surface 8) |
 
 Skip empty negatives in chat, but **do** end the run with one compact block:
 

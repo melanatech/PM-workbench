@@ -241,6 +241,7 @@ will not memorize slash commands; the menu + skills are the product surface.
 | "Get this ready to launch" / "launch package" | `/build launch-package` |
 | "The roadmap changed" / features moved or were added | `/sync roadmap-update` |
 | "What are competitors doing" / "competitive scan" | `/discover competitive-scan` |
+| "Search the web for" / "market scan" / "how do others solve" / external grounding (problems · market · users · solutions) | skill `web-search` → `_web-search.md` (`state/web-search/`); if it's a brief/PRD ask, run explore-brief / prd-package instead |
 | "Update the strategy doc" / "strategy refresh" | `/report strategy-refresh` |
 | "I need to understand how X works" (product) | `/discover learn-product-flow` then often `/discover code-dive` |
 | "How does X work in the code" / "code dive" | `/discover code-dive` |
@@ -273,7 +274,8 @@ Meetings feed the registers. The registers feed the weekly update, Jira reconcil
 ## Key file map
 - `scripts/todo_register.py` — the only way `/todo` writes `registers/todos.csv` (IDs, dates and CSV quoting in code; refuses a changed header, lost rows, symlinks)
 - `registers/initiatives.csv` — the hub: one row per feature, tracking stage and linking every artifact about it. Seeded by `/capture` when product work is named; refined by `/build`. See CONNECTIONS.md for the full write/read map.
-- `inbox/` — new raw captures by type; `state/` — snapshots and cursors (what was already processed)
+- `inbox/` — new raw captures by type; `state/` — snapshots and cursors (what was already processed); `state/web-search/` — external grounding captures (see `_web-search.md`); `state/competitive/` — competitor page dumps
+- `scripts/web_search.py` — Bedrock-safe URL discovery (always before native WebSearch)
 - `outputs/` — reviewed work products by cadence/type; `archive/` — processed raw inputs
 - `reference/` — templates (incl. `templates/formatted/` — tagged Word/Excel templates where the TEMPLATE owns branding/formatting and Claude supplies only content via `scripts/render_template.py`; markdown fallback when none exists), metric definitions (one YAML per OKR metric), product knowledge, `user-research/` (indexed research summaries)
 - `learning/` — per-area product knowledge from deep-dives and code-dives

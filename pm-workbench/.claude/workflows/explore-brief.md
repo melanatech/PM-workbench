@@ -22,7 +22,9 @@ This is **not** a PRD package. No readiness score-as-PRD-gate, Feature Contract,
 
 **Step 1 — Gather.** Dispatch `prd-context-gatherer` with the preflight marker (it consumes `.context-preflight.json` for Prior workspace analysis — do not replace the script with ad-hoc Grep). In parallel, dispatch `internal-docs-reader` when wiki, user research, or shared-drive docs are likely relevant. **Do not draft options or the brief body before the gatherer returns** (and the docs reader, if dispatched). On `reuse_and_refresh`, spot-check the newer surface before locking the frame.
 
-**Step 2 — Frame (show before concepts).** From the grounding brief, write the problem frame in the reply (and later into the draft):
+**Step 1.5 — External grounding (web).** Follow `.claude/workflows/_web-search.md`. Run `python3 scripts/web_search.py` (not native WebSearch-only) and WebFetch for **problems, market/category, users, and solutions** relevant to the topic — unless the PM scoped fewer axes. Prefer help docs, launch posts, and public research over invented in-app tours. Write `state/web-search/YYYY-MM-DD-<slug>.md` when findings are consequential; index with `--kind web-search`. Reuse a same-day capture for the same slug when queries would not change. Mark unverified claims `[external::training]`. Workspace evidence still outranks web hits on conflict (rule 8).
+
+**Step 2 — Frame (show before concepts).** From the grounding brief **and** the web capture (if any), write the problem frame in the reply (and later into the draft):
 - Jobs-to-be-done hypotheses
 - In / out of scope
 - Non-goals (already-decided sibling work from decided-vs-open)
@@ -32,7 +34,7 @@ Show this frame **before** any concepts.
 
 **Step 3 — Gate.** If gatherer gaps are material (could change problem, audience, or scope) or the PM is newly owning the area with thin context: return a batched set of QUESTIONS and **wait**. Do not invent answers. If gaps are low-impact, mark `[NEEDS INPUT: …]` in the draft and continue.
 
-**Step 4 — Options.** After the frame (and after any gate answers): 2–4 concepts. For each: what job it serves, density/coverage fit if relevant, risks, what evidence would validate it. Competitive stress-test via `scripts/web_search.py` + WebFetch on **help docs and launch posts** — not fabricated in-app product tours. Mark unverified in-app claims `[external::training]`.
+**Step 4 — Options.** After the frame (and after any gate answers): 2–4 concepts. For each: what job it serves, density/coverage fit if relevant, risks, what evidence would validate it. Stress-test against the Step 1.5 **solutions** (and competitive) hits — deepen with `_web-search.md` if the capture was thin on solutions. Not fabricated in-app product tours.
 
 **Step 5 — Write.** Write `drafts/[slug]-product-brief.md` (slug from INIT name or topic). Outline:
 

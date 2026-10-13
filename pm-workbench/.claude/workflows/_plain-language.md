@@ -54,6 +54,9 @@ command — never a third improvised path.
   explore options / alternatives before a PRD: improvising a generic brainstorm
   skill or freeform chat that skips `prd-context-gatherer` — run
   `/discover explore-brief` instead
+- Native WebSearch-only (or inventing URLs) when external grounding is needed —
+  use `scripts/web_search.py` per `_web-search.md` and write `state/web-search/`
+  (or `state/competitive/` for competitive-scan)
 - Re-reading `repos/` for instrumentation/events/code behavior when
   `outputs/daily/` or `learning/` already has a dated analysis of that topic —
   cite the workspace analysis first (CLAUDE.md rule 25)

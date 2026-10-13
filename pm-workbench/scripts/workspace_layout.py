@@ -24,7 +24,7 @@ DATA_DIRS = (
     "inbox/meetings", "inbox/captures", "inbox/exports", "inbox/documents",
     "inbox/competitive", "inbox/slack", "inbox/discovery", "inbox/metrics",
     "inbox/walkthroughs",
-    "archive", "state", "state/competitive", "logs", "registers",
+    "archive", "state", "state/competitive", "state/web-search", "logs", "registers",
     "outputs/daily", "outputs", "outputs/monthly",
     "outputs/todo-proposals", "outputs/todo-drafts",
     "repos", "learning", "drafts", "prototypes", "roadmap", "reference/context",

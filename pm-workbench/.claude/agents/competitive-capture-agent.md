@@ -11,15 +11,15 @@ You are given a competitor's watchlist entry: **name + product areas to watch** 
 
 ## Why not only Claude WebSearch
 
-On Amazon Bedrock (and some company proxies), Claude's native **WebSearch** tool fails with errors like *"Bedrock does not support the web_search tool"*. That is an infrastructure gap, not a reason to BLOCK the scan or demand URLs from the PM.
+Shared recipe: `.claude/workflows/_web-search.md`. On Amazon Bedrock (and some company proxies), Claude's native **WebSearch** tool fails with errors like *"Bedrock does not support the web_search tool"*. That is an infrastructure gap, not a reason to BLOCK the scan or demand URLs from the PM.
 
-**Primary discovery path (always use this first for URL discovery):**
+**Primary discovery path (always use this first for URL discovery — never native WebSearch alone):**
 
 ```bash
 python3 scripts/web_search.py --json --max 8 "YOUR QUERY"
 ```
 
-This runs on the local machine (DuckDuckGo → Bing fallback), independent of Bedrock. Use several targeted queries per competitor. Prefer official help/docs domains in the query text.
+This runs on the local machine (DuckDuckGo → Bing fallback), independent of Bedrock. Use several targeted queries per competitor. Prefer official help/docs domains in the query text. Competitor page dumps stay in `state/competitive/`; general problem/market/user/solution grounding uses `state/web-search/` via the shared recipe.
 
 **Optional:** If native `WebSearch` works in this session, you may use it too — but **never** stop after a Bedrock/proxy WebSearch failure. Fall through to `scripts/web_search.py` immediately.
 

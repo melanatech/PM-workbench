@@ -34,6 +34,8 @@ SCAN_DIRS = (
     "outputs/todo-drafts",
     "learning",
     "drafts",
+    "state/web-search",
+    "state/competitive",
 )
 
 KIND_HINTS = (
@@ -42,6 +44,7 @@ KIND_HINTS = (
     ("code-dive", ("code-dive", "code dive", "code-findings")),
     ("product-flow", ("product-flow", "learn-product")),
     ("competitive", ("competitive", "competitor")),
+    ("web-search", ("web-search", "state/web-search")),
     ("strategy", ("strategy", "okr")),
     ("reconcile", ("reconcil",)),
     ("research", ("research",)),

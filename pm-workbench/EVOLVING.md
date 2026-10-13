@@ -45,7 +45,7 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 
 ## Changelog (newest first; one line per real architectural decision — not every edit)
 
-- 2026-10-13 — **Session token usage mining (phase 1):** `scripts/session_usage.py` scans Claude Code `~/.claude/projects/…-pm-live/*.jsonl` → `state/usage-history.csv` (L0+L1+L2a; opt-in `--classify` L2b with separate spend log). `workbench_metrics` Session tokens info rows; never "tokens saved." Cursor Agent out of scope.
+- 2026-10-13 — **Session token usage mining (phase 1):** `scripts/session_usage.py` scans Claude Code `~/.claude/projects/…-pm-live/*.jsonl` → `state/usage-history.csv` (L0+L1+L2a; opt-in `--classify` L2b via `claude -p` login / Haiku, not API key). `workbench_metrics` Session tokens info rows; never "tokens saved." Cursor Agent out of scope.
 
 - 2026-10-13 — **Cache-first context stitch (root fix):** `state/analysis-index.csv` + `context_preflight.py` + grounding/repos hooks; SOURCE-POLICY claim-type ladder + `primary_sources` (drafts/prototypes never evidence); `repo_profile.py` surface map; prototype source-derived baseline + `BASELINE-SOURCES.md` QA gate; reconciler accepts brief upstream. Rule 26. Trigger: stitch failures (ignored digests; circular brief citation; invented baseline).
 

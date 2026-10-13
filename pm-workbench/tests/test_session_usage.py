@@ -156,11 +156,8 @@ class BackfillTests(unittest.TestCase):
         self.assertIn("rows_appended=1", r.stdout)
         self.assertIn("code_dive", r.stdout)
 
-    def test_classify_without_key_skips(self):
-        env = {**dict(**{k: v for k, v in __import__("os").environ.items() if k != "ANTHROPIC_API_KEY"})}
-        # ensure no key
-        env.pop("ANTHROPIC_API_KEY", None)
-        # unlabeled turn
+    def test_classify_without_claude_cli_skips(self):
+        # unlabeled turn + --claude pointing at a missing binary
         _write_jsonl(
             self.projects / "sess-bbb.jsonl",
             [
@@ -196,16 +193,65 @@ class BackfillTests(unittest.TestCase):
                 str(self.projects),
                 "--backfill",
                 "--classify",
+                "--claude",
+                str(self.tmp / "no-such-claude-binary"),
             ],
             capture_output=True,
             text=True,
-            env=env,
             check=False,
         )
         self.assertEqual(r.returncode, 0, r.stderr)
         log = self.live / "logs" / "usage-classify-runs.csv"
         self.assertTrue(log.is_file())
         self.assertIn("skipped", log.read_text(encoding="utf-8"))
+        self.assertIn("claude CLI not on PATH", log.read_text(encoding="utf-8"))
+
+    def test_classify_via_fake_claude_p(self):
+        fake = self.tmp / "fake-claude"
+        fake.write_text(
+            "#!/bin/sh\n# echo last arg-ish: print a valid label\necho lookup\n",
+            encoding="utf-8",
+        )
+        fake.chmod(0o755)
+        _write_jsonl(
+            self.projects / "sess-ccc.jsonl",
+            [
+                {
+                    "type": "user",
+                    "uuid": "u3",
+                    "timestamp": "2026-10-11T13:00:00.000Z",
+                    "message": {"role": "user", "content": "vague unlabeled ask"},
+                },
+                {
+                    "type": "assistant",
+                    "uuid": "a3",
+                    "timestamp": "2026-10-11T13:00:05.000Z",
+                    "message": {
+                        "role": "assistant",
+                        "usage": {
+                            "input_tokens": 11,
+                            "output_tokens": 6,
+                            "cache_creation_input_tokens": 0,
+                            "cache_read_input_tokens": 0,
+                        },
+                    },
+                },
+            ],
+        )
+        n, _ = session_usage.backfill(
+            self.live,
+            projects_dir=self.projects,
+            classify=True,
+            claude_bin=str(fake),
+        )
+        self.assertGreaterEqual(n, 1)
+        with (self.live / "state" / "usage-history.csv").open(encoding="utf-8") as fh:
+            rows = [r for r in csv.DictReader(fh) if r["message_uuid"] == "a3"]
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["category"], "lookup")
+        self.assertEqual(rows[0]["category_source"], "l2b")
+        log = (self.live / "logs" / "usage-classify-runs.csv").read_text(encoding="utf-8")
+        self.assertIn("via claude -p", log)
 
 
 class MetricsUsageRowsTests(unittest.TestCase):

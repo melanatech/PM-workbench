@@ -9,7 +9,7 @@ The system needs its own product management. One line per item; move to EVOLVING
 - [x] First-run live workspace bootstrap (`scripts/create_live_workspace.py` + `NEW-USER-SETUP.md`); scheduled wrapper uses `--permission-mode dontAsk` (Claude Code 2.1+ rejects `--permission-prompts`)
 - [ ] Validate an approved browser read path against real chat/dashboard sources (not tested end-to-end yet); use `npx --yes @playwright/mcp@latest` in live `.mcp.json`, not `npm install -g`
 - [x] Competitive-scan URL discovery on Bedrock: `scripts/web_search.py` (client-side) — native Claude WebSearch stays unsupported on Bedrock; do not re-open as "ask PM for URLs"
-- [ ] Optional: wire the same `web_search.py` fallback into other WebSearch-heavy agents if Bedrock errors show up there
+- [x] First-class web search: `_web-search.md` recipe, `state/web-search/`, fan-out + `web-search` index kind, skill; explore-brief / prd-package search problems · market/category · users · solutions
 - [x] `extract_document.sh` implemented (textutil + pdftotext/PDFKit); process-inbox prefers it and fails fast on exit 2/3
 - [ ] Implement and test the manual-fallback replacements for `log_metrics.py` and `render_template.py` when a real use case warrants them
 - [ ] Confirm an approved, access-controlled company backup destination for registers/context/logs; until then leave snapshots unconfigured (never Git)

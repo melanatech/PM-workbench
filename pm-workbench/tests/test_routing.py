@@ -205,6 +205,7 @@ class RoutesTableTests(unittest.TestCase):
         self.assertIn("grounded in", scan)
         self.assertIn("state/competitive", scan)
         self.assertIn("web_search.py", scan)
+        self.assertIn("_web-search.md", scan)
         self.assertIn('Should I create the competitive-log?', scan)
         capture = (WORKBENCH / ".claude" / "agents" / "competitive-capture-agent.md").read_text(
             encoding="utf-8"
@@ -221,6 +222,35 @@ class RoutesTableTests(unittest.TestCase):
         self.assertIn("Customer alternatives / workarounds", capture)
         self.assertIn("web_search.py", capture)
         self.assertIn("state/competitive", capture)
+        self.assertIn("_web-search.md", capture)
+
+    def test_web_search_first_class_recipe_and_brief_prd_axes(self):
+        recipe = (WORKBENCH / ".claude" / "workflows" / "_web-search.md").read_text(encoding="utf-8")
+        self.assertIn("web_search.py", recipe)
+        self.assertIn("state/web-search/", recipe)
+        for axis in ("Problems", "Market / category", "Users", "Solutions"):
+            self.assertIn(axis, recipe)
+        fan = (WORKBENCH / ".claude" / "workflows" / "_fan-out.md").read_text(encoding="utf-8")
+        self.assertIn("state/web-search/", fan)
+        explore = (WORKBENCH / ".claude" / "workflows" / "explore-brief.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("_web-search.md", explore)
+        self.assertIn("problems, market/category, users, and solutions", explore)
+        prd = (WORKBENCH / ".claude" / "workflows" / "prd-package.md").read_text(encoding="utf-8")
+        self.assertIn("_web-search.md", prd)
+        self.assertIn("problems, market/category, users, and solutions", prd)
+        skill = (WORKBENCH / ".claude" / "skills" / "web-search" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("_web-search.md", skill)
+        self.assertIn("web_search.py", skill)
+        index_src = (WORKBENCH / "scripts" / "analysis_index.py").read_text(encoding="utf-8")
+        self.assertIn('"web-search"', index_src)
+        layout = (WORKBENCH / "scripts" / "workspace_layout.py").read_text(encoding="utf-8")
+        self.assertIn("state/web-search", layout)
+        preflight = (WORKBENCH / "scripts" / "context_preflight.py").read_text(encoding="utf-8")
+        self.assertIn("state/web-search", preflight)
 
     def test_optional_company_product_ui_base_docs(self):
         """Org-agnostic recipe for private UI mocks under live repos/ — no company remotes in kit."""

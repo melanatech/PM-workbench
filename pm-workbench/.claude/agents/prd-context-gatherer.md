@@ -25,6 +25,7 @@ The main session must have run `scripts/context_preflight.py` and written `state
 4. `learning/[area]/` — product-flow and code-findings files if they exist
 5. `state/okr-history.csv` — relevant baseline metric(s)
 6. `outputs/monthly/competitive-log.md` — if relevant
+6b. `state/web-search/` and `state/competitive/` hits from preflight — cite path + date; do **not** run web search yourself (Read-only; parent session runs `_web-search.md`)
 7. `registers/decisions.csv` and `registers/risks.csv`
 8. `prototypes/[feature]/` — note existence + short state summary
 

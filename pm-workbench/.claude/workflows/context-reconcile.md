@@ -11,8 +11,9 @@ Backfill: $ARGUMENTS
 
 This is **not** `/sync jira-reconcile` (board) and **not** `/sync ripple-check` (one new change). Use this when: todos feel wrong, open questions are scattered, competitive/research insights never hit INIT notes, or fan-out was added after a big archive week.
 
-## Step 0 — scope
+## Step 0 — preflight + scope
 
+0. `python3 scripts/context_preflight.py --root <live> --topic "context-reconcile $ARGUMENTS"` — prefer indexed analyses when backfilling product facts; append index rows for any new durable analyses this run produces.
 1. Default window: last **30 days** of `archive/` + related `outputs/daily/`, `outputs/monthly/`, `reference/user-research/`, `learning/`, plus always-read living files and registers below.
 2. If `$ARGUMENTS` names a focus (`todos`, `questions`, `competitive`, `initiatives`, a topic, or `since YYYY-MM-DD`), narrow to that. If it says `full`, widen but still cap (step 1).
 3. Print one line: window + focus + approx file count you will open (max **12** source files in Standard; if more are relevant, list excluded and offer to widen — never silently fan out across the whole archive).

@@ -7,7 +7,7 @@ Execution mode: **standard** (fast=0 reviewers, standard=1–2, deep=full panel 
 
 Launch package for: $ARGUMENTS
 
-**Step 0 — reconcile:** refresh current Jira scope and the approved Confluence PRD before anything else; the drift check is worthless against stale inputs.
+**Step 0 — preflight + reconcile:** `python3 scripts/context_preflight.py --root <live> --topic "$ARGUMENTS"` (cite PRD/launch/instrumentation hits). Then refresh current Jira scope and the approved Confluence PRD before anything else; the drift check is worthless against stale inputs.
 
 **Step 1 — dispatch to the `launch-drift-detector` subagent** (in `.claude/agents/`) with the approved PRD, current Jira scope + acceptance criteria, prototype notes (if in `prototypes/`), instrumentation plan, and any existing docs/marketing/support drafts. It reads all of it in its own isolated context and returns only the discrepancy report — keeping this session from filling up with every source document.
 

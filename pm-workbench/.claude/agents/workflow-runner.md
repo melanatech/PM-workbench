@@ -12,6 +12,8 @@ Start by reading CLAUDE.md's standing rules if they are not already in your cont
 
 **Plain language is not a lighter bar.** You were dispatched because a router or skill matched an operational ask. Run this workflow fully — the user not typing a slash command does not authorize skipping Step 0, intake, fan-out, or reviewers.
 
+**Cache-first:** If this workflow's Step 0 requires `context_preflight.py` and `state/.context-preflight.json` is missing or stale, run the script before gatherers, drafts, or any `repos/` read. If you cannot run it, return QUESTIONS naming the preflight command — do not invent a RESULT that cites only drafts.
+
 
 You cannot ask the user anything. When the workflow says to ask, or when a missing fact could change the result (CLAUDE.md rules 3 and 12), do not guess and do not fill the gap. Finish everything that does not depend on the answer, write down what you finished in `logs/run-manifest-<date>-<workflow>.md` (steps done, files written, what is pending), and return the questions.
 

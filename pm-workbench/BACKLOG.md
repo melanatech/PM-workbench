@@ -3,6 +3,8 @@
 The system needs its own product management. One line per item; move to EVOLVING.md's changelog when done. Add here whenever a workflow annoys you, breaks, over-asks for approval, or misses something — that friction log is what makes month-3 tuning real instead of guesswork.
 
 ## Known open items (from reviews, not yet built)
+- [ ] **Session token usage mining (separate from cache-first stitch):** `scripts/session_usage.py` — scan Claude Code `~/.claude/projects/…-pm-live/*.jsonl` for `message.usage`; append `state/usage-history.csv`; `--backfill` (L0+L1+L2a rules only); optional `--classify` Haiku L2b with spend log; `workbench_metrics` info rows. Do not invent "tokens saved." Attribution: Claude Code / pm-live only (Cursor Agent out of scope).
+- [ ] **Shared prototype package** (`prototypes/_shared/` + npm `file:` deps): real reuse across greenfield demos. Soft catalog is live (`reference/design/prototype-components.md`). Full checklist: `reference/design/DEFERRED-shared-prototype-package.md`. Trigger: copy-drift or a third similar prototype.
 - [x] First-run live workspace bootstrap (`scripts/create_live_workspace.py` + `NEW-USER-SETUP.md`); scheduled wrapper uses `--permission-mode dontAsk` (Claude Code 2.1+ rejects `--permission-prompts`)
 - [ ] Validate an approved browser read path against real chat/dashboard sources (not tested end-to-end yet); use `npx --yes @playwright/mcp@latest` in live `.mcp.json`, not `npm install -g`
 - [x] Competitive-scan URL discovery on Bedrock: `scripts/web_search.py` (client-side) — native Claude WebSearch stays unsupported on Bedrock; do not re-open as "ask PM for URLs"

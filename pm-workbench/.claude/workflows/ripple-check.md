@@ -5,6 +5,8 @@ argument-hint: [what happened - a decision, a Jira update, news, anything]
 
 Something changed: $ARGUMENTS
 
+**Step 0 — preflight:** `python3 scripts/context_preflight.py --root <live> --topic "$ARGUMENTS"`. Reuse prior analyses on the same topic before re-investigating product facts.
+
 This is for anything that happened outside the normal command flow — a hallway decision, a Slack thread, news that didn't go through `/capture meeting-closeout` or `/discover discovery`. Trace its implications the same way those commands would, then **apply the Tier 1 fan-out** (do not stop at a report).
 
 1. Check `registers/initiatives.csv` — does this touch anything at prd/prototype/experiment/launched stage? Name it and its current stage explicitly.

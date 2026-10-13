@@ -22,9 +22,21 @@ Following the same routing discipline as the rest of the system (haiku=trivial, 
 - **haiku** is intentionally unused here — nothing in this skill is a `/quick-close`-style trivial lookup.
 
 
-## Step 0 — decide type, complexity, and design source (ask if unclear)
+## Step 0 — preflight, source selection, type, complexity, design source
 
-Three decisions shape everything after. Infer what you can from the flow being prototyped and the Feature Contract; ask only what's genuinely ambiguous.
+**0a. Context preflight (required).** Run `python3 scripts/context_preflight.py --root <live> --topic "$ARGUMENTS"`. Read `state/.context-preflight.json` hits + `repo_map`. Reuse prior code-dive / product-flow analyses before dispatching `code-repo-explorer`. Do not open `repos/` until `allow_repos` is true.
+
+**0b. Source-derived baseline (third mode).** When any variant depicts **today**, use fixed id `baseline`. Greenfield apps that cannot run a private UI base still **port** screens from the highest-ranked source on SOURCE-POLICY's "what users see today" ladder:
+
+1. Read preflight `repo_map` rows for the surfaces being prototyped.
+2. Prefer live captures if present; else the **product** repo at a named commit; else the **mock** repo for surfaces the product repo doesn't cover (flag as dated snapshot).
+3. Port needed pieces into `prototypes/[name]/src/baseline/` (or equivalent). Write `prototypes/[name]/BASELINE-SOURCES.md` — one row per visible baseline element: element, source path:line or commit or capture, as-of date. Elements without a source are `[assumed]` here and labeled in the UI.
+4. **Fidelity:** baseline must not be worse or better than today. If a source shows an element exists (e.g. a placeholder tooltip), include it with that source's content.
+5. After clone/symlink of any repo, run `python3 scripts/repo_profile.py --root <live>`.
+
+"Not runnable" (private registry) means **port from source**, not "ignore the repo."
+
+Then decide type / complexity / design source. Infer what you can from the flow and Feature Contract; ask only what's genuinely ambiguous.
 
 **Type** — how will this run?
 - **static** — HTML/CSS/JS, opens as a file, no build. Right for a single screen or a quick clickable flow.
@@ -37,12 +49,13 @@ Three decisions shape everything after. Infer what you can from the flow being p
 
 **Design source** — does this pull in company look-and-feel?
 - Check `reference/design/` and `reference/links.csv` for: a **component library / design-system repo** (import and use its real components), and/or a **style-guide doc** (Figma/Confluence/PDF — extract tokens: colors, type, spacing, and match them). If both exist, prefer real components for structure and the style guide for tokens the components don't cover. If neither exists yet, build clean and generic and note in the README that design import is pending — never invent a fake "company style."
+- **Soft reuse (cross-prototype):** read `reference/design/prototype-components.md`. If a catalog row matches the flow (shell, table, filters, empty/error states), **copy or adapt** from the listed `prototypes/[source]/…` path into the new feature. Note the source in the new README (`Adapted from …`). Do not invent a shared npm package unless `prototypes/_shared/` already exists (see `reference/design/DEFERRED-shared-prototype-package.md` — deferred). If the catalog is empty or no row fits, skip — do not invent fake shared components.
 
-## Step 1 — ground it in the contract
+## Step 1 — ground it in the contract (and brief)
 
-Check `learning/` for this area. If `outputs/prds/[feature]/contract.md` exists, THAT is the spec the prototype implements — the contract, not a fresh reading of the whole PRD. If only a PRD exists, implement what it describes. If checking real product patterns needs a repo, dispatch `code-repo-explorer` rather than loading the repo here.
+Check `learning/` for this area. If `outputs/prds/[feature]/contract.md` exists, THAT is the spec the prototype implements — the contract, not a fresh reading of the whole PRD. If only a PRD exists, implement what it describes. If only a product brief exists (`drafts/*-product-brief.md`), ground the baseline in its "Starting point / what exists" and Concepts sections — still via primary sources / BASELINE-SOURCES, never by citing the brief as evidence. If checking real product patterns needs a repo, dispatch `code-repo-explorer` only after preflight allows it.
 
-**Required input.** If no Feature Contract or PRD exists, ask for the flow (screens, the one interaction that matters, what the test needs to learn) before scaffolding. A title is not a spec.
+**Required input.** If no Feature Contract, PRD, or brief exists, ask for the flow (screens, the one interaction that matters, what the test needs to learn) before scaffolding. A title is not a spec.
 
 ## Step 2 — scaffold to match the type
 
@@ -52,7 +65,9 @@ Every prototype, whatever the type, must include the states that make a test hon
 - **web / repo:** a real project (e.g. Vite + React) with `package.json`, lockfile, `src/`, a `.gitignore`, and a README stating the exact run command (`npm install && npm run dev`). `git init` locally. Structure it so imported components have a home (`src/components/`, `src/theme/`).
 - **mobile / repo:** an Expo project (`create-expo-app`) with the same README + git treatment, and — importantly — confirm it runs under **`expo start --web`** so it can be QA'd without a simulator. If the interaction truly can't be represented on web, say so and note that QA will be a build check + manual simulator checklist.
 
-If a **component library** is the design source, install/link it and build screens from its real components. If a **style-guide doc** is the source, extract tokens into `src/theme/` (or a `:root` block for static) and apply them.
+If a **component library** is the design source, install/link it and build screens from its real components. If a **style-guide doc** is the source, extract tokens into `src/theme/` (or a `:root` block for static) and apply them. If soft-reuse catalog rows matched, copy/adapt those files before inventing parallel ones.
+
+**Catalog update.** When this build creates a reusable piece (shell, shared table pattern, state kit) worth stealing later, append a row to `reference/design/prototype-components.md` (date, name, path, reuse-when, notes) in the same run — do not wait for a later cleanup pass.
 
 **Checkpoint after scaffold.** Even for loose static: `python3 scripts/prototype_checkpoint.py --path prototypes/[name] --label after-scaffold` (creates local `git init` if missing; never pushes). See Checkpoints below.
 
@@ -61,6 +76,8 @@ If a **component library** is the design source, install/link it and build scree
 ## Step 3 — QA: actually run it and look (do not skip, do not fake)
 
 This is the step that distinguishes a real prototype from a plausible-looking one. Run the bundled QA harness in `qa/` (see `qa/README.md` for prerequisites — it needs a local browser via Playwright, free/open-source, no API or cost — see note below).
+
+**Baseline source map gate:** if the prototype has a `baseline` variant (toggle/state/route), QA **fails** when `BASELINE-SOURCES.md` is missing or empty. Fix that before treating QA as passed.
 
 **What the harness does, per type:**
 - **static:** open the file, walk to every declared state, screenshot each, click every interactive element once, assert the DOM changes and no console error fires, confirm instrumentation labels are actually visible in each state.
@@ -112,9 +129,9 @@ Prototypes get **git checkpoints** so a bad revision can be rolled back without 
 - After restore, say the commit short hash and offer `git switch -c resume-<hash>` if editing continues.
 - List: `--list`. Do not invent Claude Code Plans / plan files for prototype work.
 
-## Step 5 — reconcile against the PRD
+## Step 5 — reconcile against upstream (brief or PRD)
 
-If `outputs/prds/[feature]/` exists, dispatch `prd-prototype-reconciler` to check what got built against what the PRD specified. Surface discrepancies both directions ("fix the prototype" vs. "building this surfaced something the PRD missed") and let me decide — don't auto-resolve.
+If a product brief (`drafts/*-product-brief.md`) **or** `outputs/prds/[feature]/` exists, dispatch `prd-prototype-reconciler` with that upstream. It accepts a brief or a PRD (not PRD-only). When only a brief exists, reconcile against "Starting point / what exists" and Concepts. Explicitly check the `baseline` variant against "what exists today" claims and against `BASELINE-SOURCES.md`. Surface discrepancies both directions and let me decide — don't auto-resolve.
 
 ## Step 6 — register + repo handoff
 

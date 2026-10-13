@@ -4,6 +4,8 @@ description: Retrieve OKR metrics (already calculated), log them, draft the thre
 
 Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
+**Step 0 — preflight:** `python3 scripts/context_preflight.py --root <live> --topic "okr $ARGUMENTS"`. Reuse prior OKR digests for framing; still pull live dashboard numbers per rule 5 (never invent).
+
 This is a workflow prompt, not a connected dashboard integration. Use only an
 approved, verified read path, a value/export I provide, or an **internal**
 document that already shows the calculated metric with an as-of date (MBR deck,

@@ -5,6 +5,8 @@ argument-hint: "[leave start date] [return date]"
 
 I was on leave from $ARGUMENTS. Build me a "what changed" brief — organized by significance, NOT chronologically.
 
+**Step 0 — preflight:** `python3 scripts/context_preflight.py --root <live> --topic "return-brief $ARGUMENTS"`. Feed hits into the return-window-scanner so it does not re-derive already-indexed analyses from the leave window.
+
 **Gather** (browser for Slack/dashboards; paste-in or internal-tool pulls for Jira/Confluence; I'll drop anything else into `inbox/`) — my bookmarked Slack searches scoped to the leave window, Jira epics/tickets in my area, Confluence docs modified during the window, any leadership announcements I've dropped into `inbox/`.
 
 **Dispatch all of it, plus any leadership decks/org docs on the shared drive or the file browser, to the `return-window-scanner` subagent.** This is the heaviest read in the whole kit — weeks of chat/Jira/wiki/shared-drive history has no reason to sit in this session once extracted.

@@ -29,6 +29,7 @@ DATA_DIRS = (
     "outputs/todo-proposals", "outputs/todo-drafts",
     "repos", "learning", "drafts", "prototypes", "roadmap", "reference/context",
     "reference/templates", "reference/metric-definitions", "reference/user-research",
+    "reference/design",
 )
 
 # Kit paths that --dev-links may symlink back to KIT_ROOT.
@@ -160,6 +161,23 @@ def seed_empty_registers(destination, dry_run=False):
     if not dry_run and not os.path.exists(os.path.join(target, run_log)):
         with open(os.path.join(target, run_log), "w", encoding="utf-8") as handle:
             handle.write("timestamp,workflow,approx_duration,success,note\n")
+    # Analysis cache index (header only)
+    analysis_rel = "state/analysis-index.csv"
+    analysis_path = os.path.join(target, analysis_rel)
+    written.append(analysis_rel)
+    if not dry_run:
+        os.makedirs(os.path.join(target, "state"), exist_ok=True)
+        if not os.path.exists(analysis_path):
+            with open(analysis_path, "w", encoding="utf-8") as handle:
+                handle.write(
+                    "topic_key,initiative_ids,kind,path,as_of_date,one_line,"
+                    "primary_sources,source_workflow,indexed_date\n"
+                )
+    preflight_log = "logs/context-preflight.csv"
+    written.append(preflight_log)
+    if not dry_run and not os.path.exists(os.path.join(target, preflight_log)):
+        with open(os.path.join(target, preflight_log), "w", encoding="utf-8") as handle:
+            handle.write("timestamp,topic,recommendation,hit_count,allow_repos\n")
     return written
 
 

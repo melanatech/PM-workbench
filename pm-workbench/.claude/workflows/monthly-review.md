@@ -8,6 +8,8 @@ This is the monthly check on the workbench itself. It measures two things first:
 
 Input: $ARGUMENTS (optional: a month, e.g. `2026-10`; default is today)
 
+**Step 0 — preflight:** `python3 scripts/context_preflight.py --root <live> --topic "monthly-review $ARGUMENTS"`. Cite prior monthly reviews / workbench-health digests when synthesizing the period narrative (counts still come only from `workbench_metrics.py`).
+
 ## Steps
 
 1. **Take the snapshot.** Run `python3 scripts/workbench_metrics.py --snapshot` (add `--today YYYY-MM-DD` only if I named a date). Use ONLY the numbers it prints. Never estimate, round, or fill in a count yourself. A metric shown as `n/a` is a missing source, not a zero; say so.

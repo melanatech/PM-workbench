@@ -7,6 +7,8 @@ Execution mode: **standard** (fast=0 reviewers, standard=1–2, deep=full panel 
 
 Research target: $ARGUMENTS
 
+**Step 0 — preflight:** `python3 scripts/context_preflight.py --root <live> --topic "$ARGUMENTS"`. Cite prior research plans / discovery hits before drafting a new plan. Index the package when written (`kind=research`).
+
 This system has no customer directory and no CRM access, and it must never invent one: it does NOT try to be a user-lookup tool and never outputs names of specific people. A name this workflow produced would be a fabrication in the exact format of a real query result. It produces the thinking around research: who to talk to, how to reach them, and what to ask. Three parts, as one package to `outputs/research/[topic]/`:
 
 **1. Screening criteria** — grounded in the feature and the evidence behind it (pull from `/discover discovery` / `registers/evidence.csv`):

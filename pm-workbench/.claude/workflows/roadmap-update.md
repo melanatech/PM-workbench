@@ -7,6 +7,8 @@ Execution mode: **standard** (fast=0 reviewers, standard=1–2, deep=full panel 
 
 Roadmap changes: $ARGUMENTS
 
+**Step 0 — preflight:** `python3 scripts/context_preflight.py --root <live> --topic "roadmap $ARGUMENTS"`. Cite prior roadmap/strategy digests before rewriting product facts across surfaces.
+
 The roadmap lives in more than one place, and a change that lands in only one of them is how versions drift. One input, every surface reconciled:
 
 1. **Parse per feature.** The input may cover several initiatives at once ("scorecards slips a sprint; export reliability enters Next"). Split into one change set per initiative, each cross-referenced against its `registers/initiatives.csv` row and linked decisions — never blur two features' changes together.

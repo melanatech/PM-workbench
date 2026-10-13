@@ -278,10 +278,14 @@ class BackfillTests(unittest.TestCase):
         self.assertIn("skipped", log.read_text(encoding="utf-8"))
         self.assertIn("claude CLI not on PATH", log.read_text(encoding="utf-8"))
 
-    def test_classify_via_fake_claude_p(self):
+    def test_classify_via_fake_claude_p_bulk(self):
         fake = self.tmp / "fake-claude"
+        # Emit one TSV line per numbered turn in the prompt
         fake.write_text(
-            "#!/bin/sh\n# echo last arg-ish: print a valid label\necho lookup\n",
+            "#!/bin/sh\n"
+            "# argv: -p <prompt> --model haiku --permission-mode dontAsk\n"
+            "prompt=\"$2\"\n"
+            "echo \"$prompt\" | awk '/^[0-9]+\\. /{c++} END{for(i=1;i<=c;i++) print i\"\\tlookup\"}'\n",
             encoding="utf-8",
         )
         fake.chmod(0o755)
@@ -323,7 +327,11 @@ class BackfillTests(unittest.TestCase):
         self.assertEqual(rows[0]["category"], "lookup")
         self.assertEqual(rows[0]["category_source"], "l2b")
         log = (self.live / "logs" / "usage-classify-runs.csv").read_text(encoding="utf-8")
-        self.assertIn("via claude -p", log)
+        self.assertIn("bulk", log)
+
+    def test_parse_bulk_labels(self):
+        parsed = session_usage._parse_bulk_labels("1\tlookup\n2: prototype\n3|capture\n", 3)
+        self.assertEqual(parsed, {1: "lookup", 2: "prototype", 3: "capture"})
 
 
 class MetricsUsageRowsTests(unittest.TestCase):

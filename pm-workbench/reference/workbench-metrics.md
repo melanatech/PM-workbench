@@ -27,7 +27,7 @@ Lead measures: **dropped balls**, then **decision quality**. Time saved is secon
 ### Session usage mining (Claude Code / pm-live only)
 
 1. Default backfill is **L0+L1+L2a** (zero model cost): per assistant message → preceding user turn → rules-based category. It scans **both** `~/.claude/projects/…-pm-live` and `…-PM-workbench` when present — Claude Code keys sessions by the folder you opened (often the kit multi-root), so pm-live-only misses most real work.
-2. Opt-in **`--classify` (L2b)**: Haiku labels only turns L2a left as unlabeled `other`. Uses your existing Claude Code login via `claude -p --model haiku` (override binary with `--claude` / `CLAUDE_BIN`). No `ANTHROPIC_API_KEY`. Each classify call is logged in `logs/usage-classify-runs.csv` (separate from product usage rows; CLI usually does not return token counts). Labels cache in `state/usage-label-cache.json` by user-message uuid.
+2. Opt-in **`--classify` / `--reclassify` (L2b)**: Haiku labels turns L2a left as `other`. Uses Claude Code login via **bulk** `claude -p --model haiku` (~20 turns per call, short excerpts). No `ANTHROPIC_API_KEY`. Per-turn outcomes log in `logs/usage-classify-runs.csv`; labels cache in `state/usage-label-cache.json` by user-message uuid.
 3. Summary without snapshot: `python3 scripts/session_usage.py --root ~/pm-live --summary`.
 4. Do **not** invent a "tokens saved by cache-first" figure from these rows. Trends vs `logs/context-preflight.csv` reuse share can be compared later by hand; never fabricate a dollar savings.
 

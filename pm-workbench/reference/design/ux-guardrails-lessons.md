@@ -33,10 +33,10 @@ Use these unless the Feature Contract explicitly forbids them:
 
 | Date | Theme | Fix | Seen in |
 |---|---|---|---|
-| 2026-10-13 | Hover-only KPI info | Click + keyboard; Esc dismisses; labelled control | `explanations-transactions` (concept 1 vs baseline) |
-| 2026-10-13 | Side panel covering prototype controls | Non-modal side drawer starts below `--bar-h`; page shifts on wide screens | `explanations-transactions` concepts 2/4 |
-| 2026-10-13 | Sort vs explain on header click | Explain mode uses separate explain targets; does not sort | `explanations-transactions` concept 4 |
-| 2026-10-13 | Guardrails needs real HTML | Snapshot rendered DOM (product only) via Playwright before `check` | `explanations-transactions/qa/render-snapshots.mjs` |
+| 2026-10-13 | Hover-only KPI info | Click + keyboard; Esc dismisses; labelled control | `prototypes/[feature]` (concept vs baseline) |
+| 2026-10-13 | Side panel covering prototype controls | Non-modal side drawer starts below `--bar-h`; page shifts on wide screens | `prototypes/[feature]` |
+| 2026-10-13 | Sort vs explain on header click | Explain mode uses separate explain targets; does not sort | `prototypes/[feature]` |
+| 2026-10-13 | Guardrails needs real HTML | Snapshot rendered DOM (product only) via Playwright before `check` | `prototypes/[feature]/qa/render-snapshots.mjs` |
 | 2026-10-13 | Shared kit as learning surface | Drawer / HelpPopover / InfoTip / ScenarioGuide live in `prototypes/_shared`; lessons + kit bump = inheritance | `@pm-live/prototype-kit` |
 
 _Add rows when Guardrails fails again — do not only fix in chat._

@@ -43,24 +43,15 @@ never a number "roughly matching" what this file's intuition above would suggest
 so the *inputs* to that script (especially `mde_relative`) get chosen for the right reason, not so
 its *output* gets second-guessed or reproduced by hand.
 
-## GoDaddy-specific: alpha and achievement-badge credit factors
+## Platform credit factors (record locally)
 
-the experiment platform ties the `alpha_value` an experiment pre-registers to an achievement badge
-(Bronze/Silver/Gold/Platinum), and that badge sets what fraction of a win's iGCR actually gets
-credited when it's annualized — 0 = none, 1 would be all of it:
+Some experiment platforms tie the pre-registered alpha to an internal badge or credit factor.
+That factor changes how much of a statistically significant win counts toward an annualized
+impact number. The incentive can push alpha looser than statistical convention, not tighter:
+a conventional 0.05 level may already clear every tier, so the risk is registering too loose
+an alpha and receiving no credit.
 
-| Badge | Alpha requirement | iGCR credit factor (0 = none, higher = more) |
-|---|---|---|
-| Bronze | frequentist, alpha > 0.2 | 0 |
-| Silver | frequentist, alpha ≤ 0.2 (+ documented hypothesis, ≤3 decision + ≤3 guardrail metrics) | 0.335 |
-| Gold | Silver requirements + alpha ≤ 0.1 | 0.433 |
-| Platinum | Gold requirements + configured/measured on the experiment platform | 0.53 |
-
-This is a real business incentive around alpha that's distinct from pure statistical rigor — and
-it runs the opposite direction from what you'd guess. The conventional 0.05 significance level
-already clears every tier's alpha bar (0.05 ≤ 0.1), so there's no credit for going tighter than
-0.1; the actual risk this table creates is registering too *loose* an alpha. A Bronze-badged win
-(alpha > 0.2) gets zero iGCR credit no matter how real the effect is. Source: Confluence
-"Experiment Governance & Validation Guidelines" (space REN, page 4140533098) — check that page
-directly before citing exact numbers in a real proposal; GoDaddy governance pages change without
-this file being told.
+Do not copy a company's badge table, governance page, or credit factors into this public file.
+Record the live table, its source link, and an as-of date in the live workspace (for example
+`.claude/CLAUDE.local.md` or a note you do not commit). Check that source before citing exact
+numbers in a proposal.

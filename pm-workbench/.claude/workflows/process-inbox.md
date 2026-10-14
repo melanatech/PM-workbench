@@ -29,7 +29,7 @@ Each clip’s frontmatter (when `.md`) carries `source_url` and `access_path` �
 
 Work through every unprocessed file listed by intake_status (and any still in `inbox/` not in `state/processed-files.txt`).
 
-**Name resolution (before routing instructions).** If the PM's message or a capture names a surface ("add to the term registers", "update the events digest", "PPP"), look up `reference/context/workspace-aliases.md` first, then `python3 scripts/context_preflight.py --root "$(pwd)" --topic "<phrase>"`. Do **not** guess the nearest-sounding file. If still ambiguous, ask once.
+**Name resolution (before routing instructions).** If the PM's message or a capture names a surface ("update the events digest", "the weekly scorecard"), look up `reference/context/workspace-aliases.md` first, then `python3 scripts/context_preflight.py --root "$(pwd)" --topic "<phrase>"`. Do **not** guess the nearest-sounding file. If still ambiguous, ask once.
 
 **Incomplete transcripts.** If a meeting capture has frontmatter `incomplete: true`, or a multi-speaker transcript has no speaker labels, do **not** close it out silently. Ask once to recapture with the current clipper (or drop a `.vtt`/`.docx` if download is enabled). Continue the rest of the inbox. If the PM says "proceed anyway," mark the summary provisional and never invent COM owners from unlabeled speakers — use `[NEEDS INPUT]`.
 

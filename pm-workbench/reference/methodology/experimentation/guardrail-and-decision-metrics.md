@@ -31,12 +31,12 @@ regressions" is not. If a design's primary metric measures *depth* (does more, o
 converting), it needs a *reach* guardrail (converts at all) — a depth win bought by quietly losing
 reach is exactly the kind of failure a vague guardrail would miss and a specific one catches.
 
-## iGCR eligibility, conceptually
+## Credited annualized impact, conceptually
 
-Not every significant win becomes an annualized revenue number. iGCR (incremental GCR) requires
-the *decision* metric itself to be a GCR-shaped conversion/funnel metric, statistically
-significant, with the experiment's achievement badge (driven by its pre-registered alpha) setting
-what fraction of the annualized number actually gets credited — see `sample-size-and-power.md`'s
-badge/credit-factor table for the literal thresholds. This section only exists to explain why
-the eligibility gate exists at all: it's a filter against claiming full annualized revenue for
-wins that don't actually meet the rigor bar for it, not an arbitrary bureaucratic hurdle.
+Not every significant win becomes an annualized revenue number. A credited impact figure usually
+requires the *decision* metric itself to be a revenue-shaped conversion or funnel metric,
+statistically significant, with the platform's badge or credit factor (driven by the
+pre-registered alpha) setting what fraction of the annualized number actually gets counted.
+See `sample-size-and-power.md` ("Platform credit factors"). The eligibility gate exists to stop
+a full annualized claim for a win that does not meet the rigor bar — record your platform's
+thresholds in the live workspace, not in this file.

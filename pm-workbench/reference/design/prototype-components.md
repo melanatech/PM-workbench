@@ -21,7 +21,8 @@ When a prototype ships a piece worth stealing later, **append a row** in the sam
 | 2026-10-13 | Scenario Guide (evaluator panel) | `prototypes/_shared` → `ScenarioGuide` | Multi-concept / multi-persona demos | in `_shared` | Scripts stay in the feature app; see `_scenario-guide.md` |
 | 2026-10-13 | Drawer / HelpPopover / InfoTip | `prototypes/_shared` | Dialogs, column help, KPI info | in `_shared` | Guardrails: Esc, focus return, click+keyboard |
 | 2026-10-13 | Sortable table shell | `prototypes/_shared` → `SortableTable` | Simple sortable tables | in `_shared` | Concept-heavy tables may stay local |
-| 2026-10-13 | Report explanations shell | `prototypes/explanations-transactions/src/` | Transactions-style report concept tests | soft copy | Concept + state bar; KPI strip; consumer of kit |
+
+Company-specific prototypes stay in the live catalog (`~/pm-live/reference/design/prototype-components.md`), not in this seed.
 
 _Add rows when a build ships something worth stealing._
 

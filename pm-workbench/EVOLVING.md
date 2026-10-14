@@ -16,7 +16,7 @@ CLAUDE.md is read every session for day-to-day operating rules. This file is dif
 - Machine + install rights: [OS, npm/Python, editor]
 - Actual tools: [chat, email, meetings, dashboards, behavior analytics, experiment platform, shared drive]
 - Customer records/CRM: **none, by design** — the kit never looks up or names people (see `/research-plan`)
-- Browser access: [`claude --chrome` if permitted, else the Playwright/CDP bridge, else paste-ins] — see SETUP.md
+- Browser access: [Workbench Clipper for capture; Atlassian or Slack MCP when approved; Playwright/CDP bridge for logged-in reads; `claude --chrome` only if your plan allows it] — see SETUP.md
 
 **If any of the above changes** (a new connector gets approved, a new tool gets adopted), that's a reason to revisit the architecture, not just patch around it — a newly available chat connector, for instance, might replace `discovery-source-reader`'s reliance on hand-fed browser content with something more direct.
 
@@ -81,6 +81,8 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 - 2026-10-07 — **Intake RESULT compact:** process-inbox Step 0 still must run `intake_status.py`; user-facing RESULT gets one summary line only (`Intake: pulled N…; M unprocessed`). Full stdout stays in thinking/logs — no paste-code-to-users. Trigger: RESULT dumps of intake stdout.
 
 - 2026-10-06 — **Pattern borrow (methods only):** CLAUDE.md rule 4 + `_protocol` provenance tags `[hypothesis:]` / `[external::training]` → assumptions file; templates `pm-lifecycle-experiment`, `learning-entity-stubs/*`, `prototype-readiness-checklist` (worst-score-wins), `stakeholder-lenses`; thin hooks in prototype-build / prd-package Step 3.5 / meeting-prep; `## Provenance tagging` on existing reviewer/gatherer agents. Audited remaining Agency product agents (sprint-prioritizer, behavioral-nudge, product-manager) — **skip** this pass (overlap / low fit); no Agency install. **Reject:** self-improving instruction loop; kit NEW-USER docs-hub recipe; company PRDs/surveys/personas in kit; AI Factory plugin port. Tests: `tests/test_pattern_borrow.py`.
+
+- 2026-10-14 — **Context cold start:** `reference/context/_manifest.md` + `scripts/context_health.py` (missing / template-empty / stale). `/brief context-setup` mines existing material, then `scripts/chat_harvest.py` (PM turns only, via `transcripts.py`) and `scripts/memory_harvest.py` (list only, Tier 2). New templates: people, systems-map, audiences, writing-style, product-areas, and `kr-metric-map.md` as the OKR file. Fan-out is typed (`scripts/fanout_route.py`); N/A lists dropped; rules 23–24 live in `_fan-out.md`. Surface 13 gains `stale_since` (flag, do not rewrite). Claude in Chrome is optional, only if the plan allows it.
 
 - 2026-10-06 — **Optional company product UI base:** NEW-USER-SETUP §2a + CLAUDE.md Code/key map — clone private mock/replica outside the kit, symlink into live `repos/`, document in CLAUDE.local + links.csv; never commit company trees to kit git. `prototypes/` remains greenfield `/build prototype-build` path. No company remotes in the kit. Live E2E (2026-10-06): symlink + source code-dive OK; `npm install` needs private registry auth (documented); `code-dive` must not re-clone over symlink.
 
@@ -192,7 +194,7 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 
 ## Open questions / known fragilities (revisit periodically)
 
-- Whether `claude --chrome` or the Playwright/CDP fallback is actually in use, and whether that's changed since setup.
+- `claude --chrome` is optional and only if the plan allows it. Some enterprise plans do not include Claude in Chrome. The standing paths are the Workbench Clipper, Atlassian or Slack MCP, and the Playwright/CDP bridge (SETUP.md).
 - Whether your ticketing/wiki has gained a direct API path Claude can call (an approved integration or token) — would simplify several commands if so.
 - Register file sizes — check whether `/rotate-registers` has actually been run.
 - Whether `scripts/log_metrics.py` and `scripts/render_template.py` have been filled in past their stub state; `extract_document.sh` covers common formats including `.xlsx`/`.xlsm` (pptx, legacy `.xls`, and encrypted Office still manual).

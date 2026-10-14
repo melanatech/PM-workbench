@@ -294,8 +294,7 @@ Do these on non-sensitive data. Record pass/fail in `logs/setup-findings.md`.
       Downloads, then processes them). Or one-shot: `python3 scripts/pull_clips.py`.
       Optional background watcher (`bash scripts/install_clip_watcher.sh`) needs macOS
       Full Disk Access — skip it unless you want auto-move without Claude.
-2. **Claude in Chrome:** install per Anthropic; ask Claude Code to read one open
-   public tab without clicking.
+2. **Claude in Chrome (optional, if your plan allows it):** some enterprise plans do not include this extension. If yours does, install per Anthropic and ask Claude Code to read one open public tab without clicking. If it does not, skip this step and use the clipper, Atlassian or Slack MCP, and Playwright (step 3).
 3. **Playwright MCP:** put `.mcp.json` only in the live folder with
    `npx --yes @playwright/mcp@latest` and a Chrome debug profile. Ask Claude Code
    to list tabs. Confirm click/type stay denied in `.claude/settings.json`.

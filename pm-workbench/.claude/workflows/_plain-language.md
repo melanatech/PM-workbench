@@ -91,6 +91,9 @@ Plain language that matches a row **is** an instruction to run that workflow. Co
 | "Close out this meeting" / paste notes / "log this meeting" | `/capture meeting-closeout` |
 | Between meetings, 60 seconds or less / "quick capture" | `/quick-close` |
 | "Add / update / finish / drop a to-do" / "what's on my list" / "what should I be doing" / "help me do TODO-nnn" / "draft help for what is due" | `/todo` (`sweep` drafts for the few that are due) |
+| "Plan these to-dos" / "plan the queue" / "dispatch plan for TODO-nnn" / "what would it take to do these" | `/todo plan` |
+| "Dispatch the plan" / "run the approved to-do plan" / "draft these in parallel" | `/todo dispatch` |
+| "Which to-dos did I already finish" / "reconcile to-dos" / "mark the ones I already did" | `/todo reconcile` (propose only; `done` only after I confirm) |
 | Before a meeting, need to walk in ready / "prep me for" | `/brief meeting-prep` |
 | "Check the Jira board" / "is anything stale" / "board hygiene" | `/sync jira-reconcile` |
 | "What's new in discovery" / "any new themes" / "what are users saying" | `/discover discovery` |

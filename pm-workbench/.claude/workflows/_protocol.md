@@ -22,11 +22,17 @@ Do this silently. Do not print "checking routes.json", "reading the protocol", o
 ## 2. Before running
 
 - Read the workflow file for its execution mode (look for `Execution mode:` near the top; Fast, Standard, or Deep) and its required-input rules. If the line is missing, treat the workflow as **fast**.
-- **Deep:** print the usage estimate the workflow asks for and wait for a yes. **Standard:** print exactly one line — `Running <workflow> (Standard / <model>)…` — then **dispatch immediately** in the same turn (that line means work is starting, not waiting). **Fast:** dispatch with no preamble.
+- **Deep:** tell me to switch to Claude Code plan mode (Shift+Tab) for the usage estimate and the approval. Print the usage estimate the workflow asks for and wait for a yes. **Standard:** print exactly one line — `Running <workflow> (Standard / <model>)…` — then **dispatch immediately** in the same turn (that line means work is starting, not waiting). **Fast:** dispatch with no preamble.
 - If the workflow's own required-input rule says to ask me something before starting (a feature's problem statement, a date range, a file), ask it now, in one batch. Do not dispatch with the answers missing.
 - **Cache-first (consequential workflows):** if the workflow synthesizes product/tech/strategy facts (discover/*, build prd|prototype|experiment|launch, report weekly|okr|strategy|ship-signal|monthly-review, brief meeting-prep|return-brief, sync ripple|context-reconcile|roadmap), require Step 0 `python3 scripts/context_preflight.py --root <live> --topic "<args>"` before gatherer/draft/`repos/` reads. Paste one preflight line in RESULT. Do not dispatch the runner until preflight has been run in this session (or the workflow file embeds that Step 0 for the runner). See CLAUDE.md rule 26.
 - Write the marker for the run log: `printf '%s' '<cluster>:<workflow>' > state/.run-workflow` (create `state/` if absent). The Stop hook reads it and then removes it. Do not announce that you wrote the marker.
 - **Never stop on "ready."** Do not end a turn with "Ready to reprocess," "Ready when you are," "I can run process-inbox next," "Clean — ready," or any equivalent status line that implies the next step is obvious but not started. If the next action is clear (inbox is staged, I said reprocess/reset/go, prep finished), **dispatch or run it in this same turn**. The only allowed stops before work are: Deep yes/no, a required-input question, `state/PAUSE`, or a real ambiguity between workflows.
+
+## 2b. Gather plan
+
+Before the first tool call of a workflow step, list that step's reads. Batch the independent reads in one turn. Sequence only a read that depends on an earlier result. When this session has already read a file, pass the distilled brief to a subagent instead of having it re-read the raw file. Re-reading the same file for a different task is fine: prompt caching makes the repeat cheap, and the purposes differ. No session cache.
+
+`daily-brief`, `weekly-update`, and `jira-reconcile` each open with their own gather list. Other workflows follow this rule even when they do not repeat the list.
 
 ## 3. Dispatch
 
@@ -103,7 +109,7 @@ Governing rules for every mode:
 
 `.claude/workflows/routes.json` is the single source of truth for which model each workflow runs on. Change a model there, not in the workflow file. `/quick-close` and `/todo` are their own commands.
 
-- **Haiku** — `/quick-close`, `/todo`, and the workflows `get-started`, `daily-brief`, `rotate-registers`, `workbench-health`. `/todo propose` and `/todo work` hand judgment to the sonnet `todo-worker`.
+- **Haiku** — `/quick-close`, `/todo`, and the workflows `get-started`, `daily-brief`, `rotate-registers`, `workbench-health`. `/todo propose`, `/todo work`, `/todo plan`, `/todo dispatch`, and `/todo reconcile` hand judgment to the sonnet `todo-worker`.
 - **Sonnet** — day-to-day default (meetings, tracker hygiene, discovery, OKRs, updates, prototypes, launches).
 - **Opus** — `prd-package`, `strategy-refresh`, `experiment-package`.
 

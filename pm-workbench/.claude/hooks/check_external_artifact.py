@@ -3,10 +3,16 @@
 
 Watches files under outputs/external/ and any file whose frontmatter says
 ``audience: external``. Blocks register ids, workspace paths, /Users/ paths,
-internal tags ([NEEDS INPUT], [hypothesis], [external::training]), and
-codename phrases from reference/context/workspace-aliases.md.
+and internal tags ([NEEDS INPUT], [hypothesis], [external::training]).
 
-A file still marked ``status: template`` contributes no codenames.
+Alias rows in reference/context/workspace-aliases.md are classified by how an
+outside reader should meet the phrase, not banned as a set:
+
+- ``internal_only`` and an unclassified row block when the phrase appears.
+- ``expand`` and ``neutralize`` block until ``scripts/publish.py`` rewrites them.
+- ``preserve`` is left alone.
+
+A file still marked ``status: template`` contributes no aliases.
 Neutral citations (meeting name and date, uploaded file name, Jira key,
 Confluence title, Slack channel and date, dashboard name and as-of date)
 are not labels and are allowed.
@@ -19,6 +25,7 @@ import os
 import re
 import sys
 import zipfile
+from dataclasses import dataclass
 
 sys.path.insert(0, os.path.dirname(__file__))
 from _common import payload, root, rel, block, warn  # noqa: E402
@@ -51,8 +58,28 @@ def audience_is_external(text: str) -> bool:
     return re.search(r"(?m)^audience:\s*external\s*$", match.group(1)) is not None
 
 
-def load_alias_phrases(workspace: str | os.PathLike) -> list[str]:
+TREATMENTS = ("internal_only", "expand", "preserve", "neutralize")
+_TREATMENT_LIST = "internal_only, expand, preserve, or neutralize"
+
+
+@dataclass(frozen=True)
+class Alias:
+    """One alias row. ``treatment`` is empty when the row is unclassified."""
+
+    phrases: tuple[str, ...]
+    path: str
+    meaning: str
+    treatment: str
+    external_value: str
+
+
+def load_aliases(workspace: str | os.PathLike) -> list[Alias]:
+    """Read the live alias table. A template file contributes nothing."""
     path = os.path.join(workspace, "reference", "context", "workspace-aliases.md")
+    return load_alias_file(path)
+
+
+def load_alias_file(path: str | os.PathLike) -> list[Alias]:
     if not os.path.isfile(path):
         return []
     try:
@@ -62,20 +89,180 @@ def load_alias_phrases(workspace: str | os.PathLike) -> list[str]:
         return []
     if TEMPLATE_RE.search(text):
         return []
+    return _parse_alias_table(text)
+
+
+def load_alias_phrases(workspace: str | os.PathLike) -> list[str]:
+    """Phrases that must not appear raw in an external artifact.
+
+    ``preserve`` is omitted. ``internal_only``, ``expand``, ``neutralize``,
+    and unclassified rows are included so an untransformed alias still fails.
+    """
+    return blocking_phrases(load_aliases(workspace))
+
+
+def blocking_phrases(aliases: list[Alias]) -> list[str]:
     phrases: list[str] = []
+    for alias in aliases:
+        if alias.treatment == "preserve":
+            continue
+        phrases.extend(alias.phrases)
+    return phrases
+
+
+def alias_publish_problems(text: str, aliases: list[Alias]) -> list[str]:
+    """Name each alias that cannot be published as written.
+
+    ``expand`` and ``neutralize`` with an ``external_value`` are not problems:
+    :func:`apply_alias_treatments` rewrites them. ``preserve`` is not a problem.
+    """
+    problems: list[str] = []
+    seen: set[str] = set()
+    for alias in aliases:
+        for phrase in alias.phrases:
+            key = phrase.casefold()
+            if key in seen or not _phrase_in(text, phrase):
+                continue
+            seen.add(key)
+            if alias.treatment == "preserve":
+                continue
+            if alias.treatment == "internal_only":
+                problems.append(f'alias "{phrase}" is internal_only and cannot be published')
+            elif alias.treatment in ("expand", "neutralize"):
+                if not _usable_external_value(alias.external_value):
+                    problems.append(
+                        f'alias "{phrase}" is {alias.treatment} but has no external_value'
+                    )
+            else:
+                problems.append(
+                    f'alias "{phrase}" needs an external_treatment ({_TREATMENT_LIST})'
+                )
+    return problems
+
+
+def apply_alias_treatments(text: str, aliases: list[Alias]) -> str:
+    """Replace ``expand`` and ``neutralize`` phrases with ``external_value``."""
+    jobs: list[tuple[str, str]] = []
+    for alias in aliases:
+        if alias.treatment not in ("expand", "neutralize"):
+            continue
+        if not _usable_external_value(alias.external_value):
+            continue
+        for phrase in alias.phrases:
+            jobs.append((phrase, alias.external_value))
+    jobs.sort(key=lambda item: len(item[0]), reverse=True)
+    rendered = text
+    for phrase, value in jobs:
+        pattern = rf"(?i)(?<!\w){re.escape(phrase)}(?!\w)"
+        rendered = re.sub(pattern, lambda _match, value=value: value, rendered)
+    return rendered
+
+
+def describe_alias_hit(item: str, aliases: list[Alias]) -> str:
+    """Explain a blocked alias. Other labels are returned unchanged."""
+    folded = item.casefold()
+    for alias in aliases:
+        if folded not in {phrase.casefold() for phrase in alias.phrases}:
+            continue
+        if alias.treatment == "internal_only":
+            return f"{item} — internal_only; remove it before an outside reader sees it"
+        if alias.treatment in ("expand", "neutralize"):
+            return (
+                f"{item} — {alias.treatment}; run scripts/publish.py "
+                "so the external_value replaces it"
+            )
+        return f"{item} — needs an external_treatment ({_TREATMENT_LIST})"
+    return item
+
+
+def _parse_alias_table(text: str) -> list[Alias]:
+    """Parse the Phrase table. Extra columns are treatment and value.
+
+    A three-column row has an empty treatment, which blocks publishing.
+    Lines inside fenced code blocks, and any table whose header is not
+    ``Phrase``, are not aliases. A blank line ends the Phrase table.
+    """
+    visible: list[str] = []
+    fenced = False
     for line in text.splitlines():
+        if line.strip().startswith("```"):
+            fenced = not fenced
+            continue
+        if not fenced:
+            visible.append(line)
+    header_at = None
+    for index, line in enumerate(visible):
         if not line.startswith("|"):
             continue
-        cell = line.strip().strip("|").split("|")[0].strip()
-        if not cell or cell.casefold() == "phrase" or set(cell) <= set("-: "):
+        cells = _table_cells(line)
+        if cells and cells[0].strip().strip("`").casefold() == "phrase":
+            header_at = index
+            break
+    aliases: list[Alias] = []
+    rows = visible if header_at is None else visible[header_at + 1 :]
+    for line in rows:
+        if header_at is not None and not line.startswith("|"):
+            if line.strip() == "":
+                break
             continue
-        if cell.startswith("["):
+        if not line.startswith("|"):
             continue
-        for part in cell.split("/"):
-            phrase = part.strip().strip("`")
-            if len(phrase) >= 3:
-                phrases.append(phrase)
-    return phrases
+        cells = _table_cells(line)
+        if not cells:
+            continue
+        raw_phrase = cells[0].strip()
+        if not raw_phrase or _is_separator(raw_phrase) or raw_phrase.strip("`").casefold() == "phrase":
+            continue
+        phrases = _phrases_from_cell(raw_phrase)
+        if not phrases:
+            continue
+        path = cells[1].replace("`", "").strip() if len(cells) > 1 else ""
+        meaning = cells[2].strip() if len(cells) > 2 else ""
+        treatment = _clean_treatment(cells[3]) if len(cells) > 3 else ""
+        external_value = _clean_value(cells[4]) if len(cells) > 4 else ""
+        aliases.append(Alias(phrases, path, meaning, treatment, external_value))
+    return aliases
+
+
+def _table_cells(line: str) -> list[str]:
+    return [cell.strip() for cell in line.strip().strip("|").split("|")]
+
+
+def _is_separator(cell: str) -> bool:
+    return bool(cell) and set(cell) <= set("-: ")
+
+
+def _phrases_from_cell(cell: str) -> tuple[str, ...]:
+    if cell.strip().startswith("["):
+        return ()
+    phrases: list[str] = []
+    for part in cell.split("/"):
+        phrase = part.strip().strip("`")
+        if len(phrase) >= 3:
+            phrases.append(phrase)
+    return tuple(phrases)
+
+
+def _clean_treatment(cell: str) -> str:
+    token = cell.strip().strip("`").casefold().replace(" ", "")
+    if token in TREATMENTS:
+        return token
+    return ""
+
+
+def _clean_value(cell: str) -> str:
+    return cell.strip().strip("`")
+
+
+def _usable_external_value(value: str) -> bool:
+    text = value.strip()
+    if not text:
+        return False
+    return not text.casefold().startswith("[needs input")
+
+
+def _phrase_in(text: str, phrase: str) -> bool:
+    return re.search(rf"(?i)(?<!\w){re.escape(phrase)}(?!\w)", text) is not None
 
 
 def find_banned(text: str, phrases: list[str] | None = None) -> list[str]:
@@ -135,18 +322,23 @@ def main() -> None:
         text = external_text(full, relative)
         if text is None:
             sys.exit(0)
-        found = find_banned(text, load_alias_phrases(root()))
+        aliases = load_aliases(root())
+        found = find_banned(text, blocking_phrases(aliases))
         if not found:
             sys.exit(0)
         lines = [
             f"EXTERNAL ARTIFACT BLOCKED in {relative}",
-            "Workspace-only labels cannot ship to an outside reader:",
+            "These labels cannot ship to an outside reader:",
         ]
-        lines.extend(f"  - {item}" for item in found)
+        lines.extend(f"  - {describe_alias_hit(item, aliases)}" for item in found)
         lines.append(
-            "Rewrite them as neutral citations (meeting name and date, uploaded file name, "
-            "Jira key, Confluence page, Slack channel and date, or dashboard name and as-of date) "
-            "or run scripts/publish.py. Claims stay; these labels do not."
+            "Rewrite a register id, workspace path, or internal tag as a neutral citation "
+            "(meeting name and date, uploaded file name, Jira key, Confluence page, "
+            "Slack channel and date, or dashboard name and as-of date), or run scripts/publish.py. "
+            "An alias is classified by external_treatment: internal_only (remove it), "
+            "expand or neutralize (publish.py replaces it with external_value), "
+            "or preserve (leave a phrase an outside reader understands). "
+            "An unclassified alias blocks publishing until you classify it."
         )
         block("\n".join(lines))
     except SystemExit:

@@ -5,6 +5,12 @@ The internal draft stays untouched. Register ids, workspace paths, and
 internal tags in that draft are rewritten into citations an outside reader
 can recognize. A ``*.sources.md`` sidecar keeps the id-to-label map.
 
+Workspace aliases are not a blanket ban. ``external_treatment`` on each row
+of ``reference/context/workspace-aliases.md`` is ``internal_only`` (block),
+``expand`` or ``neutralize`` (replace with ``external_value``), or
+``preserve`` (leave the phrase). A missing or unknown treatment blocks
+publishing and names the alias.
+
 Citations are links only when ``reference/context/audiences.md`` says this
 audience can open that system. A missing file, or one still marked
 ``status: template``, grants no links.
@@ -150,6 +156,11 @@ def publish_file(
     if placeholders:
         raise NeedsInputError(placeholders)
     meta, body = _split_frontmatter(raw)
+    aliases = external_artifact.load_aliases(root)
+    alias_problems = external_artifact.alias_publish_problems(body, aliases)
+    if alias_problems:
+        raise PublishError("Publishing blocked: " + "; ".join(alias_problems))
+    body = external_artifact.apply_alias_treatments(body, aliases)
     chosen = formats or _formats_from(meta.get("formats", ""))
     if not chosen:
         chosen = ["md"]
@@ -160,6 +171,9 @@ def publish_file(
     access = load_access(root / "reference" / "context" / "audiences.md", name)
     workspace = Workspace.load(root)
     published_body, footnotes = neutralize(body, workspace, access)
+    alias_problems = external_artifact.alias_publish_problems(published_body, aliases)
+    if alias_problems:
+        raise PublishError("Publishing blocked: " + "; ".join(alias_problems))
     external = "\n".join([
         "---",
         "audience: external",

@@ -19,7 +19,7 @@ that local file too. This manifest does not add a second OKR file:
 | current-priorities | reference/context/current-priorities.md | optional | 7 | daily-brief;weekly-update;strategy-refresh;roadmap-build;competitive-scan;meeting-closeout;context-reconcile;return-brief | This week's priorities, leadership pressure, and top risks |
 | assumptions | reference/context/assumptions-and-open-questions.md | optional | 0 | meeting-closeout;context-reconcile;ripple-check | Open questions and unresolved conflicts. An empty Open section is valid |
 | glossary | reference/context/glossary.md | optional | 0 |  | Standing acronyms for chat. Not metric definitions |
-| workspace-aliases | reference/context/workspace-aliases.md | optional | 0 |  | Name the PM uses, mapped to a path, before guessing a file |
+| workspace-aliases | reference/context/workspace-aliases.md | optional | 0 |  | Name the PM uses, mapped to a path, before guessing a file. external_treatment classifies publishing |
 | people | reference/context/people.md | optional | 30 | meeting-closeout;meeting-prep;context-reconcile;prd-package;strategy-refresh;roadmap-build | People, roles, decision rights, and recurring concerns, with dated sources |
 | systems-map | reference/context/systems-map.md | optional | 0 | jira-reconcile;context-setup;roadmap-build | Ticket key prefixes, what each project holds, which repo maps to which project, wiki spaces, and chat channels |
 | audiences | reference/context/audiences.md | optional | 30 | weekly-update;explore-brief;prd-package;launch-package;strategy-refresh;roadmap-build | Who reads each recurring output, what they care about, format, channel, and which systems they can open |

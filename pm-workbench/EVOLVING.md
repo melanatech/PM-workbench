@@ -46,6 +46,8 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 
 ## Changelog (newest first; one line per real architectural decision — not every edit)
 
+- 2026-10-14 — **Alias audience treatment:** `workspace-aliases.md` rows carry `external_treatment` (`internal_only`, `expand`, `preserve`, `neutralize`). Publishing blocks an unclassified row, including an old three-column row. An alias is not banned just because it is an alias.
+
 - 2026-10-14 — **Final sweep:** Fan-out stays 14 surfaces (`scripts/fanout_route.py`). Entity links stay on `/sync jira-reconcile` (`state/entity-links.csv`), and product areas stay the owner map. `external-readiness-reviewer` is indexed beside the red team; each stays blind to the other's inputs. `render_template.py` is the stdlib HTML/docx writer; `log_metrics.py` remains a stub. Week one includes `/brief context-setup`. Indexes name `state/chat-harvest/` and `state/repo-activity/`.
 
 - 2026-10-14 — **Lean CLAUDE.md:** numbered one-line rules stay in CLAUDE.md; rule 5 lives in `okr-refresh.md`; rules 18–20 and 23–24 plus execution modes and model routing live in `_protocol.md` (models still declared in `routes.json`); the command menu lives in `_plain-language.md`; the authority and cache tables live in `authority-lookup`; register schemas and the file map live in CONNECTIONS.md; "Keeping this fast" lives in AGENTS.md. Removed the commitment-lookup alias (phrases folded into authority-lookup), the deferred prototype stub, and two scripts no workflow called.

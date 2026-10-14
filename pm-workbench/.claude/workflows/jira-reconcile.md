@@ -4,6 +4,8 @@ description: Reconcile the Jira board against reality - snapshot diff plus propo
 
 Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
+Context dependencies: soft: systems-map | hard: none
+
 ## Gather plan
 
 Batch the independent reads in one turn, then diff. The live board read does not depend on the local registers, and the registers do not depend on the live board. The diff depends on both, so it waits until the batch is back. If this session already read a file, pass the distilled brief onward instead of re-reading the raw file. Re-reading the same file for a different task is fine; prompt caching makes that cheap. No session cache.
@@ -14,6 +16,9 @@ Independent (batch together):
 - the previous file in `state/jira-snapshots/`
 - `registers/decisions.csv`, `registers/commitments.csv`, `registers/initiatives.csv`, `registers/evidence.csv` (recent rows only)
 - recent `outputs/daily/*-meeting.md`
+- `reference/context/systems-map.md` (key prefixes, repo mapping, link conventions). If that file is still the template, say so and skip key parsing — do not invent a prefix.
+- the latest file in `state/repo-activity/` when one exists (the code-vs-board step refreshes it)
+- `state/entity-links.csv` (header only until this workflow writes a row)
 - the live board via Atlassian MCP, the bookmarked browser view, or a pasted export (name which path — rule 21). Prefer compact fields; write the full payload into the snapshot file instead of pasting it into chat.
 
 Then write `state/jira-snapshots/[date].json` and the diff in `outputs/weekly/[date]-jira-reconcile.md`. Dispatch `internal-docs-reader` only when a discrepancy needs a decision doc outside Jira/Confluence, and pass it the distilled mismatch, not the whole board dump.
@@ -54,7 +59,41 @@ Needs my approval: any date/priority/owner/status/stage change
 Confidence: High/Medium/Low
 ```
 
-7. For approved changes: draft the exact text for the Atlassian MCP / internal tool (or type it via browser with my live approval). **Mechanical fixes** (links, comments, missing metadata) can batch under one approval once I trust the accuracy — **priority, owner, dates, scope, status, and delivery-stage changes are always individually approved.** Default this workflow to **read-only against Jira** until I approve a PROPOSALS block.
+7. For approved changes: draft the exact text for the Atlassian MCP / internal tool (or type it via browser with my live approval). **Mechanical fixes** (links, comments, missing metadata) can batch under one approval once I trust the accuracy — **priority, owner, dates, scope, status, and delivery-stage changes are always individually approved.** Default this workflow to **read-only against Jira** until I approve a PROPOSALS block. Link and comment writes in the tracker are Tier 2. After I approve a batch, apply it, then re-read each touched ticket and verify the record matches what was approved. Do not mark the batch done from the write call alone.
+
+8. **Code vs board.** From the live workspace, run:
+
+```bash
+python3 scripts/repo_activity.py --root "$(pwd)"
+```
+
+Pass `--since YYYY-MM-DD` when the cursor in `state/repo-activity-cursor.json` is missing or the window should be explicit. The script reads prefixes from `reference/context/systems-map.md` (or the example, which has no real prefix). It writes `state/repo-activity/[date].json`. This is git metadata only (`git log`, `git fetch`, branch names). It is exempt from the repos preflight gate (SOURCE-POLICY, Git metadata exemption) — do not open source files under `repos/` for this step. If fetch fails or the clone has no remote, the script uses the local log and says so; report that note, and do not treat it as an empty history.
+
+Compare that snapshot to the board snapshot. One Tier 2 batch, local proposals only (`tracker_write` stays false until I approve). Four checks:
+
+- **merged_but_open** — ticket is To Do or In Progress, and a default-branch commit names it. Cite `repo@commit`. Delivery status stays the board's; report the conflict (rule 8, SOURCE-POLICY "Merged in code").
+- **stale_in_progress** — In Progress with no commit naming it in N days (default 7; say the window).
+- **key_not_on_board** — a key in a commit or branch name is absent from the board snapshot.
+- **done_without_commits** — Done with no commits (low priority; it may be non-code work).
+
+9. **Entity links (this workflow only — not fan-out).** Columns in `state/entity-links.csv`: `from,to,type,source,confidence,status,first_seen`. Status is `proposed` or `confirmed`. Types: `ticket-epic`, `paired-tickets`, `ticket-initiative`, `initiative-doc`, `ticket-decision`, `ticket-thread`, `initiative-thread`, `commit-ticket`. Pair rules come from the systems-map link convention, not from a guessed prefix.
+
+```bash
+python3 scripts/entity_links.py propose --root "$(pwd)" --activity state/repo-activity/[date].json --tickets <board-snapshot> --comments <comments-export> --apply-confirmed
+```
+
+- **Explicit** (a key or id named in a commit, comment, parent field, or initiative row) is Tier 1: write the local row as `confirmed`.
+- **Inferred** (a missing pair, a missing parent, a name overlap with no key) is Tier 2: write `proposed` and show the batch. Do not confirm those rows until I approve. `confirm` without approval is a no-op.
+- Confirmed links that name an INIT- update that row in place (same id, same order). There is no `links` column: put a doc or PRD path in `prd`, a `DEC-` id in `related_decisions`, and any other ref as a `links:` clause in `notes`. Do not change stage, scope, priority, owner, or dates (Tier 3). Do not add or delete rows.
+- Tracker link payloads stay empty until I approve. Nothing in this step calls the tracker.
+
+10. **Comments.** Read recent comments on tracked tickets through the configured tracker path (Atlassian MCP, bookmarked browser, or a pasted export — name which, rule 21). If that path is not configured, say so and skip; do not invent comments. Save the text, then:
+
+```bash
+python3 scripts/entity_links.py candidates --root "$(pwd)" --comments <comments-export>
+```
+
+Propose decision, risk, or blocker candidates in the reconcile report. Nothing is auto-written to a register or to the tracker. A `DEC-` id named in a comment is an explicit `ticket-decision` link (Tier 1 local). A bare "blocked" with no key is a candidate only.
 
 Save the report to `outputs/weekly/[date]-jira-reconcile.md`. This turns board maintenance into reviewing a diff instead of reconstructing reality.
 

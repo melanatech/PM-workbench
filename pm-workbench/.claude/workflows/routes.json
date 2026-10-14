@@ -124,6 +124,10 @@
         "path": ".claude/workflows/strategy-refresh.md",
         "model": "opus"
       },
+      "roadmap-build": {
+        "path": ".claude/workflows/roadmap-build.md",
+        "model": "sonnet"
+      },
       "workbench-health": {
         "path": ".claude/workflows/workbench-health.md",
         "model": "haiku"

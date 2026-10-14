@@ -1,7 +1,9 @@
 ---
 name: strategy-refresh
 description: >
-  Use when the PM says update the strategy doc or strategy refresh. Runs /report strategy-refresh (Deep — usage estimate first). Dispatch synthesizer/docs reader; never skim.
+  Use when the PM says update the strategy doc, strategy refresh, or strategy from scratch.
+  Runs /report strategy-refresh (Standard by default; opus). Deep is one word away and prints a usage estimate first.
+  From scratch follows the roadmap-build discovery phase. Dispatch synthesizer or that phase; never skim.
 ---
 
 # strategy-refresh

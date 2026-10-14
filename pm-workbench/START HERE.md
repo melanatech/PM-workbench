@@ -111,7 +111,8 @@ The six cluster commands (`/capture`, `/brief`, `/sync`, `/discover`, `/build`, 
 | My own to-dos (add, update, finish, drop, list; propose from the inbox; draft the outreach; `sweep`) | `/todo` (`registers/todos.csv`; `propose` and `work` use the `todo-worker` subagent) |
 | Competitive intelligence | `/discover competitive-scan` (dated diffs, monthly) |
 | Weekly leadership updates | `/report weekly-update` (generated from registers) |
-| Strategy/innovation/revenue docs | `/report strategy-refresh` (change report first; revenue ideas get real models) |
+| Strategy/innovation/revenue docs | `/report strategy-refresh` (Standard by default; from scratch uses the discovery phase and `product-strategy-memo-template.md`; a refresh still starts with the change report) |
+| Roadmap from scratch | `/report roadmap-build` (discovery first; Now / Next / Later; no invented dates). A change to an existing roadmap is `/sync roadmap-update` |
 | Week one back | `/brief return-brief` (one-time) |
 | Is the system itself working for me | `/report workbench-health` (reads the run log; proposes pruning) |
 | Is it helping: fewer dropped balls, better decisions | `/report monthly-review` (monthly; scheduled; first snapshot starts a 21-day baseline) |

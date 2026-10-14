@@ -42,6 +42,8 @@ command — never a third improvised path.
 - "Summarize from memory/registers only…" when weekly-update or okr-refresh matches
   and the workflow requires reconciliation first
 - Improvising a "quick release readout" when ship-signal / "did this ship move the needle" matches
+- Drafting a Now/Next/Later list from registers alone when "build a roadmap" or "draft a roadmap from scratch" matches — run `/report roadmap-build` (discovery phase first)
+- Treating "the roadmap changed" as a from-scratch roadmap — that is `/sync roadmap-update`
 - Skipping Deep usage estimate / required-input gates because the user used
   casual wording
 - Treating "context constraints" as a reason to skip the matched workflow
@@ -74,7 +76,7 @@ You type one of eight commands. Six are routers over the workflows in `routes.js
 | `/sync` | `jira-reconcile`, `ripple-check`, `context-reconcile`, `roadmap-update`, `rotate-registers` |
 | `/discover` | `discovery`, `research-plan`, `research-package`, `competitive-scan`, `learn-product-flow`, `code-dive`, `explore-brief` |
 | `/build` | `prd-package`, `prototype-build`, `prd-prototype-sync`, `experiment-package`, `experiment-analyze`, `launch-package` |
-| `/report` | `weekly-update`, `okr-refresh`, `strategy-refresh`, `workbench-health`, `monthly-review`, `ship-signal` |
+| `/report` | `weekly-update`, `okr-refresh`, `strategy-refresh`, `roadmap-build`, `workbench-health`, `monthly-review`, `ship-signal` |
 
 Name the workflow as the first word (`/build prd-package Bulk Export`) or describe the job (`/build spec out Bulk Export`) and the router picks from the initiative's stage, asking if it cannot tell. Older notes may say `/prd-package` or `/daily-brief`. Those are workflow names; run them as `/build prd-package`, `/brief daily-brief`. Week one is `/quick-close`, `/capture`, `/report`, `/sync`, `/discover`, plus `/brief`. `/build` and `/todo` may be name-only in `.claude/settings.json`. `.claude/settings.core.json` hides them; `.claude/settings.full.json` shows everything. Workflow texts live in `.claude/workflows/`.
 
@@ -113,6 +115,8 @@ Plain language that matches a row **is** an instruction to run that workflow. Co
 | "What did the experiment results say" | `/build experiment-analyze` |
 | "Get this ready to launch" / "launch package" | `/build launch-package` |
 | "The roadmap changed" / features moved or were added | `/sync roadmap-update` |
+| "Build a roadmap" / "draft a roadmap from scratch" | `/report roadmap-build` |
+| "Strategy from scratch" / "draft a strategy from scratch" | `/report strategy-refresh` |
 | "What are competitors doing" / "competitive scan" | `/discover competitive-scan` |
 | "Search the web for" / "market scan" / "how do others solve" / external grounding (problems, market, users, solutions) | skill `web-search` → `_web-search.md` (`state/web-search/`); if it's a brief or PRD ask, run explore-brief / prd-package instead |
 | "Update the strategy doc" / "strategy refresh" | `/report strategy-refresh` |

@@ -62,4 +62,6 @@ Produce an email version and a wiki-format version. Save to `outputs/weekly/[dat
 
 **If living context is blank** (`current-priorities.md`): note it rather than silently generating unframed output — a one-line "no stated priorities this week" is honest; fabricated framing is not.
 
+**Optional red team.** Not the default, and not run in Fast. When the PM asks for one pass, dispatch `strategy-red-team-reviewer` once on the draft plus the sources it cites. Put findings in an Anticipated objections section. Do not silently rewrite the draft.
+
 **Publish.** Defaults: `audience: internal`, `formats: [md, slack]`. Follow Audience and formats and Publish in `.claude/workflows/_protocol.md`. The file in `outputs/weekly/` stays the internal source. `python3 scripts/publish.py` writes neutralized copies under `outputs/external/`. This workflow is Fast, so do not dispatch `external-readiness-reviewer`. The Slack file is a local mrkdwn draft. Sending it is Tier 3 and waits for an explicit yes. Do not call a chat send API from this step.

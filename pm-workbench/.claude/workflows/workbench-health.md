@@ -26,3 +26,5 @@ Then, in under 200 words, tell me:
 4. **One tuning suggestion** grounded in the log, and the BACKLOG item it maps to (or a new BACKLOG line to add).
 
 Save the script's raw output to `outputs/monthly/[date]-workbench-health.md` and show me the file. Do not edit `settings.json`, `CLAUDE.md`, or any command from here.
+
+Once a month, the usage story can be rebuilt from the live files [state/usage-history.csv](state/usage-history.csv), [state/cursor-activity.csv](state/cursor-activity.csv), and [state/kit-changes.csv](state/kit-changes.csv). Reuse the periods and the labeled price-table estimate from the 2026-10-14 story. Do not add a separate workflow for that rerun.

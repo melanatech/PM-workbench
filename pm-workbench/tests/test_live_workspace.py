@@ -41,6 +41,10 @@ class CreateLiveWorkspaceTests(unittest.TestCase):
             self.assertFalse(path.is_symlink(), name)
         self.assertIn("id,date,decision", (dest / "registers" / "decisions.csv").read_text())
         self.assertIn("timestamp,workflow", (dest / "logs" / "run-log.csv").read_text())
+        self.assertIn("status: template", (dest / "reference/context/people.md").read_text(encoding="utf-8"))
+        self.assertTrue((dest / "reference/context/systems-map.md").is_file())
+        self.assertTrue((dest / "reference/context/audiences.md").is_file())
+        self.assertTrue((dest / "reference/metric-definitions/kr-metric-map.md").is_file())
         # Source working data must not have been copied even if present on kit root.
         self.assertFalse((dest / "inbox" / "meetings" / "2026-07-14-roadmap-review.txt").exists())
 

@@ -245,8 +245,8 @@ class RoutesTableTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("scenario-guide", proto)
-        self.assertIn("company-ux-checker-lessons.md", proto)
-        lessons = (WORKBENCH / "reference" / "design" / "company-ux-checker-lessons.md").read_text(
+        self.assertIn("prototype-preflight.md", proto)
+        lessons = (WORKBENCH / "reference" / "design" / "prototype-preflight.md").read_text(
             encoding="utf-8"
         )
         self.assertIn("Standing preflight", lessons)

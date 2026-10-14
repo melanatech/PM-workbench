@@ -146,3 +146,38 @@ Ids are the `id` column in `reference/context/_manifest.md`. Before gathering, r
 - **Soft gap** (missing, template-empty, or stale): derive what you can and label it. Priorities, when `current-priorities` is empty, may be drafted from open initiatives plus key-result names in `kr-metric-map.md` when that file is filled. Label the draft "derived, not stated priorities" and ask the PM to confirm. Ask two or three questions instead when a derivation would invent a fact. Do not hard-block. Do not present the derivation as something the PM stated.
 - **Hard gap:** ask the short batch before the artifact is treated as complete. An unattended run marks that section incomplete and appends `BLOCKED:` (rule 22). Still do not invent.
 - The health script exits 0 when the root exists. A gap is a notice, not a failed command.
+
+## Audience and formats
+
+A deliverable keeps one internal source. Published copies carry frontmatter the hooks read:
+
+```
+audience: internal|external
+formats: [md, html, docx, confluence, slack]
+```
+
+`audience` is who the copy is for. `reference/context/audiences.md` (manifest id `audiences`) says which systems that audience can open. `scripts/publish.py` turns a citation into a link only when the matching row lists the system (tracker or jira, wiki or confluence, slack, dashboard). A missing file, or one still marked `status: template`, grants no links: the citation stays plain text. Do not invent audience rows.
+
+Workflow defaults:
+
+| Workflow | audience | formats | External version |
+|---|---|---|---|
+| weekly-update | internal | md, slack | always, for those formats |
+| launch-package (customer-facing docs) | external | docx, confluence | always, for those docs |
+| strategy-refresh | internal | md | only when the PM asks |
+| explore-brief | internal | md | only when the PM asks |
+| roadmap-build | internal | md | only when the PM asks |
+
+`roadmap-build` is not a workflow file yet. When it is added, give it the table row above and a Publish step that points at the section below. Do not invent a second procedure.
+
+## Publish
+
+Run this after the internal draft is saved. The internal file stays the source of record. Do not overwrite it.
+
+1. Leave register ids, workspace paths, and internal tags in the internal draft. They are how the workspace stays traceable.
+2. Run `python3 scripts/publish.py <draft> --root <live>`. The script reads registers and writes a neutralized copy for each requested format under `outputs/external/`, plus a `<draft>.sources.md` sidecar next to the internal draft (id to neutral label).
+3. A workspace label becomes a short footnote and a closing Sources line. A meeting row becomes the meeting name and date plus "(meeting notes)". An uploaded file becomes "Uploaded document:" and the file name. A tracker item becomes "Jira" plus the issue key, linked only when this audience has the tracker. A wiki row becomes "Confluence:" plus the page title, linked only when this audience has the wiki. A chat row becomes "Slack" plus the channel and date. A metric becomes "Internal dashboard:" plus the name and as-of date. A workspace path becomes the document title or the file name. A `[hypothesis]` tag becomes inline wording such as "unverified" or "early signal". An id that is not in a register fails the command. `[NEEDS INPUT]` stops publishing until it is resolved: the script writes nothing.
+4. Reviewer: in Standard or Deep, dispatch `external-readiness-reviewer` once on the rendered file and the single audience line. It does not see the internal draft, the sidecar, or the registers. Fast: do not dispatch it. Escalate that reviewer to sonnet only when the PM asks.
+5. Confluence storage-format XML and Slack mrkdwn are local drafts. Creating a wiki page or sending a chat message is Tier 3: wait for an explicit yes, then re-read the record and verify it. Do not call a wiki create API or a chat send API from Publish.
+
+Customer-facing launch docs use the external formats in the table. Strategy, explore-brief, and roadmap-build stay on internal markdown until the PM asks for an external version; then run steps 2–5 for the formats they name.

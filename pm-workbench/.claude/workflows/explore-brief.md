@@ -53,3 +53,5 @@ Show this frame **before** any concepts.
 **Step 6 — Close.** Lightly update the INIT row notes with path to the draft and date (keep id/order). Propose a TODO only if an open action is clear. Tell the PM the next step when ready is `/build prd-package` — **do not run it** from this workflow.
 
 End gathering with one line: context used / excluded (rule 18) when the source set was a real choice.
+
+**Step 7 — Publish.** Defaults: `audience: internal`, `formats: [md]`. The brief in `drafts/` stays the internal source. Produce an external version only when the PM asks, then follow Audience and formats and Publish in `.claude/workflows/_protocol.md`. This workflow is Standard: when an external version is written, dispatch `external-readiness-reviewer` once on the rendered file and the audience line. Publishing or sending is Tier 3 and waits for an explicit yes. Do not call a wiki create API or a chat send API from this step.

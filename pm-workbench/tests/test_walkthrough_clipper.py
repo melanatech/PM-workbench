@@ -10,7 +10,8 @@ WORKFLOWS = WORKBENCH / ".claude" / "workflows"
 class WalkthroughClipperTests(unittest.TestCase):
     def test_manifest_v05_permissions(self):
         text = (CLIPPER / "manifest.json").read_text(encoding="utf-8")
-        self.assertIn('"0.5.0"', text)
+        # Walkthrough landed in 0.5; transcript slow-scroll is 0.6+
+        self.assertTrue('"0.5.0"' in text or '"0.6.0"' in text)
         self.assertIn("storage", text)
         self.assertIn("alarms", text)
         self.assertIn("pmwb-wt-mark", text)

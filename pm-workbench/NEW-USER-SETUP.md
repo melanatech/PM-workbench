@@ -152,7 +152,7 @@ Steps:
 
 Skip this section if you have no UI base yet — `repos/` and `prototypes/` can stay empty.
 
-**Soft reuse (no shared package yet):** after you have one good greenfield prototype, list stealable pieces in `reference/design/prototype-components.md`. The next `/build prototype-build` copies from those paths. A real `prototypes/_shared/` npm package is deferred — see `reference/design/DEFERRED-shared-prototype-package.md`.
+**Soft reuse + shared kit:** after you have one good greenfield prototype, list stealable pieces in `reference/design/prototype-components.md`. When `prototypes/_shared/` exists (package `@pm-live/prototype-kit`), new web prototypes depend on `file:../_shared` and import primitives from it; the soft catalog is for pieces not yet promoted. See `reference/design/shared-prototype-package.md`. Stakeholder handoff: static `index.html`, or React `npm run build` / optional `npm run share` (single-file HTML) so recipients need not `npm install`.
 
 ## 2b. Optional Claude Code plugins (user install — not in git)
 
@@ -246,7 +246,8 @@ Also try `/quick-close`, `/todo`, `/brief daily-brief`, and
 | `claude -p` “Not logged in” | No standalone OAuth in that shell | Run `/login` in Claude Code / the CLI |
 | Clip lands in Downloads, Claude does not see it | Chrome cannot write outside Downloads; pull not run yet **or** plain-language ask improvised a peek | Say "process clips" / `/capture process-inbox` (runs `intake_status.py`). Approve Bash. Fix `~/.pm-workbench/live-root` if it points at a `/tmp` fixture (`bash scripts/fix-live-root.sh`) |
 | Constant Bash / `python3` approval prompts | **Edit automatically** does not auto-run scripts; your mode menu may lack **Auto** | Start a **new** Claude Code chat (user `~/.claude/settings.json` already allows `Bash(python3 *)`). Type `/permissions` to add more. Or extension setting **Allow dangerously skip permissions** → Bypass if it appears |
-| Clip cuts off mid-meeting | Old extension, or **Selection only** used | `chrome://extensions` → **Reload** clipper; use **Meeting notes / summary** (scrapes transcript DOM). Avoid Selection only for Stream |
+| Clip cuts off mid-meeting | Old extension (&lt;0.6), or **Selection only** used | `chrome://extensions` → **Reload** clipper **0.6.0+**; use **Meeting notes / summary** (slow DOM scroll). Check frontmatter `incomplete: false`. Avoid Selection only for Stream |
+| View-only Stream (Download greyed out) | Expected — CDN transcript is encrypted | DOM capture is the supported path; do not ask the kit to decrypt. Optional: ask IT for tenant download / post-decrypt policy |
 | Menu has no "full page" / still 6 flat items | Extension not reloaded after kit update | Reload PM Workbench Clipper on `chrome://extensions` (v0.3+); primary items now always scrape the page/transcript |
 | Output path in chat is not clickable | Link used `file://` or absolute `/Users/...`, or wrong folder is first | Claude Code only clicks **workspace-relative** paths under the **first** folder. Open `~/pm-live` first (or alone). Expect `[outputs/daily/….md](outputs/daily/….md)` |
 | Hooks seem skipped | Fail-open by design, or settings not loaded | Check `logs/run-log.csv`; run `python3 scripts/check_run.py` |
@@ -283,7 +284,8 @@ Do these on non-sensitive data. Record pass/fail in `logs/setup-findings.md`.
    4. After updating the extension, click **Reload** on that page (required — Chrome
       keeps the old menu until you do).
    5. Right-click a **public** page or Stream transcript → **Send to PM Workbench** →
-      **Meeting notes / summary** (that path scrapes transcript entries in the DOM,
+      **Meeting notes / summary** (that path slow-scrolls the transcript DOM and
+      collects speaker-labelled entries; leave the tab open until the notification,
       text only — no screenshot; do not use **Selection only** for long meetings).
       Other categories may also save a viewport PNG. Files land in
       `~/Downloads/pm-workbench-inbox/<category>/`.

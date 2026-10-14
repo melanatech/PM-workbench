@@ -2,7 +2,7 @@
 
 **What it does:** right-click a page (or a selection) in Chrome → *Send to PM Workbench* → pick a category → a markdown file lands in `~/Downloads/pm-workbench-inbox/<category>/`, plus a viewport screenshot PNG for non-meeting categories. **Walkthrough mode** records clicks/URLs + viewport PNGs in your **logged-in** tab until you Stop (SSO-safe alternative to Playwright). It never auto-clicks, types, submits, or talks to the network.
 
-**Version:** 0.5.0+ required for walkthrough. **After updating this folder:** open `chrome://extensions` → find PM Workbench Clipper → **Reload**. Until you reload, Chrome keeps the old menu.
+**Version:** **0.6.0+** required for complete Stream transcripts (slow overlapping scroll + speaker labels). **0.5.0+** for walkthrough. **After updating this folder:** open `chrome://extensions` → find PM Workbench Clipper → **Reload**. Until you reload, Chrome keeps the old menu.
 
 **Why Downloads (and not `inbox/` directly):** Chrome's extension downloads API can only write under the browser Downloads folder.
 
@@ -25,17 +25,14 @@ python3 scripts/pull_clips.py
 
 | | |
 |---|---|
-| **Yes** | Visible text: for meetings, scrolls the Stream transcript panel and accumulates `sub-entry-*` rows until `aria-setsize` (or scroll stalls); otherwise page `innerText` (up to ~200k chars); title; URL; up to 80 links |
+| **Yes** | Visible text: for meetings, **slow overlapping scroll** (~35% of panel height per step, wait until rows settle) over Stream’s virtualized transcript; collects every `aria-posinset` from 1..`aria-setsize`; parses **speaker + time** from each entry’s `role=group` `aria-label`; merges consecutive same-speaker lines as `**Speaker** [m:ss]: text`. Otherwise page `innerText` (up to ~200k chars); title; URL; up to 80 links |
 | **Screenshot** | Optional **viewport** PNG for every category **except meetings** (sidecar with page text). Meetings are text/transcript only |
 | **Screenshot only** | Menu group **Screenshot only (no page text)** → pick a category → viewport PNG + stub markdown (`capture_kind: screenshot`). No `innerText` scrape |
 | **Walkthrough** | *Walkthrough: Start recording* → use the product normally → *Mark step* (or Alt+Shift+M) for a clean frame → *Stop & save* (or toolbar badge / Alt+Shift+S). Also: toolbar icon toggles Start/Stop. Writes `walkthroughs/<stem>.md` + `.events.jsonl` + `.step-NN.png`. Viewport only — scroll then Mark step for below-the-fold |
-| **No** | Embedded page images, video frames, automatic full-page stitch, keystroke/password values |
+| **No** | Embedded page images, video frames, automatic full-page stitch, keystroke/password values, decryption of Stream’s encrypted CDN transcript payload |
 | **Menu** | Categories scrape transcript/page; **Selection only**; **Screenshot only**; **Walkthrough** Start / Mark / Stop |
 
-Stream tip: right-click the transcript → *Meeting notes / summary* and wait a few
-seconds while it scrolls the panel (virtualized list). Check the notification count
-(`entries/aria_setsize`). See [DEBUG.md](DEBUG.md) if clips still stop early.
-Do not use **Selection only** for long meetings.
+Stream tip: right-click the transcript → *Meeting notes / summary* and **leave the tab open** — a long meeting can take a few minutes. Check the notification (`entries/aria_setsize`). Frontmatter must show `incomplete: false` and `speakers: [...]`. See [DEBUG.md](DEBUG.md) if clips still stop early. Do not use **Selection only** for long meetings. **Download** on Stream is often disabled for view-only recordings; the DOM capture is the supported path.
 
 ## Install (Chrome or Edge, macOS or Windows)
 1. Open `chrome://extensions` (Edge: `edge://extensions`).

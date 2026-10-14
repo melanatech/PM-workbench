@@ -55,6 +55,67 @@ KIND_HINTS = (
 DATE_RE = re.compile(r"(20\d{2}-\d{2}-\d{2})")
 INIT_RE = re.compile(r"\bINIT-\d{3,5}\b", re.I)
 COM_RE = re.compile(r"\bCOM-\d{3,5}\b", re.I)
+# Table row: | phrase | `path` | meaning |
+ALIAS_ROW_RE = re.compile(
+    r"^\|\s*([^|]+?)\s*\|\s*`?([^|`]+?)`?\s*\|\s*([^|]*)\|?\s*$",
+    re.M,
+)
+
+
+def _load_aliases(root: Path) -> list[dict]:
+    """Read reference/context/workspace-aliases.md (or .example.md)."""
+    for name in ("workspace-aliases.md", "workspace-aliases.example.md"):
+        path = root / "reference" / "context" / name
+        if not path.is_file():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        out = []
+        for m in ALIAS_ROW_RE.finditer(text):
+            phrase = m.group(1).strip()
+            dest = m.group(2).strip()
+            meaning = m.group(3).strip()
+            if phrase.lower() in ("phrase", "---") or phrase.startswith("-"):
+                continue
+            if not dest or dest.lower() == "path":
+                continue
+            out.append({"phrase": phrase, "path": dest, "meaning": meaning})
+        return out
+    return []
+
+
+def _alias_hits(root: Path, topic: str) -> list[dict]:
+    """Match topic against alias phrases (substring, case-insensitive)."""
+    topic_l = topic.lower()
+    hits = []
+    for a in _load_aliases(root):
+        # Support "a / b" alternate phrases in the Phrase column
+        phrases = [p.strip() for p in re.split(r"\s*/\s*", a["phrase"]) if p.strip()]
+        matched = None
+        for ph in phrases:
+            if ph.lower() in topic_l or topic_l in ph.lower():
+                matched = ph
+                break
+        if not matched:
+            continue
+        dest = a["path"].split()[0].rstrip(",")  # first path token if extras
+        # Strip glob/parenthetical notes like `(e.g. …)`
+        dest = dest.split("(")[0].strip()
+        rel = dest.lstrip("./")
+        full = root / rel
+        exists = full.exists()
+        hits.append({
+            "path": rel if exists or "*" not in rel else rel,
+            "kind": "alias",
+            "as_of": "",
+            "one_line": f"alias '{matched}' → {a['path']}: {a['meaning'][:120]}",
+            "primary_sources": "",
+            "source": "alias",
+            "exists": exists,
+        })
+    return hits
 
 
 def _tokens(topic: str) -> list[str]:
@@ -260,15 +321,17 @@ def run_preflight(
     for m in COM_RE.findall(topic):
         tokens.append(m.lower())
 
+    alias_hits = _alias_hits(root, topic)
     index_hits = _index_hits(root, tokens, init_id)
     scan_hits = _scan_files(root, tokens)
-    # merge: index first, then scan paths not already present
-    seen = {h["path"] for h in index_hits}
-    hits = list(index_hits)
-    for h in scan_hits:
-        if h["path"] not in seen:
+    # merge: aliases first (name resolution), then index, then scan
+    seen: set[str] = set()
+    hits: list[dict] = []
+    for h in alias_hits + index_hits + scan_hits:
+        p = h.get("path") or ""
+        if p and p not in seen:
             hits.append(h)
-            seen.add(h["path"])
+            seen.add(p)
 
     newer_signals: list[str] = []
     if verify:

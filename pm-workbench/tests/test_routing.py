@@ -141,22 +141,27 @@ class RoutesTableTests(unittest.TestCase):
         self.assertIn("context_preflight", claude)
         self.assertIn("Cache-first", claude)
 
-    def test_prototype_soft_reuse_catalog_and_deferred_shared_package(self):
+    def test_prototype_soft_reuse_catalog_and_shared_package(self):
         design = WORKBENCH / "reference" / "design"
         catalog = (design / "prototype-components.md").read_text(encoding="utf-8")
-        deferred = (design / "DEFERRED-shared-prototype-package.md").read_text(encoding="utf-8")
+        shared = (design / "shared-prototype-package.md").read_text(encoding="utf-8")
+        stub = (design / "DEFERRED-shared-prototype-package.md").read_text(encoding="utf-8")
         skill = (
             WORKBENCH / ".claude" / "skills" / "prototype-build" / "SKILL.md"
         ).read_text(encoding="utf-8")
         self.assertIn("soft reuse", catalog.lower())
         self.assertIn("prototypes/", catalog)
-        self.assertIn("prototypes/_shared", deferred)
-        self.assertIn("file:", deferred)
+        self.assertIn("in `_shared`", catalog)
+        self.assertIn("prototypes/_shared", shared)
+        self.assertIn("file:", shared)
+        self.assertIn("npm run share", shared)
+        self.assertIn("shared-prototype-package.md", stub)
         self.assertIn("prototype-components.md", skill)
-        self.assertIn("Soft reuse", skill)
+        self.assertIn("Shared kit", skill)
         self.assertIn("Catalog update", skill)
+        self.assertIn("npm run share", skill)
         backlog = (WORKBENCH / "BACKLOG.md").read_text(encoding="utf-8")
-        self.assertIn("DEFERRED-shared-prototype-package.md", backlog)
+        self.assertIn("shared-prototype-package.md", backlog)
 
     def test_explore_brief_reuses_gatherer_and_frames_before_options(self):
         flat = {w: e for ws in clusters().values() for w, e in ws.items()}
@@ -366,7 +371,8 @@ class RouterFileTests(unittest.TestCase):
         self.assertIn("Relay = paste, then stop", protocol)
         self.assertIn("No RESULT + Done pair", protocol)
         self.assertIn("omit empty", protocol.lower())
-        self.assertIn("Show each artifact once", claude)
+        self.assertIn("Every existing workspace path is a clickable Markdown link", claude)
+        self.assertIn("show the link **once**", claude)
         self.assertNotIn("Show RESULT text in full", protocol)
         self.assertIn("omit empty negatives", runner)
         self.assertIn("Never paste the same summary twice", runner)

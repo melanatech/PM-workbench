@@ -37,3 +37,5 @@ Suggested: 1) /capture process-inbox  2) /sync jira-reconcile  3) prep for [meet
 **If `reference/context/current-priorities.md` is blank:** say so in one line and offer to capture this week's top 3 now — never frame the brief against priorities that were never stated.
 
 **Blocked scheduled runs:** read `logs/run-log.csv` for any `BLOCKED:` lines since the last brief and list each as a decision point with what the run needed (CLAUDE.md rule 22). Never re-run the blocked command from here — offer it.
+
+**Recurring corrections (when present):** if `state/usage-history.csv` exists, run `python3 scripts/recurring_corrections.py --root <live>` once. If it prints themes, add one short line under Suggested (e.g. "recurring: nonexistent_id — needs a hook, not another rule"). Skip silently when the script reports none.

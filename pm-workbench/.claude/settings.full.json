@@ -1,6 +1,6 @@
 {
   "permissions": {
-    "defaultMode": "acceptEdits",
+    "defaultMode": "dontAsk",
     "additionalDirectories": [
       "~/Downloads/pm-workbench-inbox"
     ],
@@ -32,6 +32,7 @@
       "Bash(find *)",
       "Bash(rg *)",
       "Bash(grep *)",
+      "Bash(*)",
       "Agent",
       "Glob",
       "Grep",
@@ -59,7 +60,56 @@
       "mcp__browser-bridge__browser_handle_dialog",
       "mcp__browser-bridge__browser_install",
       "Bash(git push:*)",
-      "Bash(rm -rf:*)"
+      "Bash(rm -rf:*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git reset --hard*)",
+      "Bash(rm -r *)",
+      "Bash(rm -R *)",
+      "Bash(git clean -fd*)",
+      "Bash(git branch -D*)",
+      "Bash(npm publish*)",
+      "Bash(curl *-X POST*)",
+      "Bash(curl *-X PUT*)",
+      "Bash(curl *-X DELETE*)",
+      "Bash(curl *--request POST*)",
+      "Bash(curl *--request PUT*)",
+      "Bash(curl *--request DELETE*)",
+      "Bash(dd *)",
+      "Bash(mkfs*)",
+      "Bash(diskutil erase*)",
+      "Bash(diskutil eraseDisk*)",
+      "Bash(diskutil eraseVolume*)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~/*)",
+      "Bash(rm -rf /Users/*)",
+      "Bash(rm -rf /Applications/*)",
+      "Bash(rm -rf /System/*)",
+      "Bash(rm -rf /Library/*)",
+      "Bash(find * -delete*)",
+      "Bash(brew upgrade*)",
+      "Bash(apt-get upgrade*)",
+      "Bash(apt upgrade*)",
+      "Bash(yum update*)",
+      "Bash(softwareupdate*)",
+      "Bash(curl * | bash*)",
+      "Bash(curl * | sh*)",
+      "Bash(wget * | bash*)",
+      "Bash(wget * | sh*)",
+      "Bash(curl *| bash*)",
+      "Bash(curl *| sh*)",
+      "Bash(csrutil*)",
+      "Bash(nvram*)",
+      "Bash(spctl*)",
+      "Bash(systemsetup*)",
+      "Bash(networksetup*)",
+      "Bash(pmset*)",
+      "Bash(launchctl load*/System/*)",
+      "Bash(launchctl load*/Library/*)",
+      "Bash(sudo *)",
+      "Bash(dscl*)",
+      "Bash(chown -R /*)",
+      "Bash(chmod -R /*)"
     ]
   },
   "hooks": {
@@ -98,6 +148,11 @@
             "type": "command",
             "command": "PY=$(command -v python3 || command -v python); \"$PY\" \"$CLAUDE_PROJECT_DIR/.claude/hooks/check_context_grounding.py\"",
             "timeout": 20
+          },
+          {
+            "type": "command",
+            "command": "PY=$(command -v python3 || command -v python); \"$PY\" \"$CLAUDE_PROJECT_DIR/.claude/hooks/check_md_links.py\"",
+            "timeout": 20
           }
         ]
       }
@@ -105,6 +160,11 @@
     "Stop": [
       {
         "hooks": [
+          {
+            "type": "command",
+            "command": "PY=$(command -v python3 || command -v python); \"$PY\" \"$CLAUDE_PROJECT_DIR/.claude/hooks/check_reply_links.py\"",
+            "timeout": 20
+          },
           {
             "type": "command",
             "command": "PY=$(command -v python3 || command -v python); \"$PY\" \"$CLAUDE_PROJECT_DIR/.claude/hooks/log_run.py\"",

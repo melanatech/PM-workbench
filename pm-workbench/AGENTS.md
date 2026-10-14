@@ -23,6 +23,7 @@ Subagents are one-directional: dispatch, isolated work, a result comes back. The
 | `return-window-scanner` | Heavy read | `/brief return-brief` |
 | `strategy-synthesizer` | Heavy read | `/report strategy-refresh` (refresh path; not the from-scratch discovery phase) |
 | `strategy-red-team-reviewer` | Blind review | `/report strategy-refresh` and `/report roadmap-build` (Standard: one pass). Sees the draft and its cited sources only. Findings become Anticipated objections. Optional single pass on `/report weekly-update` when the PM asks; not the Fast default. |
+| `external-readiness-reviewer` | Blind review | Publish step in Standard or Deep (`.claude/workflows/_protocol.md`). Sees the rendered file and one audience line only. Fast skips it. |
 | `code-repo-explorer` | Heavy read | `/discover code-dive`; reused by `/build prototype-build` |
 | `todo-worker` | Heavy read | `/todo propose` and `/todo work` (read-only). Returns `[NEEDS INPUT: …]`; the main session asks. |
 | `internal-docs-reader` | Heavy read | Alongside another agent for research, wiki, and shared-drive docs: discovery, prd-package, explore-brief, research-plan, strategy-refresh, competitive-scan, research-package, learn-product-flow. Checks `reference/user-research/` first. |

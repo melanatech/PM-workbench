@@ -24,14 +24,15 @@ Pass only if none of the three recommendations changes either register while unc
 
 ## Full write/read map
 
-The first column is the workflow name. Run it through its cluster command: `/capture` (meeting-closeout, process-inbox), `/brief` (daily-brief, return-brief, meeting-prep), `/sync` (jira-reconcile, ripple-check, context-reconcile, roadmap-update, rotate-registers), `/discover` (discovery, research-plan, research-package, competitive-scan, learn-product-flow, code-dive, explore-brief), `/build` (prd-package, prototype-build, prd-prototype-sync, experiment-package, experiment-analyze, launch-package), `/report` (weekly-update, okr-refresh, strategy-refresh, roadmap-build, workbench-health, monthly-review). `/todo` is its own command. Writes and reads are unchanged by the routing.
+The first column is the workflow name. Run it through its cluster command: `/capture` (meeting-closeout, process-inbox), `/brief` (get-started, context-setup, daily-brief, return-brief, meeting-prep), `/sync` (jira-reconcile, ripple-check, context-reconcile, roadmap-update, rotate-registers), `/discover` (discovery, research-plan, research-package, competitive-scan, learn-product-flow, code-dive, explore-brief), `/build` (prd-package, prototype-build, prd-prototype-sync, experiment-package, experiment-analyze, launch-package), `/report` (weekly-update, okr-refresh, strategy-refresh, roadmap-build, workbench-health, monthly-review, ship-signal). `/todo` is its own command (`plan`, `dispatch`, and `reconcile` are modes of that command). Writes and reads are unchanged by the routing.
 
 | Command | Writes to | Reads / cross-checks against |
 |---|---|---|
+| `/brief context-setup` | `drafts/context-setup/[date]/` until the Tier 2 batch is accepted; `state/chat-harvest/[date].md` | `scripts/context_health.py` against `reference/context/_manifest.md`; recent register rows; `scripts/chat_harvest.py`; `scripts/memory_harvest.py` (list only) |
 | `/brief return-brief` | `registers/decisions.csv`, `registers/risks.csv`, `registers/commitments.csv` (seeds them) | chat/Jira/wiki/shared-drive (via `return-window-scanner`) |
 | `/capture meeting-closeout` | `registers/decisions.csv`, `registers/commitments.csv`, `registers/risks.csv`, `registers/initiatives.csv` (seed/update); `reference/context/assumptions-and-open-questions.md`; `learning/[area].md`; `outputs/todo-proposals/` (queue only) | Same registers (conflict check) + Jira |
 | `/capture process-inbox` | `registers/evidence.csv`; meetings → meeting-closeout writes; initiatives notes/EV links; assumptions + learning + todo-proposals as above | `state/processed-files.txt`, existing evidence/initiatives (dedupe) |
-| `/sync jira-reconcile` | `state/jira-snapshots/`, proposed Jira writes | `registers/decisions.csv`, `commitments.csv`, `evidence.csv`, `initiatives.csv`, recent meeting outputs |
+| `/sync jira-reconcile` | `state/jira-snapshots/`, `state/repo-activity/[date].json`, `state/entity-links.csv` (local rows), proposed tracker writes | `registers/decisions.csv`, `commitments.csv`, `evidence.csv`, `initiatives.csv`, `reference/context/systems-map.md`, recent meeting outputs |
 | `/discover discovery` | `registers/evidence.csv` | chat/support/behavior-analytics (`discovery-source-reader`) + internal docs (`internal-docs-reader`) + `registers/initiatives.csv` (relevance flag) |
 | `/report okr-refresh` | `state/okr-history.csv` | Dashboard and/or dated internal metric surfaces + `registers/initiatives.csv` (which initiative this metric belongs to) |
 | `/discover research-plan` | `outputs/research/[topic]/plan.md` (criteria, outreach drafts, guide, decision rules — never names), (later) `registers/research-participants.csv` | dashboards/behavior analytics/Jira + internal docs (personas/prior research) |
@@ -64,7 +65,7 @@ The first column is the workflow name. Run it through its cluster command: `/cap
 
 The cross-checks above are only as good as the initiative actually being *in* `initiatives.csv` with the right name. If you build a prototype before ever running `/build prd-package`, or a feature never gets a formal PRD at all, nothing will connect it automatically — that's why `/build prototype-build` creates a row even without a PRD, and why it's worth naming things consistently. When in doubt about whether something is tracked, just ask in a session — "is [feature] in the initiatives register?" — rather than assuming the connection exists.
 
-**Registers alone are not enough.** Capture used to stop after DEC-/EV-/INIT- rows. `.claude/workflows/_fan-out.md` routes each extracted item type to the surfaces that can hold it (`scripts/fanout_route.py`). The end block lists surfaces written and the cross-initiative line. A chat answer is not proof those surfaces hold the same detail — Rule 23 in `_fan-out.md`.
+**Registers alone are not enough.** Capture used to stop after DEC-/EV-/INIT- rows. `.claude/workflows/_fan-out.md` routes each extracted item type to the surfaces that can hold it (`scripts/fanout_route.py`). The end block lists surfaces written and the cross-initiative line. Fan-out is those 14 surfaces. Entity links (`state/entity-links.csv`) are written by `/sync jira-reconcile` only. A chat answer is not proof those surfaces hold the same detail — Rule 23 in `_fan-out.md`.
 
 ## Register schemas
 
@@ -84,7 +85,7 @@ Meetings feed the registers. The registers feed the weekly update, tracker recon
 ## Key file map
 
 - `scripts/todo_register.py` — the only way `/todo` writes `registers/todos.csv` (IDs, dates, and CSV quoting in code; refuses a changed header, lost rows, symlinks).
-- `inbox/` — new raw captures by type. `state/` — snapshots and cursors. `state/web-search/` — external grounding (see `_web-search.md`). `state/competitive/` — competitor page dumps.
+- `inbox/` — new raw captures by type. `state/` — snapshots and cursors. `state/web-search/` — external grounding (see `_web-search.md`). `state/competitive/` — competitor page dumps. `state/chat-harvest/` — PM-turn candidates from `scripts/chat_harvest.py` (cursor `state/.chat-harvest-cursor`). `state/repo-activity/` — git-metadata snapshots from `scripts/repo_activity.py` (cursor `state/repo-activity-cursor.json`); the script does not write to a tracker. `state/entity-links.csv` — local ticket, document, and initiative links from `scripts/entity_links.py`, written by `/sync jira-reconcile` only.
 - `scripts/web_search.py` — URL discovery that does not depend on a hosted web-search tool (always before native WebSearch).
 - `outputs/` — reviewed work products by cadence and type. `archive/` — processed raw inputs.
 - `reference/` — templates (including `templates/formatted/`, where the template owns branding and `scripts/render_template.py` supplies content), metric definitions (one YAML per OKR metric), product knowledge, `user-research/` (indexed research summaries).

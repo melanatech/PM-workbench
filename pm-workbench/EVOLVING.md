@@ -46,6 +46,8 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 
 ## Changelog (newest first; one line per real architectural decision — not every edit)
 
+- 2026-10-14 — **Final sweep:** Fan-out stays 14 surfaces (`scripts/fanout_route.py`). Entity links stay on `/sync jira-reconcile` (`state/entity-links.csv`), and product areas stay the owner map. `external-readiness-reviewer` is indexed beside the red team; each stays blind to the other's inputs. `render_template.py` is the stdlib HTML/docx writer; `log_metrics.py` remains a stub. Week one includes `/brief context-setup`. Indexes name `state/chat-harvest/` and `state/repo-activity/`.
+
 - 2026-10-14 — **Lean CLAUDE.md:** numbered one-line rules stay in CLAUDE.md; rule 5 lives in `okr-refresh.md`; rules 18–20 and 23–24 plus execution modes and model routing live in `_protocol.md` (models still declared in `routes.json`); the command menu lives in `_plain-language.md`; the authority and cache tables live in `authority-lookup`; register schemas and the file map live in CONNECTIONS.md; "Keeping this fast" lives in AGENTS.md. Removed the commitment-lookup alias (phrases folded into authority-lookup), the deferred prototype stub, and two scripts no workflow called.
 
 - 2026-10-13 — **Enforce recurring workbench fixes:** provenance hook covers registers/context; `workspace-aliases.md` + preflight name resolution; Stop/PostToolUse path-link hooks; clipper v0.6 slow DOM transcript (no decrypt); `recurring_corrections.py` + principle 7. Trigger: assume→glossary, phantom COM cites, bare paths, incomplete Stream clips.
@@ -197,4 +199,4 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 - `claude --chrome` is optional and only if the plan allows it. Some enterprise plans do not include Claude in Chrome. The standing paths are the Workbench Clipper, Atlassian or Slack MCP, and the Playwright/CDP bridge (SETUP.md).
 - Whether your ticketing/wiki has gained a direct API path Claude can call (an approved integration or token) — would simplify several commands if so.
 - Register file sizes — check whether `/rotate-registers` has actually been run.
-- Whether `scripts/log_metrics.py` and `scripts/render_template.py` have been filled in past their stub state; `extract_document.sh` covers common formats including `.xlsx`/`.xlsm` (pptx, legacy `.xls`, and encrypted Office still manual).
+- Whether `scripts/log_metrics.py` has been filled in past its stub state. `scripts/render_template.py` writes HTML and `.docx` (Excel and PowerPoint still exit with a message). `extract_document.sh` covers common formats including `.xlsx`/`.xlsm` (pptx, legacy `.xls`, and encrypted Office still manual).

@@ -240,7 +240,7 @@ Two access paths, use whichever is real for you:
 Drop anything durable-but-unprocessed into `inbox/documents/`; `/capture process-inbox`
 is a prompt workflow that may index it into `reference/user-research/` or the
 appropriate local file and then archive the original. Review its proposed file
-changes. Binary extraction is not available until the stub is implemented.
+changes. When `extract_document.sh` exits 2 or 3, re-export or paste.
 
 ## Part 6: Verify the local loop
 

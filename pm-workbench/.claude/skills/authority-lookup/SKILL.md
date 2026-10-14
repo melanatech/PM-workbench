@@ -62,4 +62,4 @@ Pick the authoritative surface for the question type, read it first, then second
 4. A new durable analysis → `scripts/analysis_index.py append` in the same run (or fan-out).
 5. Forbidden: blank-slate re-investigation when hits exist and there is no staleness or conflict signal; answering "the brief says" for a product-fact check.
 
-Citations under `drafts/` or `prototypes/` are not evidence. Carry `primary_sources` from the index, or climb the SOURCE-POLICY claim-type ladder. Hooks block ungrounded consequential writes and `repos/**` reads without a fresh preflight marker.
+Citations under `drafts/` or `prototypes/` are not evidence. Carry `primary_sources` from the index, or climb the SOURCE-POLICY claim-type ladder. Hooks block ungrounded consequential writes and `repos/**` reads without a fresh preflight marker. Git metadata (`scripts/repo_activity.py`: `git log`, `git fetch`, branch names) is exempt from that repos preflight gate, which blocks Read/Grep/Glob of `repos/**` and not shell git metadata; do not open source files on that path (SOURCE-POLICY, Git metadata exemption).

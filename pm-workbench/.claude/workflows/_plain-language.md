@@ -70,7 +70,7 @@ You type one of eight commands. Six are routers over the workflows in `routes.js
 | Command | Workflows behind it |
 |---|---|
 | `/capture` | `meeting-closeout`, `process-inbox` |
-| `/brief` | `get-started`, `daily-brief`, `return-brief`, `meeting-prep` |
+| `/brief` | `get-started`, `context-setup`, `daily-brief`, `return-brief`, `meeting-prep` |
 | `/sync` | `jira-reconcile`, `ripple-check`, `context-reconcile`, `roadmap-update`, `rotate-registers` |
 | `/discover` | `discovery`, `research-plan`, `research-package`, `competitive-scan`, `learn-product-flow`, `code-dive`, `explore-brief` |
 | `/build` | `prd-package`, `prototype-build`, `prd-prototype-sync`, `experiment-package`, `experiment-analyze`, `launch-package` |
@@ -85,6 +85,7 @@ Plain language that matches a row **is** an instruction to run that workflow. Co
 | I say something like... | Run |
 |---|---|
 | "How do I get started" / "set up the workbench" / "create my pm-live" / "first-time setup" / "new user setup" | `/brief get-started` |
+| "Fill my context" / "set up my context" / "context setup" | `/brief context-setup` |
 | "What changed while I was out" / "back from leave" | `/brief return-brief` |
 | "What's new" / "morning" / "catch me up" / "daily brief" | `/brief daily-brief` |
 | "Catch up the inbox" / "process clips" / "web clips" / "process documents" / "I uploaded something" / "new PDFs" / "what's waiting" | `/capture process-inbox` |

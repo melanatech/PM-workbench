@@ -33,7 +33,7 @@ Say so in one sentence. Do **not** re-run `create_live_workspace.py`.
 
 Then give a short first-week card (chat only; optional save to `outputs/daily/YYYY-MM-DD-get-started.md` if useful):
 
-1. Fill `.claude/CLAUDE.local.md` (machine, editor, tools you actually have — never invent connectors).
+1. `/brief context-setup` — drafts context from material already on disk, your own chat, and a short interview. Personal identity goes to `.claude/CLAUDE.local.md` (gitignored). Do not hand-edit tracked `CLAUDE.md`.
 2. Optional: fictional practice in a **separate** isolate — from the kit: `python3 scripts/load_fixture.py lumenly --isolate /tmp/pm-workbench-lumenly` (never load the fixture into the live folder).
 3. Drop a real meeting note in `inbox/meetings/` → `/capture meeting-closeout` or `/quick-close`.
 4. Chrome clips → `/capture process-inbox`.

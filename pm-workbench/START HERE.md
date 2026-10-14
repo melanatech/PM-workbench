@@ -25,6 +25,8 @@ python3 pm-workbench/scripts/create_live_workspace.py ~/pm-live
 ```
 
 Open `~/pm-live` in Claude Code. Keep the git clone for kit fixes only.
+Say **"fill my context"** (or `/brief context-setup`) to draft living context from
+what you already have. Identity stays in `.claude/CLAUDE.local.md`.
 
 The Lumenly fixture is fictional. Keep it separate from real work: this command
 creates a code-only copy in the path you choose, loads the fixture there, and

@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 # Reuse live-root resolution from the clipper bridge.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from pull_clips import resolve_live_root  # noqa: E402
+from source_fidelity import classify_fidelity  # noqa: E402
 
 CATEGORIES = [
     ("discovery", "Discovery signal (customer / support / feedback)"),
@@ -134,6 +135,7 @@ def write_capture(live_root: str, category: str, body: str, *, title: str = "", 
         f"title: {(title or 'Clipboard capture').replace(chr(10), ' ')}",
         f"source_url: {source_url}",
         "capture_kind: clipboard",
+        f"fidelity: {classify_fidelity(text)}",
         "extract_source: clipboard",
         "access_path: PM Workbench clipboard capture — text the PM copied from a desktop app (Slack, Mail, etc.); not fetched by the model",
         f"landing: {live_root}/inbox/{category}/",

@@ -5,6 +5,8 @@ argument-hint: [INIT-nnn | COM-nnn | feature or problem]
 
 Execution mode: **standard** (fast=0 reviewers, standard=bounded gather, deep not used here — see CLAUDE.md). Override inline if I say so.
 
+Context dependencies: soft: product-areas, audiences | hard: none
+
 Explore / check-in brief for: $ARGUMENTS
 
 This is **not** a PRD package. No readiness score-as-PRD-gate, Feature Contract, stakeholder reviewer panel, or opus path. When the PM later wants a full PRD, they run `/build prd-package` (same gatherer).

@@ -5,6 +5,8 @@ argument-hint: [optional focus: todos|questions|competitive|initiatives| or a da
 
 Execution mode: **standard** (bounded sources; not Deep). Override inline if I say so.
 
+Context dependencies: soft: current-priorities, people | hard: none
+
 Backfill: $ARGUMENTS
 
 **Purpose.** `/capture process-inbox` and meeting-closeout process a file once. Older runs often wrote registers (or a daily digest) and skipped living surfaces. This workflow **re-reads already-processed material** and applies `.claude/workflows/_fan-out.md` so context is propagated everywhere it should have landed — without re-inventing evidence or auto-adding to-dos.
@@ -13,7 +15,8 @@ This is **not** `/sync jira-reconcile` (board) and **not** `/sync ripple-check` 
 
 ## Step 0 — preflight + scope
 
-0. `python3 scripts/context_preflight.py --root <live> --topic "context-reconcile $ARGUMENTS"` — prefer indexed analyses when backfilling product facts; append index rows for any new durable analyses this run produces.
+0. `python3 scripts/context_preflight.py --root <live> --topic "context-reconcile $ARGUMENTS"` — prefer indexed analyses when backfilling product facts; append index rows for any new durable analyses this run produces. When a backfilled fact shares an initiative id or a primary source with an indexed deliverable, `python3 scripts/analysis_index.py mark-stale` (surface 13). Do not rewrite the deliverable.
+0b. **Chat harvest (rule 24 backfill).** `python3 scripts/chat_harvest.py --root <live> --workspace <live> --workspace <kit>`. Classify fact-like PM turns that never reached a capture. Present promotions in one Tier 2 batch. Do not copy assistant text into durable files.
 1. Default window: last **30 days** of `archive/` + related `outputs/daily/`, `outputs/monthly/`, `reference/user-research/`, `learning/`, plus always-read living files and registers below.
 2. If `$ARGUMENTS` names a focus (`todos`, `questions`, `competitive`, `initiatives`, a topic, or `since YYYY-MM-DD`), narrow to that. If it says `full`, widen but still cap (step 1).
 3. Print one line: window + focus + approx file count you will open (max **12** source files in Standard; if more are relevant, list excluded and offer to widen — never silently fan out across the whole archive).
@@ -61,7 +64,7 @@ Create [`outputs/daily/[today]-context-reconcile.md`](outputs/daily/) with:
 - Open questions added/resolved (count)
 - Todo proposal path + counts (`new` / `already tracked` / `skip`)
 - Todo hygiene proposals awaiting approval
-- Surfaces updated / N/A / Cross-initiative block from `_fan-out.md`
+- Surfaces updated / Cross-initiative block from `_fan-out.md` (no N/A list)
 
 Show the report path (rule 20). One line on context used/excluded if you chose among many sources (rule 18).
 

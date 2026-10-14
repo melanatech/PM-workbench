@@ -6,6 +6,8 @@ argument-hint: [feature or problem]
 
 Execution mode: **standard** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
+Context dependencies: soft: product-areas, audiences, people | hard: none
+
 Build the PRD package for: $ARGUMENTS
 
 **Step 0 — context preflight, then gatherers.** Run `python3 scripts/context_preflight.py --root <live> --topic "$ARGUMENTS"` first; read `state/.context-preflight.json`. Then dispatch `prd-context-gatherer` (consumes the marker) and in parallel `internal-docs-reader`. Do not open `repos/` until preflight sets `allow_repos` or you re-run with `--allow-repos` / `--verify`. Everything below works from the preflight + both briefs instead of re-reading files from scratch.

@@ -4,6 +4,8 @@ description: Draft the weekly leadership update from maintained state, not memor
 
 Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
+Context dependencies: soft: current-priorities, audiences, writing-style | hard: none
+
 ## Gather plan
 
 Sequence Step 0 first (preflight, then the live Jira refresh), because the draft is interpreted against that reconciliation. After Step 0, batch the independent local reads in one turn. If this session already read a file, pass the distilled brief onward instead of re-reading the raw file. Re-reading the same file for a different task is fine; prompt caching makes that cheap. No session cache.

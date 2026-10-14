@@ -5,6 +5,8 @@ argument-hint: [paste notes/transcript, or filename in inbox/meetings/]
 
 Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
+Context dependencies: soft: people, current-priorities | hard: none
+
 Meeting input: $ARGUMENTS
 
 (This can be typed notes, a downloaded meeting transcript/AI summary (Teams, Zoom, Meet) if you organized the meeting, whatever your meeting tool's AI summary produces if you didn't, or a dictated voice memo transcript — treat all of them the same way below.)
@@ -55,7 +57,7 @@ Meeting input: $ARGUMENTS
 
 If the meeting produced follow-ups that are mine to do but are not commitments to anyone: write them as a numbered candidate table to `outputs/todo-proposals/[date]-proposals.md` (create folder if needed; start with `QUEUED — nothing added` if new file; if today's file exists, add a section). Do **not** add rows to `registers/todos.csv` from here — I pick via `/todo propose`. One line in the reply: path + count. If there are none, skip.
 
-**Fan-out (required).** After registers/initiatives/assumptions/learning/todo-proposals above, read and apply `.claude/workflows/_fan-out.md`. Update every surface that applies in this same run (including `current-priorities.md` when week pressure/dates moved; competitive log/`state/competitive/` when a competitor was named with a durable claim; every INIT- touched, not only the primary). End with the Surfaces updated / N/A / Cross-initiative block from that file.
+**Fan-out (required).** After registers/initiatives/assumptions/learning/todo-proposals above, tag each item and apply `.claude/workflows/_fan-out.md` (only the surfaces `scripts/fanout_route.py` names for those types). Update every matching surface in this same run (including `current-priorities.md` when week pressure moved; competitive log when a competitor was named; every INIT- touched). End with the Surfaces updated / Cross-initiative block. No N/A list.
 
 
 The measure of this command is not the summary — it's that the registers stay true *for PM work*. A meeting isn't closed out until its product-relevant decisions and commitments are reconciled with the system of record.

@@ -61,3 +61,5 @@ Produce an email version and a wiki-format version. Save to `outputs/weekly/[dat
 - PPPs are posted to Confluence or Slack (the exact page or channel is not recorded). In this workflow stop at the saved draft: do not publish, post, or pre-fill either.
 
 **If living context is blank** (`current-priorities.md`): note it rather than silently generating unframed output — a one-line "no stated priorities this week" is honest; fabricated framing is not.
+
+**Publish.** Defaults: `audience: internal`, `formats: [md, slack]`. Follow Audience and formats and Publish in `.claude/workflows/_protocol.md`. The file in `outputs/weekly/` stays the internal source. `python3 scripts/publish.py` writes neutralized copies under `outputs/external/`. This workflow is Fast, so do not dispatch `external-readiness-reviewer`. The Slack file is a local mrkdwn draft. Sending it is Tier 3 and waits for an explicit yes. Do not call a chat send API from this step.

@@ -5,7 +5,7 @@ model: opus
 
 Execution mode: **deep** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
-Context dependencies: soft: current-priorities, product-areas, kr-metric-map | hard: none
+Context dependencies: soft: current-priorities, product-areas, kr-metric-map, audiences | hard: none
 
 **Step 0 — preflight:** `python3 scripts/context_preflight.py --root <live> --topic "strategy $ARGUMENTS"`. Pass hits into the synthesizer; index the refresh when written (`kind=strategy`).
 
@@ -20,3 +20,5 @@ Context dependencies: soft: current-priorities, product-areas, kr-metric-map | h
 **Step 3 — package** → `outputs/strategy/[date]/`: updated strategy doc (same throughline as prior versions — deepen, don't reinvent); one-page leadership memo; prioritization table; revenue models; strategic risks; anticipated objections + responses; proposed roadmap changes; experiments needed before investment; discussion-deck outline.
 
 **First run:** if no current strategy doc exists in `outputs/strategy/` or `reference/`, STOP and ask for it (a wiki/shared-drive link for `reference/links.csv`, or a file). A change report against no baseline is fiction. If the person confirms no strategy doc exists at all, say so and offer to draft an initial one instead — labeled as initial, not as an update.
+
+**Step 4 — Publish.** Defaults: `audience: internal`, `formats: [md]`. The strategy folder stays the internal source. Produce an external version only when the PM asks, then follow Audience and formats and Publish in `.claude/workflows/_protocol.md`. This workflow is not Fast: when an external version is written, dispatch `external-readiness-reviewer` once on the rendered file and the audience line. Publishing or sending is Tier 3 and waits for an explicit yes. Do not call a wiki create API or a chat send API from this step.

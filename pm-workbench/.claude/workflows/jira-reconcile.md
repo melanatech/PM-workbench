@@ -4,6 +4,20 @@ description: Reconcile the Jira board against reality - snapshot diff plus propo
 
 Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
+## Gather plan
+
+Batch the independent reads in one turn, then diff. The live board read does not depend on the local registers, and the registers do not depend on the live board. The diff depends on both, so it waits until the batch is back. If this session already read a file, pass the distilled brief onward instead of re-reading the raw file. Re-reading the same file for a different task is fine; prompt caching makes that cheap. No session cache.
+
+Independent (batch together):
+
+- `reference/links.csv` (the board bookmark and which fields mean delivery stage)
+- the previous file in `state/jira-snapshots/`
+- `registers/decisions.csv`, `registers/commitments.csv`, `registers/initiatives.csv`, `registers/evidence.csv` (recent rows only)
+- recent `outputs/daily/*-meeting.md`
+- the live board via Atlassian MCP, the bookmarked browser view, or a pasted export (name which path — rule 21). Prefer compact fields; write the full payload into the snapshot file instead of pasting it into chat.
+
+Then write `state/jira-snapshots/[date].json` and the diff in `outputs/weekly/[date]-jira-reconcile.md`. Dispatch `internal-docs-reader` only when a discrepancy needs a decision doc outside Jira/Confluence, and pass it the distilled mismatch, not the whole board dump.
+
 1. **Get current state** of my active board/epics. Access-path ladder (name which one in the report — rule 21):
    1. **Atlassian MCP** (approved plugin) — preferred when configured and authenticated.
    2. Bookmarked Jira (or equivalent) view via logged-in browser.

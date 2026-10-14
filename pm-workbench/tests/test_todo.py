@@ -345,5 +345,166 @@ class FixtureSeedTests(unittest.TestCase):
             self.assertEqual((data["open"], data["overdue"]), (3, 1))
 
 
+QUEUE = """# Queue
+
+QUEUED — nothing added
+
+| # | Description | Owner | Due | Priority | Initiative | Blocks | Links | Source file | Why |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Ask finance for the export | me | 2026-10-20 | normal | | | EV-211 | inbox/meetings/q.md | they asked |
+| 2 | Leave this one | me | | normal | | | | | later |
+"""
+
+
+class TodoPlanTests(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        (self.root / "scripts").mkdir()
+        shutil.copy(SCRIPT, self.root / "scripts" / "todo_register.py")
+        (self.root / "registers").mkdir()
+        self.register = self.root / "registers" / "todos.csv"
+        self.register.write_text(BASE, encoding="utf-8")
+        queue_dir = self.root / "outputs" / "todo-proposals"
+        queue_dir.mkdir(parents=True)
+        self.queue = queue_dir / "2026-10-14-proposals.md"
+        self.queue.write_text(QUEUE, encoding="utf-8")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def todo(self, *args):
+        return run([sys.executable, "scripts/todo_register.py", *args], cwd=self.root)
+
+    def test_plan_promotes_queue_and_writes_dispatch_plan(self):
+        result = self.todo("plan", "--queue", "1", "--today", "2026-10-14")
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        rows = read_rows(self.register)
+        self.assertEqual([row[0] for row in rows[1:]], ["TODO-001", "TODO-002", "TODO-003"])
+        added = rows[3]
+        self.assertEqual(added[1], "Ask finance for the export")
+        self.assertEqual(added[9], "proposed")
+        self.assertEqual(added[5], "open")
+        self.assertEqual(rows[1][5], "open")
+        self.assertIn("reviewed 2026-10-14: added 1 via /todo plan", self.queue.read_text(encoding="utf-8"))
+        plan = self.root / "outputs" / "todo-drafts" / "2026-10-14-dispatch-plan.md"
+        text = plan.read_text(encoding="utf-8")
+        self.assertIn("| id | deliverable | files | gaps | output | size |", text)
+        self.assertIn("TODO-003", text)
+        self.assertIn("Approved: no", text)
+        self.assertIn("```todo-plan", text)
+        self.assertIn("inbox/meetings/q.md", text)
+        self.assertIn("registers/evidence.csv", text)
+        self.assertIn('"deliverable": "message"', text)
+        again = self.todo("plan", "--queue", "1", "--today", "2026-10-14")
+        self.assertNotEqual(again.returncode, 0, again.stdout)
+        self.assertEqual(len(read_rows(self.register)), 4)
+
+    def test_register_lock_critical_sections_do_not_overlap(self):
+        trace = self.root / "lock-trace.txt"
+        env = os.environ.copy()
+        env["TODO_REGISTER_LOCK_HOLD"] = "0.4"
+        env["TODO_REGISTER_LOCK_TRACE"] = str(trace)
+        first = subprocess.Popen(
+            [sys.executable, "scripts/todo_register.py", "add", "--description", "A", "--today", "2026-10-02"],
+            cwd=self.root, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        )
+        second = subprocess.Popen(
+            [sys.executable, "scripts/todo_register.py", "add", "--description", "B", "--today", "2026-10-02"],
+            cwd=self.root, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        )
+        first_out = first.communicate()
+        second_out = second.communicate()
+        self.assertEqual(first.returncode, 0, first_out[1])
+        self.assertEqual(second.returncode, 0, second_out[1])
+        events = []
+        for line in trace.read_text(encoding="utf-8").splitlines():
+            _pid, event, stamp = line.split()
+            events.append((float(stamp), event))
+        events.sort()
+        depth = 0
+        for _stamp, event in events:
+            if event == "acquire":
+                depth += 1
+                self.assertLessEqual(depth, 1, events)
+            else:
+                depth -= 1
+        self.assertEqual(depth, 0)
+        self.assertEqual(len(read_rows(self.register)), 5)
+
+
+class TodoReconcileTests(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        (self.root / "scripts").mkdir()
+        shutil.copy(SCRIPT, self.root / "scripts" / "todo_register.py")
+        shutil.copy(WORKBENCH / "scripts" / "transcripts.py", self.root / "scripts" / "transcripts.py")
+        (self.root / "registers").mkdir()
+        self.register = self.root / "registers" / "todos.csv"
+        self.register.write_text(BASE, encoding="utf-8")
+        self.projects = self.root / "claude-projects" / "-fixture"
+        self.projects.mkdir(parents=True)
+        record = {
+            "type": "user",
+            "uuid": "u-done",
+            "sessionId": "sess-done",
+            "timestamp": "2026-10-12T15:00:00.000Z",
+            "entrypoint": "cli",
+            "cwd": str(self.root),
+            "message": {"role": "user", "content": "done with TODO-001, I sent it"},
+        }
+        negated = {
+            "type": "user",
+            "uuid": "u-not",
+            "sessionId": "sess-done",
+            "timestamp": "2026-10-12T15:01:00.000Z",
+            "entrypoint": "cli",
+            "message": {"role": "user", "content": "I have not done TODO-002"},
+        }
+        tool = {
+            "type": "user",
+            "uuid": "u-tool",
+            "timestamp": "2026-10-12T15:02:00.000Z",
+            "entrypoint": "cli",
+            "sourceToolAssistantUUID": "assistant-1",
+            "message": {"role": "user", "content": "done with TODO-002"},
+        }
+        path = self.projects / "sess-done.jsonl"
+        path.write_text(
+            "\n".join(json.dumps(item) for item in (record, negated, tool)) + "\n",
+            encoding="utf-8",
+        )
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_reconcile_proposes_without_changing_status(self):
+        before = self.register.read_text(encoding="utf-8")
+        result = run(
+            [sys.executable, "scripts/todo_register.py", "reconcile",
+             "--projects-dir", str(self.projects), "--today", "2026-10-14"],
+            cwd=self.root,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        self.assertEqual(self.register.read_text(encoding="utf-8"), before)
+        self.assertIn("likely_done=1", result.stdout)
+        self.assertIn("Status was not changed", result.stdout)
+        proposal = self.root / "outputs" / "todo-drafts" / "2026-10-14-reconcile.md"
+        text = proposal.read_text(encoding="utf-8")
+        self.assertIn("TODO-001", text)
+        self.assertNotIn("TODO-002", text)
+        self.assertIn("Nothing in registers/todos.csv was marked done", text)
+        counted = run(
+            [sys.executable, "scripts/todo_register.py", "reconcile", "--count",
+             "--projects-dir", str(self.projects), "--today", "2026-10-14"],
+            cwd=self.root,
+        )
+        self.assertEqual(counted.returncode, 0, counted.stderr)
+        self.assertIn("likely_done=1", counted.stdout)
+        self.assertIn("likely TODO-001", counted.stdout)
+        self.assertEqual(self.register.read_text(encoding="utf-8"), before)
+
+
 if __name__ == "__main__":
     unittest.main()

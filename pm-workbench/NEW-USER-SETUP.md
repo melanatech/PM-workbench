@@ -182,7 +182,6 @@ In the Claude Code panel:
 | `github` | Repo/PR lookups for prototypes and kit PRs (not a substitute for local `git`) |
 | `figma` | Design tokens / frames when `reference/design/` is thin |
 | `chrome-devtools-mcp` | Inspect a live Chrome tab (perf, network, DOM) — separate from the Workbench Clipper and Playwright `browser-bridge` |
-| UX Guardrails MCP (optional company integration) | Not required. `.claude/skills/ux-guardrails/SKILL.md` applies only if your organization provides a Guardrails MCP. Install it per that org's docs, then the skill calls `setup` before the first `check`. If you do not have it, leave the skill unused and do not claim compliance. |
 
 If a plugin is “not found,” refresh the marketplace:
 `/plugin marketplace update claude-plugins-official` (or

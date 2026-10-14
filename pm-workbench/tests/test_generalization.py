@@ -84,6 +84,28 @@ class GeneralizationTests(unittest.TestCase):
         self.assertNotIn("Payments", example)
         self.assertNotIn("Cube", example)
 
+    def test_tracked_kit_does_not_name_a_company_ux_checker(self):
+        import subprocess
+
+        root = WORKBENCH.parent
+        listed = subprocess.check_output(["git", "ls-files", "pm-workbench"], cwd=root, text=True)
+        banned = ("UX Guardrails", "ux-guardrails", "Guardrails MCP")
+        hits = []
+        for rel in listed.splitlines():
+            if "/tests/" in f"/{rel}":
+                continue
+            path = root / rel
+            if not path.is_file():
+                continue
+            if path.suffix not in TEXT_SUFFIXES and path.name not in {"Run PM Workflow.command"}:
+                continue
+            text = path.read_text(encoding="utf-8", errors="replace")
+            for token in banned:
+                if token in text:
+                    line_no = text[: text.index(token)].count("\n") + 1
+                    hits.append(f"{rel}:{line_no}: {token}")
+        self.assertEqual(hits, [], "company UX checker in the tracked kit:\n" + "\n".join(hits))
+
 
 if __name__ == "__main__":
     unittest.main()

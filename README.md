@@ -126,18 +126,18 @@ Continue with [START HERE](pm-workbench/START%20HERE.md) and
 
 ## Commands at a glance
 
-The toolkit has eight commands. Six are routers over 26 workflows: you give each one a workflow name, or just describe the job and it picks.
+The toolkit has eight commands. Six are routers over 32 workflows: you give each one a workflow name, or just describe the job and it picks.
 
 | Command | Workflows |
 | --- | --- |
 | `/capture` | `meeting-closeout`, `process-inbox` |
-| `/brief` | `daily-brief`, `return-brief`, `meeting-prep` |
-| `/sync` | `jira-reconcile`, `ripple-check`, `roadmap-update`, `rotate-registers` |
-| `/discover` | `discovery`, `research-plan`, `research-package`, `competitive-scan`, `learn-product-flow`, `code-dive` |
+| `/brief` | `daily-brief`, `return-brief`, `meeting-prep`, `get-started`, `context-setup` |
+| `/sync` | `jira-reconcile`, `ripple-check`, `context-reconcile`, `roadmap-update`, `rotate-registers` |
+| `/discover` | `discovery`, `research-plan`, `research-package`, `competitive-scan`, `learn-product-flow`, `code-dive`, `explore-brief` |
 | `/build` | `prd-package`, `prototype-build`, `prd-prototype-sync`, `experiment-package`, `experiment-analyze`, `launch-package` |
-| `/report` | `weekly-update`, `okr-refresh`, `strategy-refresh`, `workbench-health`, `monthly-review` |
+| `/report` | `weekly-update`, `okr-refresh`, `strategy-refresh`, `roadmap-build`, `workbench-health`, `monthly-review`, `ship-signal` |
 
-`/quick-close` is a 60-second capture. `/todo` manages your own to-do list (`registers/todos.csv`); it can propose to-dos from the inbox, draft help for a few that are due (`sweep`), and queue proposals without adding them.
+`/quick-close` is a 60-second capture. `/todo` manages your own to-do list (`registers/todos.csv`). It can propose to-dos from the inbox, write a dispatch plan, draft help for approved items (`dispatch` or `sweep`), and suggest which open items look finished (`reconcile`). It does not mark them done on its own.
 
 `/report monthly-review` counts dropped balls and decision quality from the registers and logs, with a recorded baseline. See `pm-workbench/reference/workbench-metrics.md` for what each number can and cannot tell you.
 
@@ -149,7 +149,7 @@ Unattended runs go through `pm-workbench/scripts/run_scheduled.py` (cron, launch
 | --- | --- |
 | **Available now** | Static course and essay; local fixture loader, run checker, and safety tests; command and agent prompt files. |
 | **Needs configuration and review** | Company context, templates, capture tools, external read paths, permissions, and scheduling. No real company systems are connected by default. |
-| **Known stubs** | `log_metrics.py`, `extract_document.sh`, and `render_template.py`. Use the documented manual or Markdown fallbacks until the needed implementation is tested. |
+| **Known limits** | `log_metrics.py` is still a stub. `render_template.py` writes HTML and Word; Excel and PowerPoint exit with a message and the caller keeps Markdown. |
 | **Not verified end-to-end** | Browser reads against real sources, hooks in your Claude Code installation, the router-to-subagent hand-off and per-workflow model choice, the scheduling wrapper under `claude -p` and `/loop`, and external-system writes. |
 
 See the [readiness guidance](pm-workbench/START%20HERE.md#what-is-ready-configurable-and-still-a-stub)

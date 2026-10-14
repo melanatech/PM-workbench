@@ -50,9 +50,3 @@ Numbers stay stable. One line here; a moved rule keeps the same number in the fi
 - **Registers, schemas, and the file map:** CONNECTIONS.md.
 - **Claim ladder:** SOURCE-POLICY.md.
 - **Subagents and context size:** AGENTS.md.
-
-<!-- BEGIN UX GUARDRAILS MCP -->
-## UX Guardrails MCP
-
-For every user-facing UI, UX, accessibility, or content change or review, call the Guardrails MCP `setup` before the first `check`, then call `check` before reporting completion. Do not claim compliance when validation is unavailable.
-<!-- END UX GUARDRAILS MCP -->

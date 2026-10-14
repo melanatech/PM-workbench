@@ -17,6 +17,7 @@ browser-profiles/
 *.docx
 *.pptx
 .claude/CLAUDE.local.md
+.claude/skills/ux-guardrails/
 .claude/settings.local.json
 __pycache__/
 tools/clipboard-capture/SendToPMWorkbench/build/

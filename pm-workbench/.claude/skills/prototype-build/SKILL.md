@@ -69,7 +69,7 @@ If a **component library** is the design source, install/link it and build scree
 
 **Catalog update.** When this build creates a reusable piece (shell, shared table pattern, state kit) worth stealing later, append a row to `reference/design/prototype-components.md` (date, name, path, reuse-when, status, notes) in the same run — do not wait for a later cleanup pass. If it belongs in `_shared`, prefer promoting there (ask PM when ≥2 prior copies).
 
-**UX Guardrails preflight (reduce first-pass failures).** Before inventing controls, read `reference/design/ux-guardrails-lessons.md` and apply every **Standing preflight** item that fits. The MCP does not learn across sessions — only this file, `_shared` primitives, and prior QA notes carry fixes forward. After a Guardrails `check` with failures: fix the UX (in `_shared` when the control is shared), then **append a lesson row** in the same run before claiming done.
+**Prototype preflight.** Before inventing controls, read `reference/design/prototype-preflight.md` and apply every **Standing preflight** item that fits. After a UX failure on a shared control, fix it in `_shared` and **append a lesson row** in the same run before claiming done. A company UX checker, if one exists, is named in `.claude/CLAUDE.local.md`, not in this skill.
 
 **Handoff paths (document in README).** (1) **Static** — single `index.html`, open in a browser. (2) **React** — `npm run build` → zip/`preview`; optional `npm run share` (single-file HTML via e.g. `vite-plugin-singlefile`) so stakeholders need not `npm install`. Do not require every concept test to be static.
 

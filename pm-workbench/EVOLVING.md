@@ -47,6 +47,7 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 
 ## Changelog (newest first; one line per real architectural decision — not every edit)
 
+- 2026-10-14 — **Company UX check leaves the public kit.** The Guardrails skill, its setup row, and the lessons filename were a company tool kept under an "optional integration" label. Standing prototype checks now live in `reference/design/prototype-preflight.md`. A company checker is named only in gitignored `CLAUDE.local.md`. `test_generalization.py` fails if a tracked kit file names that checker.
 - 2026-10-14 — **Usage story rework:** the first usage story was a cost report: list-price estimates, spend divided by file count, and outcomes buried at the end. The spec asked for cost series; the workflow said to reuse the price-table estimate; no test read the story. Now `scripts/usage_story.py data` counts the work mix, workflows, corrections (subagent results excluded), and weekly outcomes. `usage_story.py check` fails a story without an executive summary first, a "so what", the required sections, or one that divides spend by an output count. The live workspace story may use a private cost dashboard, and those figures are not committed here. Text in this repo uses a labeled price-table estimate. `workbench-health.md` names the order. Design principle 8.
 
 - 2026-10-14 — **Alias audience treatment:** `workspace-aliases.md` rows carry `external_treatment` (`internal_only`, `expand`, `preserve`, `neutralize`). Publishing blocks an unclassified row, including an old three-column row. An alias is not banned just because it is an alias.
@@ -95,7 +96,7 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 
 - 2026-10-06 — **Discovery synthesis checklist** (modes 1/3/4): channel mix + theme cards (evidence-class mix, independent-account count, verbatim/edge cases, INIT touch). Pattern borrowed from https://github.com/msitarzewski/agency-agents/blob/main/product/product-feedback-synthesizer.md — checklist only; no Agency agent install.
 
-- 2026-10-13 — **Scenario Guide + Guardrails lessons:** optional `_scenario-guide.md` / skill `scenario-guide` for prototype-build (evaluator look/do/try panel; generic recipe, scripts stay in the feature app). Guardrails MCP does not learn across sessions — durable fixes go in `reference/design/ux-guardrails-lessons.md`; prototype-build reads Standing preflight before scaffold and appends lessons after failed checks.
+- 2026-10-13 — **Scenario Guide:** optional `_scenario-guide.md` / skill `scenario-guide` for prototype-build (evaluator look/do/try panel; generic recipe, scripts stay in the feature app). Durable prototype fixes go in `reference/design/prototype-preflight.md`; prototype-build reads Standing preflight before scaffold and appends lessons after failed checks.
 
 - 2026-10-13 — **Web search providers:** when DDG serves captcha, Bing’s bot SERP returns dictionary/homepages. `web_search.py` now tries Startpage before Bing, filters dictionary/login/homepage junk, and skips unusable provider responses. Optional Serper/Brave keys still win when set.
 

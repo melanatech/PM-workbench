@@ -18,4 +18,4 @@ Optional add-on for **`/build prototype-build`**.
 4. Wire a **Guide** toggle next to the variant controls; desktop sidebar / mobile sheet; Escape closes.
 5. Update the prototype README and, if reusable, `reference/design/prototype-components.md`.
 
-Forbidden: forcing a Guide on every prototype; auto-playing clicks through the product; claiming UX Guardrails pass because a Guide exists.
+Forbidden: forcing a Guide on every prototype; auto-playing clicks through the product; claiming an accessibility pass because a Guide exists.

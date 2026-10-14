@@ -6,6 +6,6 @@ Org-agnostic hooks for `/build prototype-build`. Keep **company** component libr
 |---|---|
 | [`prototype-components.md`](prototype-components.md) | **Soft reuse catalog** — pieces not yet in `_shared`; next builds copy/adapt or promote |
 | [`shared-prototype-package.md`](shared-prototype-package.md) | Live `prototypes/_shared` (`@pm-live/prototype-kit`) convention + shareable HTML handoff |
-| [`ux-guardrails-lessons.md`](ux-guardrails-lessons.md) | Standing preflight + durable Guardrails lessons (feeds `_shared` and prototype-build) |
+| [`prototype-preflight.md`](prototype-preflight.md) | Standing preflight + lesson log (feeds `_shared` and prototype-build) |
 
 Also check `reference/links.csv` for design-system repos and style-guide URLs.

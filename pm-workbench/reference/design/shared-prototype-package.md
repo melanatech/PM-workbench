@@ -28,7 +28,7 @@ One live-only package that feature prototypes depend on via npm `file:../_shared
 2. **Else:** soft-copy from `prototype-components.md` as before.
 3. **Promotion:** when a catalog row has been copied ≥2 times, offer to move it into `_shared` and update dependents (ask the PM).
 4. **QA:** harness boots each feature app; `_shared` is a dependency. Optionally add a tiny examples page later.
-5. **Guardrails loop:** fix shared primitives in `_shared` **and** append `ux-guardrails-lessons.md` — that is how fixes propagate across prototypes (MCP does not remember).
+5. **Preflight loop:** fix shared primitives in `_shared` **and** append `prototype-preflight.md` — that is how fixes propagate across prototypes.
 6. **Non-goals:** do not replace company UI base (`repos/`); do not put `@ux/*` in the public kit; do not force static HTML prototypes onto npm; do not treat `_shared` as baseline “today” truth (still port from the PM’s product repo).
 
 ## Shareable handoff

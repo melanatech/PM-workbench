@@ -1,26 +1,12 @@
-# SETUP.md — optional setup for local capture, browser reads, and templates
+# SETUP.md — integrations reference
 
-Start with fictional data and pasted/local inputs; do not connect real sources
-until you have checked company policy and verified the access path. Part 0 is
-optional context calibration. Browser access, hooks, scheduling, and template
-conversion are separate setup items, not verified capabilities.
+This is not the setup path. Create the live workspace first:
+[START HERE.md](START%20HERE.md) then [NEW-USER-SETUP.md](NEW-USER-SETUP.md).
+Come back here for optional browser reads, hooks, templates, and document
+extraction. Nothing below is a verified company integration until you test it.
 
-Before this file: create a live workspace with
-`python3 pm-workbench/scripts/create_live_workspace.py ~/pm-live` and follow
-[NEW-USER-SETUP.md](NEW-USER-SETUP.md). Do browser and MCP setup from that live
-folder, not from the git root.
-
-## Part 0: Give it context (do this first — ~10 minutes)
-
-This is optional context calibration. Do not add raw or sensitive company
-documents, internal links, or past deliverables to a version-controlled folder
-unless company policy explicitly permits it; use redacted/approved examples.
-
-1. **Open `CLAUDE.md` and fill only the brackets approved for this repository** in "Who I am." It is version-controlled; put sensitive or private details in the ignored `.claude/CLAUDE.local.md` file instead.
-2. **Seed `reference/links.csv`** with a few approved links you reference constantly. Internal URLs may themselves be sensitive; keep them out of version control unless permitted.
-3. **Add approved or redacted past PRDs/updates** to `reference/templates/` only if policy permits. Otherwise skip this; use a sanitized example or paste content for an individual session.
-
-That's it — not a checklist to finish, just the fastest way to make week-one output feel calibrated instead of generic.
+Do browser and MCP setup from `~/pm-live`, not from the git clone. Personal
+context goes in `.claude/CLAUDE.local.md` (gitignored), not in tracked `CLAUDE.md`.
 
 ## Part 1: Browser access — three jobs, three tools, in this order
 

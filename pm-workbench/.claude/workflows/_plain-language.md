@@ -5,7 +5,7 @@ not only people who remember slash commands.
 
 ## The rule
 
-When the user's request matches a row in CLAUDE.md **Command menu** (or the
+When the user's request matches a row in the **Command menu** below (or the
 Choosing lists on `/capture`, `/brief`, `/sync`, `/discover`, `/build`,
 `/report`), **run that cluster/workflow**. Do not invent a lighter ad-hoc path
 (peek a folder, skim a file, "quick check") that skips the workflow's Step 0,
@@ -17,8 +17,8 @@ intake gates, fan-out, or subagent dispatches.
 - **No menu match →** answer from registers/`outputs/`/`learning/` if it is a
   lookup; otherwise ask which workflow or what outcome they want.
 - **Factual lookups** (commit / due / decide / initiative status / metric /
-  inbox empty / PRD scope / board) → CLAUDE.md **Authority-first lookups**
-  (rule 25): authoritative surface first, then secondary sources. Never lead
+  inbox empty / PRD scope / board) → authority-lookup skill, CLAUDE.md rule 25:
+  authoritative surface first, then secondary sources. Never lead
   with `find` on raw archive or one convenient file as if complete.
 
 ## Why this exists
@@ -62,3 +62,60 @@ command — never a third improvised path.
   cite the workspace analysis first (CLAUDE.md rule 25)
 
 Routers: after choosing a workflow, dispatch per `_protocol.md` immediately.
+
+## Eight commands — the workflows are arguments
+
+You type one of eight commands. Six are routers over the workflows in `routes.json`; `/quick-close` (the 60-second capture) and `/todo` stand alone.
+
+| Command | Workflows behind it |
+|---|---|
+| `/capture` | `meeting-closeout`, `process-inbox` |
+| `/brief` | `get-started`, `daily-brief`, `return-brief`, `meeting-prep` |
+| `/sync` | `jira-reconcile`, `ripple-check`, `context-reconcile`, `roadmap-update`, `rotate-registers` |
+| `/discover` | `discovery`, `research-plan`, `research-package`, `competitive-scan`, `learn-product-flow`, `code-dive`, `explore-brief` |
+| `/build` | `prd-package`, `prototype-build`, `prd-prototype-sync`, `experiment-package`, `experiment-analyze`, `launch-package` |
+| `/report` | `weekly-update`, `okr-refresh`, `strategy-refresh`, `workbench-health`, `monthly-review`, `ship-signal` |
+
+Name the workflow as the first word (`/build prd-package Bulk Export`) or describe the job (`/build spec out Bulk Export`) and the router picks from the initiative's stage, asking if it cannot tell. Older notes may say `/prd-package` or `/daily-brief`. Those are workflow names; run them as `/build prd-package`, `/brief daily-brief`. Week one is `/quick-close`, `/capture`, `/report`, `/sync`, `/discover`, plus `/brief`. `/build` and `/todo` may be name-only in `.claude/settings.json`. `.claude/settings.core.json` hides them; `.claude/settings.full.json` shows everything. Workflow texts live in `.claude/workflows/`.
+
+## Command menu — when I describe a need instead of typing a slash command
+
+Plain language that matches a row **is** an instruction to run that workflow. Confirm only when two rows fit equally. Future users will not memorize slash commands; this menu plus the skills are the product surface.
+
+| I say something like... | Run |
+|---|---|
+| "How do I get started" / "set up the workbench" / "create my pm-live" / "first-time setup" / "new user setup" | `/brief get-started` |
+| "What changed while I was out" / "back from leave" | `/brief return-brief` |
+| "What's new" / "morning" / "catch me up" / "daily brief" | `/brief daily-brief` |
+| "Catch up the inbox" / "process clips" / "web clips" / "process documents" / "I uploaded something" / "new PDFs" / "what's waiting" | `/capture process-inbox` |
+| "Close out this meeting" / paste notes / "log this meeting" | `/capture meeting-closeout` |
+| Between meetings, 60 seconds or less / "quick capture" | `/quick-close` |
+| "Add / update / finish / drop a to-do" / "what's on my list" / "what should I be doing" / "help me do TODO-nnn" / "draft help for what is due" | `/todo` (`sweep` drafts for the few that are due) |
+| Before a meeting, need to walk in ready / "prep me for" | `/brief meeting-prep` |
+| "Check the Jira board" / "is anything stale" / "board hygiene" | `/sync jira-reconcile` |
+| "What's new in discovery" / "any new themes" / "what are users saying" | `/discover discovery` |
+| "Pull this week's/month's numbers" / "OKR refresh" / "update metrics" | `/report okr-refresh` |
+| "Draft my weekly update" / "leadership update" | `/report weekly-update` |
+| "Ship signal" / "did this release move the needle" / "advance the release loop" / "release readout" | `/report ship-signal` |
+| "Find people to talk to about X" / "plan research" (criteria only — never names) | `/discover research-plan` |
+| "Product brief" / "explore brief" / "check-in brief" / "options for INIT-/COM-" / "alternatives before a PRD" | `/discover explore-brief` |
+| "Spec out X" / "write a PRD for X" | `/build prd-package` |
+| "Build a prototype of X" / "mock this up" | `/build prototype-build` |
+| "Do the PRD and prototype for X still match" | `/build prd-prototype-sync` |
+| "What else does this affect" / a decision that didn't go through a normal command | `/sync ripple-check` |
+| "Propagate context everywhere" / "backfill from archive" / "todos feel wrong" / open questions scattered | `/sync context-reconcile` |
+| "Set up a test for X" / "research package" | `/discover research-package` |
+| "Design an experiment for X" / "A/B test design" | `/build experiment-package` |
+| "What did the experiment results say" | `/build experiment-analyze` |
+| "Get this ready to launch" / "launch package" | `/build launch-package` |
+| "The roadmap changed" / features moved or were added | `/sync roadmap-update` |
+| "What are competitors doing" / "competitive scan" | `/discover competitive-scan` |
+| "Search the web for" / "market scan" / "how do others solve" / external grounding (problems, market, users, solutions) | skill `web-search` → `_web-search.md` (`state/web-search/`); if it's a brief or PRD ask, run explore-brief / prd-package instead |
+| "Update the strategy doc" / "strategy refresh" | `/report strategy-refresh` |
+| "I need to understand how X works" (product) | `/discover learn-product-flow` then often `/discover code-dive` |
+| "How does X work in the code" / "code dive" | `/discover code-dive` |
+| "The registers are getting huge" | `/sync rotate-registers` |
+| "How is the workbench itself doing" / "what do I actually use" | `/report workbench-health` |
+| "Is the workbench helping" / monthly check on dropped balls and decision quality | `/report monthly-review` |
+
+Not everything needs a command. "What did we decide about X" and similar factual asks are authority-lookup (rule 25), not a workflow. If the phrasing matches a row above, that is not a freeform lookup.

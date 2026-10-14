@@ -64,3 +64,28 @@ The first column is the workflow name. Run it through its cluster command: `/cap
 The cross-checks above are only as good as the initiative actually being *in* `initiatives.csv` with the right name. If you build a prototype before ever running `/build prd-package`, or a feature never gets a formal PRD at all, nothing will connect it automatically — that's why `/build prototype-build` creates a row even without a PRD, and why it's worth naming things consistently. When in doubt about whether something is tracked, just ask in a session — "is [feature] in the initiatives register?" — rather than assuming the connection exists.
 
 **Registers alone are not enough.** Capture/discovery used to stop after DEC-/EV-/INIT- rows and leave assumptions, learning, priorities, competitive, and sibling INIT notes untouched — cross-cutting insights then lived only in `outputs/daily/` or chat. `.claude/workflows/_fan-out.md` is the required end-of-run checklist for meeting-closeout, process-inbox, discovery, competitive-scan, and ripple-check: update every durable surface that applies in the same run, and print Surfaces updated / N/A / Cross-initiative. Separately: a rich chat answer is not proof those surfaces hold the same detail — CLAUDE.md rule 23 (chat ≠ durable equivalence).
+
+## Register schemas
+
+This file owns the schemas. CLAUDE.md rule 7 states the append-vs-update rule; it does not repeat the columns.
+
+- `registers/decisions.csv` — id, date, decision, made_by, source_link, affects. Immutable history: append; correct by a linked superseding row.
+- `registers/commitments.csv` — id, description, owner, due_date, audience, source, status, last_updated. Current state: update in place. PM-scoped only (promises the PM owns, chases, or depends on for product work) — not eng/ops chores overheard in a meeting; see `/capture meeting-closeout` PM-scope filter.
+- `registers/risks.csv` — id, date_raised, risk, severity, mitigation, status, source. Current state: update in place.
+- `registers/evidence.csv` — the discovery evidence graph (see `/discover discovery` for the full schema). Immutable history.
+- `registers/research-participants.csv` — who we contacted, when, outcome (prevents over-contacting). Immutable history.
+- `registers/todos.csv` — id, description, owner, due_date, priority, status, initiative, blocks, links, origin, source, created, last_updated, note. Current state, written only through `/todo` (`scripts/todo_register.py`). Not a commitment and not a decision. Cite as `TODO-nnn`. Drop marks a row `dropped`; do not delete it.
+- `registers/initiatives.csv` — the hub: one row per feature, stage, and links to every artifact. Current state. Seeded by `/capture` when product work is named; refined by `/build`.
+- **Cite only IDs that exist** for every DEC-/COM-/RISK-/EV-/INIT-/TODO- prefix. Write the row in the same run before citing it, or write `proposed: COM row needed` with no ID. The provenance hook rejects phantom citations.
+
+Meetings feed the registers. The registers feed the weekly update, tracker reconciliation, PRDs, and strategy.
+
+## Key file map
+
+- `scripts/todo_register.py` — the only way `/todo` writes `registers/todos.csv` (IDs, dates, and CSV quoting in code; refuses a changed header, lost rows, symlinks).
+- `inbox/` — new raw captures by type. `state/` — snapshots and cursors. `state/web-search/` — external grounding (see `_web-search.md`). `state/competitive/` — competitor page dumps.
+- `scripts/web_search.py` — URL discovery that does not depend on a hosted web-search tool (always before native WebSearch).
+- `outputs/` — reviewed work products by cadence and type. `archive/` — processed raw inputs.
+- `reference/` — templates (including `templates/formatted/`, where the template owns branding and `scripts/render_template.py` supplies content), metric definitions (one YAML per OKR metric), product knowledge, `user-research/` (indexed research summaries).
+- `learning/` — per-area product knowledge from deep-dives and code-dives.
+- `repos/` — read-only code clones and optional UI-base symlinks (NEW-USER-SETUP §2a). `prototypes/` — greenfield prototypes from `/build prototype-build`. Soft reuse catalog: `reference/design/prototype-components.md`. When present, live `prototypes/_shared/` (`@pm-live/prototype-kit`) is the shared primitive package (`reference/design/shared-prototype-package.md`).

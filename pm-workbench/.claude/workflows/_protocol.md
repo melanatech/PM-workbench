@@ -2,7 +2,7 @@
 
 This file is read by the six cluster commands. It is not a command. The workflow files beside it (`.claude/workflows/<name>.md`) are the original command texts, moved unchanged; `routes.json` lists which cluster owns which workflow and which model it runs on. `prototype-build` is the one workflow that lives as a skill (`.claude/skills/prototype-build/SKILL.md`).
 
-A router has no logic of its own. It picks a workflow, runs the safety steps below, hands the work to the `workflow-runner` subagent on the right model, and relays what comes back. Every gate, readiness check, approval tier and model choice stays inside the workflow text and in CLAUDE.md; the router can add a pause but never remove one.
+A router has no logic of its own. It picks a workflow, runs the safety steps below, hands the work to the `workflow-runner` subagent on the right model, and relays what comes back. Gates, readiness checks, and approval tiers stay inside the workflow text and in CLAUDE.md. Execution modes are below. Model choice is `.claude/workflows/routes.json`. The router can add a pause but never remove one.
 
 ## 0. Pause switch
 
@@ -75,6 +75,56 @@ Applies outside capture workflows too (including after meeting-prep or "what hap
 - **Do not narrate plumbing.** Do not explain that the kit clone has no live `.claude` data, that the Stop hook will write the run log, that "the run log row comes from the Stop hook," that you are about to read `routes.json`, or that you skipped a duplicate row — unless the project folder is wrong and work would land in the wrong place. Router setup and run-log bookkeeping stay in thinking; chat gets only the Standard one-liner (when applicable), then the runner's RESULT/PROPOSALS/QUESTIONS pasted once.
 - **Do not announce readiness and wait.** "Ready to reprocess" / "Clean, ready" / "I can run X next" without starting X in the same turn is a protocol failure. Prep that enables a clear next workflow must continue into that workflow immediately (Fast/Standard) unless Deep needs a yes or a required input is missing.
 - **Every existing path is a clickable link.** Any file or folder that exists under the live root must appear as `[path](path)` (workspace-relative; folders keep a trailing slash). Never leave a bare or backtick-only path for something that exists. Exceptions: fenced code blocks, shell commands, paths that do not exist yet, globs. Show each new artifact **once** with its link, then the content (or key sections). Do **not** use `file://` or bare absolute `/Users/...` paths. RESULT does not reprint it, and the router does not add "here's what happened" or "Done. Agent processed…".
-- **Name resolution.** When the PM names a surface ("term registers", "events digest"), check `reference/context/workspace-aliases.md` then `context_preflight --topic "…"`. Do not guess.
+- **Name resolution.** When the PM names a surface ("events digest", "weekly scorecard"), check `reference/context/workspace-aliases.md` then `context_preflight --topic "…"`. Do not guess.
 - **No RESULT + Done pair.** A successful run is one message. If you catch yourself about to write a confirmation under the runner paste, delete it.
 - **Re-runs.** If the meeting or input was already closed out, say that in a few lines, name the existing IDs, and go to PROPOSALS. Do not recap every empty checklist item.
+
+## Execution modes
+
+Usage is finite. A half-finished PRD that hits a limit is worse than a simpler run that completes. Every workflow runs in one mode. The declaration lives in the workflow body (`Execution mode: fast|standard|deep`) — frontmatter is stripped before the prompt reaches the model — and the PM can override inline ("run this in fast mode").
+
+| Mode | For | Behavior |
+|---|---|---|
+| **Fast** | meetings, tracker hygiene, weekly updates, quick-close, ordinary discovery/OKR | one pass, no parallel reviewers, bounded source set, cheapest model that fits |
+| **Standard** | most PRDs, research synthesis, launch packages, roadmap updates | context assembler + at most 1–2 relevant reviews, not the full panel |
+| **Deep** | major strategy, high-stakes causal experiments, exec planning | parallel analysis, but only after printing a usage estimate and asking to proceed |
+
+Governing rules for every mode:
+
+- **Bounded sources.** Default max 12 source files per assembly. If more are relevant, report what was included and excluded and offer to widen. Bounded sources choose which files; they are not a license to skim the ones selected.
+- **No context shortchanging.** Feeling context-constrained is not a reason to shallow-process or replace a full pass with a thinner summary. Dispatch the matching heavy-read subagent (AGENTS.md). Forbidden: "Given context constraints, I'll efficiently…", "too long so I'll only capture the vision", "selectively update existing initiatives" when the workflow asked for complete reconciliation.
+- **No faux pauses.** "Ready to reprocess" / "About to run" / "I can do X next" without starting X in the same turn is not a mode. Fast and Standard continue; only Deep waits for an explicit yes (or a required-input question).
+- **Bounded reviewers.** Fast = 0, Standard = 1–2, Deep = up to the full panel. Never invoke parallel reviewers in Fast or Standard.
+- **Resumable manifest.** Any multi-step or multi-agent workflow writes `logs/run-manifest-[date-cmd].md` as it goes. If interrupted, re-running reads the manifest and continues.
+- **No auto-revise loops.** A workflow proposes; it does not silently re-run itself to improve the output. Revision is the PM's call.
+- **Compact fallback.** Only when usage or API budget is actually low, not because a document is long. Then finish with no extra agents, and say so. Prefer a heavy-read subagent before compact fallback.
+
+## Model routing
+
+`.claude/workflows/routes.json` is the single source of truth for which model each workflow runs on. Change a model there, not in the workflow file. `/quick-close` and `/todo` are their own commands.
+
+- **Haiku** — `/quick-close`, `/todo`, and the workflows `get-started`, `daily-brief`, `rotate-registers`, `workbench-health`. `/todo propose` and `/todo work` hand judgment to the sonnet `todo-worker`.
+- **Sonnet** — day-to-day default (meetings, tracker hygiene, discovery, OKRs, updates, prototypes, launches).
+- **Opus** — `prd-package`, `strategy-refresh`, `experiment-package`.
+
+A router adds a pause, never removes one. Standard prints one line then dispatches. Deep prints a usage estimate and waits. Say `inline` to run the workflow in the current session. `/model` is a session command for the PM; the agent does not switch its own model mid-response.
+
+## Rule 18 — context used and excluded
+
+Report context used and excluded in one line, only when it is a real choice. Workflows that assemble from many sources (PRD packages, strategy refreshes, launch drift checks) end gathering with one line: what was included ("8 of 23 evidence records, DEC-014/015, code findings") and what was deliberately excluded ("15 low-relevance records, archived drafts"). Skip the line when the source set is obvious (a single meeting file, a named ticket). Do not list empty registers, unconfigured systems, or "nothing was excluded for relevance."
+
+## Rule 19 — log every workflow run
+
+Append one line to `logs/run-log.csv` (timestamp, workflow, approx_duration, success, one-line note). The Stop hook usually writes this; do it in chat only when the row is missing. Never narrate "the run log comes from the Stop hook" or similar plumbing in RESULT.
+
+## Rule 20 — clickable workspace paths
+
+Every existing workspace path is a clickable Markdown link. Any file or folder that exists under the live root — created this turn, an older artifact, a register, or `inbox/documents/` — must appear as `[path](path)` (workspace-relative). Folders keep a trailing slash: `[inbox/documents/](inbox/documents/)`. Never leave a bare or backtick-only path when the target exists. Exceptions: inside fenced code blocks and shell commands; paths that do not exist yet (say so); glob patterns. Hrefs must not use `file://` or absolute `/Users/...` (the client resolves relative paths under the first workspace folder). The live workspace must be that first folder. After creating or updating a file, show the link **once**, then the content (or key sections). Cluster routers paste the `workflow-runner` return **once** and stop — never RESULT, then "Done. Agent processed…", then a second recap. Omit empty negatives. Hooks enforce unlinked existing paths in chat and in written `.md` files.
+
+## Rule 23 — chat answer is not the durable file
+
+Digests, register rows, and learning notes are lossy on purpose (rule 15). An ad-hoc reply often re-reads a richer source (full transcript, deck) and adds justification the digest never held. **Forbidden:** "it's all captured in `outputs/…`" / "same as the summary" after a richer chat answer, unless you claim-checked (every material claim in the reply appears in that file) or you wrote that content into the file this turn. Allowed: "Answered from `archive/…` transcript; [digest] has headlines only" / "DEC-007 is in the register; the pricing rationale is chat-only unless we append." When the reply surfaces material facts missing from digests, registers, or learning, say the gap and either append (Tier 1, dated source) or list what would be written. Topic overlap (a keyword appears in both) is not claim coverage.
+
+## Rule 24 — user-injected context after freeform chat
+
+When the PM adds new facts mid-thread (corrections, "also someone said…", "a stakeholder confirmed…", hallway or chat color that was not in the capture) outside `/capture` / `/quick-close`, treat that as durable input. Do not only acknowledge it in chat. **Clear material claims** (decision, commitment, risk, open conflict, durable product fact, assumption): write the matching surface this turn (Tier 1) or present a one-line PROPOSAL of the exact row or append if Tier 2/3 (scope, owner, dates, send). **Ambiguous** (color vs decision; unclear owner; might supersede an existing DEC-/COM-): ask one short question naming the candidate surface. **Conversational only** (thanks, scheduling trivia, an already-tracked restatement): stay silent on write-back. Source the write as `chat:[date]` or the thread topic plus any archive path named. Same fan-out surfaces as `_fan-out.md`. `/sync ripple-check` is the explicit command for a full cross-check; it is not required for one obvious mid-chat fact.

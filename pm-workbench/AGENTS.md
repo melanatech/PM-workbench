@@ -1,50 +1,38 @@
-# AGENTS.md — the third mechanism (alongside commands and skills)
+# AGENTS.md — subagent index
 
-Three different things live in `.claude/`, and they solve different problems:
+Subagents are one-directional: dispatch, isolated work, a result comes back. They are not a multi-agent team that assigns work to each other. Use one when a step needs isolation (an unbiased verdict, or a heavy read that should not stay in the main session). Runner behavior, pauses, and execution modes live in `.claude/workflows/_protocol.md`. Standing rules live in CLAUDE.md — do not restate them here.
 
-| Mechanism | Where | What it is | Why use it |
-|---|---|---|---|
-| **Command** | `.claude/commands/*.md` | A prompt template you invoke by name. Eight exist: six thin cluster routers (`/capture`, `/brief`, `/sync`, `/discover`, `/build`, `/report`), `/quick-close`, `/todo` | What you type |
-| **Workflow** | `.claude/workflows/*.md` | The original command texts, moved unchanged; not registered as commands. A router reads one and the `workflow-runner` subagent carries it out | Keeps 27 workflows behind 8 commands without rewriting their logic |
-| **Skill** | `.claude/skills/*/SKILL.md` | Same idea, but Claude can auto-invoke it from plain language | Once a command is stable and you'd rather just describe the task (see SKILLS.md) |
-| **Subagent** | `.claude/agents/*.md` | A separate Claude instance with its OWN context window and tool access, spawned mid-task | When a step needs isolation — either to stay unbiased, or to keep heavy reading out of your main session |
+| Mechanism | Where | What it is |
+|---|---|---|
+| **Command** | `.claude/commands/*.md` | What you type. Six thin routers (`/capture`, `/brief`, `/sync`, `/discover`, `/build`, `/report`) plus `/quick-close` and `/todo`. |
+| **Workflow** | `.claude/workflows/*.md` | The step text. A router reads one; `workflow-runner` carries it out. |
+| **Skill** | `.claude/skills/*/SKILL.md` | Same job, auto-invoked from plain language (see SKILLS.md). |
+| **Subagent** | `.claude/agents/*.md` | A separate context window, spawned mid-task. |
 
-## Where subagents are actually used, and why
+| Agent | Kind | Used by |
+|---|---|---|
+| `workflow-runner` | Runner | The six cluster commands, on the model in `routes.json`. Returns RESULT, PROPOSALS, or QUESTIONS. `inline` skips it. |
+| `causal-reviewer`, `instrumentation-reviewer`, `ux-harm-reviewer`, `business-value-reviewer`, `ops-feasibility-reviewer` | Blind review | `/build experiment-package` (each sees only the design) |
+| `results-integrity-reviewer` | Blind review | `/build experiment-analyze` (pre-registered design + raw results only) |
+| `eng-feasibility-reviewer`, `design-ux-reviewer`, `data-instrumentation-reviewer`, `business-revenue-reviewer`, `customer-facing-reviewer` | Review, not a hard gate | `/build prd-package` and `/build prototype-build`. FAIL/CONDITION becomes an anticipated objection. |
+| `prd-prototype-reconciler` | Cross-artifact | End of prd-package and prototype-build when the other artifact exists; also `/build prd-prototype-sync`. Reports drift; does not pick a winner. |
+| `prd-context-gatherer` | Heavy read | `/discover explore-brief` and `/build prd-package` (check-in brief vs full PRD). Do not invent a second gatherer. |
+| `launch-drift-detector` | Heavy read | `/build launch-package` |
+| `discovery-source-reader` | Heavy read | `/discover discovery` |
+| `competitive-capture-agent` | Heavy read | `/discover competitive-scan` (`scripts/web_search.py` first; writes `state/competitive/`) |
+| `return-window-scanner` | Heavy read | `/brief return-brief` |
+| `strategy-synthesizer` | Heavy read | `/report strategy-refresh` |
+| `code-repo-explorer` | Heavy read | `/discover code-dive`; reused by `/build prototype-build` |
+| `todo-worker` | Heavy read | `/todo propose` and `/todo work` (read-only). Returns `[NEEDS INPUT: …]`; the main session asks. |
+| `internal-docs-reader` | Heavy read | Alongside another agent for research, wiki, and shared-drive docs: discovery, prd-package, explore-brief, research-plan, strategy-refresh, competitive-scan, research-package, learn-product-flow. Checks `reference/user-research/` first. |
 
-The test is: does this step need **isolation** — either independence from bias, or heavy reading that shouldn't linger in the main session? Applied consistently, not just to the two most obvious cases:
+**Plain (no subagent):** `meeting-closeout`, `weekly-update`, `okr-refresh`, `process-inbox`, `rotate-registers`, and `/todo` add/update/done/drop/list. `jira-reconcile` and `learn-product-flow` stay plain overall and dispatch `internal-docs-reader` for one sub-step.
 
-**The runner (model weight, and a router that must stay cheap):**
-- `workflow-runner` — dispatched by the six cluster commands on the model `routes.json` names for the chosen workflow (haiku, sonnet or opus). It runs the workflow text, may dispatch the subagents below (a subagent can spawn subagents, to a limited depth), and returns RESULT, PROPOSALS or QUESTIONS because a subagent cannot ask you anything. The router relays and re-dispatches. `inline` skips the runner and runs the workflow in the current session.
+Context pressure is a dispatch signal (`_protocol.md` execution modes). Do not thin a deliverable because the session feels full.
 
-**Bias-isolation (an independent verdict matters more than efficiency):**
-- `causal-reviewer`, `instrumentation-reviewer`, `ux-harm-reviewer`, `business-value-reviewer`, `ops-feasibility-reviewer` — the five `/build experiment-package` design reviewers. Each sees only the design, not each other or who wrote it.
-- `results-integrity-reviewer` — same logic, applied to `/build experiment-analyze`. Sees only the pre-registered design and raw results, never the narrative someone already drafted, so it can catch goalpost-moving or post-hoc segment-fishing without being anchored to a preferred conclusion.
+## Keeping this fast — context/token guardrails
 
-**Heavy-read isolation (keep large raw material out of the main session):**
-- `launch-drift-detector` (`/build launch-package`) — PRD + Jira + prototype + docs + marketing at once
-- `discovery-source-reader` (`/discover discovery`) — chat channels + support pages + behavior-analytics segments
-- `competitive-capture-agent` (`/discover competitive-scan`) — several competitors at once; discovers URLs via **`scripts/web_search.py` first** (Bedrock-safe; see `_web-search.md`), WebFetch, then **writes `state/competitive/YYYY-MM-DD-<slug>.md` itself** (chat is not storage); watchlist seed URLs optional. Brief/PRD problem–market–user–solution grounding uses `state/web-search/` in the parent workflow, not this agent.
-- `return-window-scanner` (`/brief return-brief`) — weeks of chat/Jira/wiki/shared-drive history; the single heaviest read in the kit
-- `strategy-synthesizer` (`/report strategy-refresh`) — evidence register + OKR history + competitive log + learning files together
-- `code-repo-explorer` (`/discover code-dive`, reused by `/build prototype-build`) — a whole cloned repo's file tree
-- `todo-worker` (`/todo propose` and `/todo work`) — reads a bounded set of inbox, meeting and output files to propose to-dos, or reads what one to-do points at to draft outreach or a research plan. Sonnet, read-only (Read/Glob/Grep). It is here for a second reason besides bulk: `/todo` itself runs on the cheap haiku model, and judgment work (what counts as a to-do, what a good message to support says) needs the stronger one. It cannot ask the PM anything, so it returns `[NEEDS INPUT: …]` lines and the main session asks.
-- `internal-docs-reader` — general-purpose, dispatched **alongside** another subagent (not instead of it) whenever a task benefits from durable internal documents: user research reports, wiki pages beyond Jira/support, the shared drive, or the local file browser. Used by `/discover discovery`, `/build prd-package`, `/discover explore-brief`, `/discover research-plan`, `/report strategy-refresh`, `/discover competitive-scan`, `/discover research-package`, and `/discover learn-product-flow`. It checks `reference/user-research/` first (already-indexed) before reading raw documents, and processed findings get indexed there so the next task doesn't re-read the same file.
-- `prd-context-gatherer` — also listed under PRD below; used by **`/discover explore-brief`** and **`/build prd-package`** (same agent, different exit: check-in brief vs full PRD).
-
-**Deliberately left as plain commands** — no isolation benefit, would just add latency: `meeting-closeout`, `weekly-update`, `okr-refresh`, `process-inbox`, `rotate-registers`, and the add/update/done/drop/list modes of `/todo` (a script does that work). Note that `jira-reconcile` and `learn-product-flow` remain plain commands overall but now dispatch `internal-docs-reader` for one specific sub-step (a targeted decision-doc check, and the doc-vs-reality comparison, respectively) rather than reading those sources inline — a command can be "mostly plain" and still delegate the one part of it that's genuinely heavy.
-
-## PRD and prototyping: the fullest use of the pattern
-
-These two got a deeper treatment than anything else, because they're the clearest case of both needs at once, plus a third one nothing else in the kit has: **two artifacts that need to stay consistent with each other as both evolve.**
-
-- **Heavy-read isolation:** `prd-context-gatherer` assembles evidence, code findings, OKR baseline, competitive log, decisions/risks, commitments, and decided-vs-open in one dispatch. Shared by **`/discover explore-brief`** (pre-PRD check-in brief) and **`/build prd-package`** (full PRD) so both start from a grounding brief instead of five separate file reads. Do not invent a second gatherer for explore.
-- **Multi-stakeholder review:** `eng-feasibility-reviewer`, `design-ux-reviewer`, `data-instrumentation-reviewer`, `business-revenue-reviewer`, `customer-facing-reviewer` — five reviewers (Standard dispatches the 1–2 most relevant; Deep runs all five), each blind to the others, **shared between `/build prd-package` and `/build prototype-build`** so a PRD and its prototype get judged by the same five lenses. Unlike the experiment panel, this isn't a hard gate — a real PRD is allowed to reach real stakeholders imperfect. Every FAIL/CONDITION becomes an entry in the PRD's own "anticipated objections" section instead of blocking anything, which is the actual point for the buy-in duty on your original task list.
-- **Cross-artifact reconciliation:** `prd-prototype-reconciler` is the new piece — it doesn't review one artifact, it compares two. Given the current PRD and the current prototype's actual behavior, it reports both directions of drift ("PRD says X, prototype does Y" and "prototype does Z, PRD never mentions it") plus, if research findings exist, whether testing proved the PRD's assumption wrong rather than the prototype. It never decides which side is right — that's a call the main session brings back to you. It runs automatically at the end of both `/build prd-package` and `/build prototype-build` whenever the other artifact already exists, and is also callable standalone as `/build prd-prototype-sync` for whenever something changes outside the normal flow (a stakeholder comment, a build decision) and the two need a manual re-check.
-
-An earlier pass of this kit only built two of these (the experiment reviewers and the launch detector) and stopped once it found clean examples, without checking the rest of the list against the same test — that gap is what the six additions above fix.
-
-## What subagents are NOT
-Not the "agent teams" feature you may see mentioned elsewhere (multiple agents coordinating with each other, assigning work back and forth) — that's a separate, more experimental Claude Code feature. Subagents here are simpler and one-directional: dispatch, isolated work, a result comes back. Stable, not experimental, and the right scope for this kit.
-
-## Failure mode to reject
-If a session says the material is "too comprehensive for context" and plans to skim, write a thinner summary, or only selectively update initiatives — **that is wrong**. Context pressure is a **dispatch signal** for the agents above, not a quality downgrade. Bounded sources (max 12) only choose *which* files; each chosen file still gets a complete pass via a subagent when it is heavy.
+- Register files (`registers/*.csv`) grow every week. Default to reading **only recent or relevant rows** (last 60–90 days, or filtered by id or metric) unless the ask is for full history (CLAUDE.md rule 13).
+- If a register or state file is large enough that a full read would be wasteful, say so and suggest `/sync rotate-registers`.
+- In a long session, `/compact` or `/clear` is available. This workspace has no automatic retrieval over growing files.
+- Heavy reads (many discovery sources, a leave window, a strategy refresh, a code repo, multi-page decks) **dispatch the matching subagent above** so the main session gets a brief, not a skim. Bounded sources (max 12) choose which files; each chosen file still gets a full pass.

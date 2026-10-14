@@ -195,6 +195,12 @@ def seed_empty_registers(destination, dry_run=False):
             handle.write(
                 "timestamp,user_uuid,status,category,input_tokens,output_tokens,note\n"
             )
+    links_rel = "state/entity-links.csv"
+    links_path = os.path.join(target, links_rel)
+    written.append(links_rel)
+    if not dry_run and not os.path.exists(links_path):
+        with open(links_path, "w", encoding="utf-8") as handle:
+            handle.write("from,to,type,source,confidence,status,first_seen\n")
     return written
 
 

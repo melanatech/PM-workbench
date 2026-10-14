@@ -84,6 +84,7 @@ WORKFLOWS = {
     "return-brief",
     "meeting-prep",
     "get-started",
+    "context-setup",
     "jira-reconcile",
     "ripple-check",
     "context-reconcile",

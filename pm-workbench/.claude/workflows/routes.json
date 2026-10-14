@@ -27,6 +27,10 @@
       "get-started": {
         "path": ".claude/workflows/get-started.md",
         "model": "haiku"
+      },
+      "context-setup": {
+        "path": ".claude/workflows/context-setup.md",
+        "model": "sonnet"
       }
     },
     "sync": {

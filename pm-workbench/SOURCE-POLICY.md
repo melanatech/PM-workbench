@@ -9,6 +9,7 @@ Registers and local files are an INDEX and working memory — never the ultimate
 | Current delivery status | Jira | Meeting notes/Slack are leads to verify against Jira, not overrides |
 | Approved product scope | Approved Confluence PRD + a recorded decision with a named owner | A newer Slack message does NOT override an approved scope — it's a signal that a decision may be pending |
 | Implemented behavior (split by claim type — see ladder below) | Highest available rung for that claim type | Code at a commit ≠ deployment; drafts/prototypes are never evidence |
+| Merged in code | `repo@commit` on the default branch, from `state/repo-activity/` | A commit subject, body, or merge message names the ticket key. Not deployment, and not a tracker-status override. When the board still says To Do or In Progress, report the conflict |
 | Official metrics | Pre-calculated value with as-of date **and** the timeframe/filters the figure covers: OKR dashboard (preferred when available), or internal leadership/metric deck, wiki page, or export that states the same metric | Never recalculate from raw rows. Log to `state/okr-history.csv` with source path, timeframe, filters, displayed delta (if any), calculation/definition `notes`, and per-series rows for multi-metric charts. Live dashboard beats a same-definition older deck; a **newer as_of_date** on an internal doc is the working figure while conflicts of **definition/cohort** stay open (ask what's official). Not web search. |
 | Support history | Jira support cases | |
 | Launch commitments | The approved launch record | Slack cannot override |
@@ -33,6 +34,14 @@ When a claim is about **what exists / fires / behaves today**, pick the highest 
 **Code behavior:**
 1. Repo at a named commit
 2. Dated code-dive that cites that commit
+
+**Merged in code:**
+1. `repo@commit` — a commit on the default branch whose subject, body, or merge message names the ticket key. The snapshot is `state/repo-activity/[date].json` from `scripts/repo_activity.py` (prefixes come from `reference/context/systems-map.md`).
+2. A dated reconcile report that cites that `repo@commit`.
+
+This claim does not move a ticket and does not prove what users see (see Deploy lag). Board status stays the authority for delivery.
+
+**Git metadata exemption (rule 26).** `scripts/repo_activity.py` reads git metadata only (`git log`, `git fetch`, branch names) under `repos/`. That is not a source-file read. The preflight hook gates Read, Grep, and Glob of `repos/**`, not shell git metadata. Do not open source files in those clones on this path. A code-behavior claim still climbs the ladder above and still needs a preflight before any file read.
 
 **Verification questions** ("how did you check?", "where did the baseline come from?"): answer with the chain down to the primary source (path:line, commit, capture). If the chain stops at a draft, say **unverified** and climb the ladder — never answer "the brief says."
 

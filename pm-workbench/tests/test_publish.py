@@ -235,6 +235,26 @@ The result is [hypothesis: early signal] and [hypothesis] and [external::trainin
 """
 
 
+def _write_aliases(root: Path, rows: list[tuple]) -> None:
+    """Write an alias table. All-None treatments keep the old three-column shape."""
+    lines = ["# Aliases", ""]
+    wide = any(row[3] is not None or row[4] is not None for row in rows)
+    if wide:
+        lines.append("| Phrase | Path | Meaning | external_treatment | external_value |")
+        lines.append("|---|---|---|---|---|")
+    else:
+        lines.append("| Phrase | Path | Meaning |")
+        lines.append("|---|---|---|")
+    for phrase, path, meaning, treatment, value in rows:
+        if treatment is None and value is None and not wide:
+            lines.append(f"| {phrase} | {path} | {meaning} |")
+        else:
+            lines.append(f"| {phrase} | {path} | {meaning} | {treatment or ''} | {value or ''} |")
+    dest = root / "reference" / "context" / "workspace-aliases.md"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def run_hook(hook: Path, file_path: Path, project: Path) -> subprocess.CompletedProcess:
     payload = {"tool_input": {"file_path": str(file_path)}}
     env = {**os.environ, "CLAUDE_PROJECT_DIR": str(project)}
@@ -467,8 +487,101 @@ class PublishFileTests(unittest.TestCase):
         self.draft.write_text("# Update\n\nSee the lumen scorecard.\n", encoding="utf-8")
         with self.assertRaises(publish.PublishError) as caught:
             publish.publish_file(self.draft, self.tmp, formats=["md"])
-        self.assertIn("lumen scorecard", str(caught.exception))
+        message = str(caught.exception)
+        self.assertIn("lumen scorecard", message)
+        self.assertIn("external_treatment", message)
         self.assertFalse((self.tmp / "outputs" / "external").exists())
+
+    def test_alias_treatments_expand_preserve_neutralize_and_block(self):
+        _write_aliases(
+            self.tmp,
+            [
+                ("events digest / instrumentation digests", "outputs/daily/", "process label", "neutralize", "prior analysis of analytics events"),
+                ("weekly scorecard", "outputs/weekly/", "leadership drafts", "expand", "weekly leadership update"),
+                ("scorecard", "outputs/weekly/", "shorter name", "expand", "SHORT"),
+                ("glossary", "reference/context/glossary.md", "plain word", "preserve", ""),
+                ("schema codename", "outputs/weekly/", "confidential", "internal_only", ""),
+                ("unclassified label", "outputs/weekly/", "not yet classified", "", "[NEEDS INPUT]"),
+                ("bare shorthand", "outputs/weekly/", "old three-column shape", None, None),
+            ],
+        )
+        self.draft.write_text(
+            "# Update\n\nSee the weekly scorecard, the events digest, and the glossary.\n",
+            encoding="utf-8",
+        )
+        result = publish.publish_file(self.draft, self.tmp, formats=["md"])
+        self.assertIn("weekly leadership update", result.body)
+        self.assertIn("prior analysis of analytics events", result.body)
+        self.assertIn("glossary", result.body)
+        self.assertNotIn("weekly scorecard", result.body)
+        self.assertNotIn("events digest", result.body)
+        self.assertNotIn("SHORT", result.body)
+
+        blocked = {
+            "schema codename": "internal_only",
+            "unclassified label": "external_treatment",
+            "bare shorthand": "external_treatment",
+        }
+        for phrase, expected in blocked.items():
+            self.draft.write_text(f"# Update\n\nSee the {phrase}.\n", encoding="utf-8")
+            with self.assertRaises(publish.PublishError) as caught:
+                publish.publish_file(self.draft, self.tmp, formats=["md"])
+            message = str(caught.exception)
+            self.assertIn(phrase, message, phrase)
+            self.assertIn(expected, message, phrase)
+        self.assertIn("weekly leadership update", (self.tmp / "outputs" / "external" / "2026-10-14-update.md").read_text(encoding="utf-8"))
+
+    def test_expand_without_a_value_blocks(self):
+        _write_aliases(
+            self.tmp,
+            [("weekly scorecard", "outputs/weekly/", "leadership drafts", "expand", "")],
+        )
+        self.draft.write_text("# Update\n\nSee the weekly scorecard.\n", encoding="utf-8")
+        with self.assertRaises(publish.PublishError) as caught:
+            publish.publish_file(self.draft, self.tmp, formats=["md"])
+        self.assertIn("weekly scorecard", str(caught.exception))
+        self.assertIn("external_value", str(caught.exception))
+        self.assertFalse((self.tmp / "outputs" / "external" / "2026-10-14-update.md").exists())
+
+    def test_preserve_is_not_blanket_blocked(self):
+        _write_aliases(
+            self.tmp,
+            [
+                ("glossary", "reference/context/glossary.md", "plain word", "preserve", ""),
+                ("lumen scorecard", "somewhere", "old row", None, None),
+            ],
+        )
+        phrases = external.load_alias_phrases(self.tmp)
+        self.assertIn("lumen scorecard", phrases)
+        self.assertNotIn("glossary", phrases)
+        self.draft.write_text("# Update\n\nUse the glossary.\n", encoding="utf-8")
+        result = publish.publish_file(self.draft, self.tmp, formats=["md"])
+        self.assertIn("glossary", result.body)
+        self.assertEqual(external.find_banned(result.body, phrases), [])
+
+    def test_example_documents_every_treatment_and_preflight_keeps_phrases(self):
+        import context_preflight
+
+        example = KIT / "reference" / "context" / "workspace-aliases.example.md"
+        text = example.read_text(encoding="utf-8")
+        for token in ("Orders", "Payments", "Cube"):
+            self.assertNotIn(token, text)
+        aliases = external.load_alias_file(example)
+        by_phrase = {phrase: alias for alias in aliases for phrase in alias.phrases}
+        self.assertEqual(by_phrase["events digest"].treatment, "neutralize")
+        self.assertEqual(by_phrase["instrumentation digests"].treatment, "neutralize")
+        self.assertEqual(by_phrase["instrumentation digests"].external_value, "prior analysis of analytics events")
+        self.assertEqual(by_phrase["weekly scorecard"].treatment, "expand")
+        self.assertEqual(by_phrase["weekly scorecard"].external_value, "weekly leadership update")
+        self.assertEqual(by_phrase["glossary"].treatment, "preserve")
+        self.assertEqual(by_phrase["schema codename"].treatment, "internal_only")
+        self.assertEqual(by_phrase["unclassified label"].treatment, "")
+        self.assertNotIn("internal_only", by_phrase)
+        rows = context_preflight._load_aliases(KIT)
+        phrases = " ".join(row["phrase"] for row in rows)
+        self.assertIn("weekly scorecard", phrases)
+        self.assertIn("glossary", phrases)
+        self.assertNotIn("Treatment", phrases)
 
 
 class RendererTests(unittest.TestCase):
@@ -599,6 +712,44 @@ class HookTests(unittest.TestCase):
         coded_result = run_hook(HOOK, coded, self.tmp)
         self.assertEqual(coded_result.returncode, 2, coded_result.stderr)
         self.assertIn("lumen scorecard", coded_result.stderr)
+        self.assertIn("external_treatment", coded_result.stderr)
+
+    def test_hook_follows_alias_treatment(self):
+        _write_aliases(
+            self.tmp,
+            [
+                ("weekly scorecard", "outputs/weekly/", "leadership drafts", "expand", "weekly leadership update"),
+                ("events digest", "outputs/daily/", "process label", "neutralize", "prior analysis of analytics events"),
+                ("glossary", "reference/context/glossary.md", "plain word", "preserve", ""),
+                ("schema codename", "outputs/weekly/", "confidential", "internal_only", ""),
+                ("unclassified label", "outputs/weekly/", "not yet classified", "", ""),
+            ],
+        )
+        passed = self.tmp / "outputs" / "external" / "ready.md"
+        passed.write_text(
+            "---\naudience: external\n---\n\n"
+            "The weekly leadership update cites the prior analysis of analytics events and the glossary.\n",
+            encoding="utf-8",
+        )
+        ok = run_hook(HOOK, passed, self.tmp)
+        self.assertEqual(ok.returncode, 0, ok.stderr)
+
+        raw_expand = self.tmp / "outputs" / "external" / "raw-expand.md"
+        raw_expand.write_text("---\naudience: external\n---\n\nSee the weekly scorecard.\n", encoding="utf-8")
+        expand_result = run_hook(HOOK, raw_expand, self.tmp)
+        self.assertEqual(expand_result.returncode, 2, expand_result.stderr)
+        self.assertIn("expand", expand_result.stderr)
+
+        for name, phrase, marker in (
+            ("secret.md", "schema codename", "internal_only"),
+            ("open.md", "unclassified label", "external_treatment"),
+        ):
+            path = self.tmp / "outputs" / "external" / name
+            path.write_text(f"---\naudience: external\n---\n\nSee the {phrase}.\n", encoding="utf-8")
+            result = run_hook(HOOK, path, self.tmp)
+            self.assertEqual(result.returncode, 2, name + result.stderr)
+            self.assertIn(phrase, result.stderr)
+            self.assertIn(marker, result.stderr)
 
     def test_hook_scans_docx_under_external(self):
         dest = self.tmp / "outputs" / "external" / "bad.docx"
@@ -657,6 +808,8 @@ class WiringTests(unittest.TestCase):
         self.assertIn("external-readiness-reviewer", text)
         self.assertIn("roadmap-build", text)
         self.assertIn("Tier 3", text)
+        self.assertIn("external_treatment", text)
+        self.assertIn("not banned as a set", text)
 
     def test_settings_register_the_external_hook(self):
         for name in ("settings.json", "settings.core.json", "settings.full.json"):

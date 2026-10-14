@@ -21,9 +21,12 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 _SCRIPTS = Path(__file__).resolve().parent
+_HOOKS = _SCRIPTS.parent / ".claude" / "hooks"
 sys.path.insert(0, str(_SCRIPTS))
+sys.path.insert(0, str(_HOOKS))
 
 import analysis_index  # noqa: E402
+import check_external_artifact as external_artifact  # noqa: E402
 
 SCAN_DIRS = (
     "outputs/daily",
@@ -57,34 +60,24 @@ KIND_HINTS = (
 DATE_RE = re.compile(r"(20\d{2}-\d{2}-\d{2})")
 INIT_RE = re.compile(r"\bINIT-\d{3,5}\b", re.I)
 COM_RE = re.compile(r"\bCOM-\d{3,5}\b", re.I)
-# Table row: | phrase | `path` | meaning |
-ALIAS_ROW_RE = re.compile(
-    r"^\|\s*([^|]+?)\s*\|\s*`?([^|`]+?)`?\s*\|\s*([^|]*)\|?\s*$",
-    re.M,
-)
-
-
 def _load_aliases(root: Path) -> list[dict]:
-    """Read reference/context/workspace-aliases.md (or .example.md)."""
+    """Read reference/context/workspace-aliases.md (or .example.md).
+
+    The hook parser is the one alias-table reader. Extra treatment columns
+    stay on that row and are ignored here; name resolution only needs the phrase.
+    """
     for name in ("workspace-aliases.md", "workspace-aliases.example.md"):
         path = root / "reference" / "context" / name
         if not path.is_file():
             continue
-        try:
-            text = path.read_text(encoding="utf-8", errors="replace")
-        except OSError:
-            continue
-        out = []
-        for m in ALIAS_ROW_RE.finditer(text):
-            phrase = m.group(1).strip()
-            dest = m.group(2).strip()
-            meaning = m.group(3).strip()
-            if phrase.lower() in ("phrase", "---") or phrase.startswith("-"):
-                continue
-            if not dest or dest.lower() == "path":
-                continue
-            out.append({"phrase": phrase, "path": dest, "meaning": meaning})
-        return out
+        return [
+            {
+                "phrase": " / ".join(alias.phrases),
+                "path": alias.path,
+                "meaning": alias.meaning,
+            }
+            for alias in external_artifact.load_alias_file(path)
+        ]
     return []
 
 

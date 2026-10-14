@@ -29,6 +29,7 @@ CLAUDE.md is read every session for day-to-day operating rules. This file is dif
 5. **Say "not ready" out loud.** Readiness/drift/adversarial gates (`prd-package`, `launch-package`, `experiment-package`) are allowed to produce "this isn't ready yet, here's what's missing" as a valid, useful output — resist the urge to make every command always produce a polished final artifact regardless of input quality.
 6. **Preserve history, update current state deliberately.** Decisions, evidence, participant contact history, raw captures, dated outputs, and run-log events are immutable history. Commitments, risks, initiatives, and to-dos are current-state rows that may be updated in place without changing IDs or order. `learning/` and living context are maintained summaries. See CLAUDE.md rule 7 and the register-write hook.
 7. **A repeated correction needs a hook or test, not another prose rule.** If the PM corrects the same failure twice (`rework_correction` in `usage-history.csv`, surfaced by `scripts/recurring_corrections.py`), the fix is enforcement that fails the run — not another sentence in CLAUDE.md. Prose alone fades under long context.
+8. **A report spec names the question and the reader, not just the metrics.** If a spec lists series to compute, the output is a table dump of those series. State the question the report answers, require an executive summary and "so what" first, have a script do the counting, and add a check that fails on wrong structure or a misleading ratio. Format and citation checks alone pass a report that answers the wrong question.
 
 ## Recipe: adding a new command
 
@@ -45,6 +46,8 @@ Ask, in order:
 Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTIONS.md if it changes what reads or writes a register. Add a dated entry below. Don't silently let CLAUDE.md's standing rules and this file's design principles drift apart — if you change one, check whether the other needs to match.
 
 ## Changelog (newest first; one line per real architectural decision — not every edit)
+
+- 2026-10-14 — **Usage story rework:** the first usage story was a cost report: list-price estimates, spend divided by file count, and outcomes buried at the end. The spec asked for cost series; the workflow said to reuse the price-table estimate; no test read the story. Now `scripts/usage_story.py data` counts the work mix, workflows, corrections (subagent results excluded), and weekly outcomes. `usage_story.py check` fails a story without an executive summary first, a "so what", the required sections, or one that divides spend by an output count. The live workspace story may use a private cost dashboard, and those figures are not committed here. Text in this repo uses a labeled price-table estimate. `workbench-health.md` names the order. Design principle 8.
 
 - 2026-10-14 — **Alias audience treatment:** `workspace-aliases.md` rows carry `external_treatment` (`internal_only`, `expand`, `preserve`, `neutralize`). Publishing blocks an unclassified row, including an old three-column row. An alias is not banned just because it is an alias.
 
@@ -197,6 +200,9 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 - Added `registers/initiatives.csv` as the explicit hub connecting stage-tracked features across commands, plus cross-checks in `discovery`, `competitive-scan`, `meeting-closeout`, `jira-reconcile`, `okr-refresh`, `strategy-refresh`, `weekly-update`, and a standalone `/ripple-check` for anything that happens outside the normal command flow.
 
 ## Open questions / known fragilities (revisit periodically)
+
+- `session_usage.py` attaches `<task-notification>` turns (subagent results) as if they were PM turns, and the classifier labels some as `rework_correction`. `usage_story.py` separates them at report time; the cleaner fix is to treat them as meta turns at ingest.
+- Cost in local logs is incomplete: Opus spend showed on the internal dashboard and not in the session transcripts. Use the dashboard for spend.
 
 - `claude --chrome` is optional and only if the plan allows it. Some enterprise plans do not include Claude in Chrome. The standing paths are the Workbench Clipper, Atlassian or Slack MCP, and the Playwright/CDP bridge (SETUP.md).
 - Whether your ticketing/wiki has gained a direct API path Claude can call (an approved integration or token) — would simplify several commands if so.

@@ -24,7 +24,7 @@ DATA_DIRS = (
     "inbox/meetings", "inbox/captures", "inbox/exports", "inbox/documents",
     "inbox/competitive", "inbox/slack", "inbox/discovery", "inbox/metrics",
     "inbox/walkthroughs",
-    "archive", "state", "state/competitive", "state/web-search", "logs", "registers",
+    "archive", "state", "state/competitive", "state/web-search", "state/chat-harvest", "logs", "registers",
     "outputs/daily", "outputs", "outputs/monthly",
     "outputs/todo-proposals", "outputs/todo-drafts",
     "repos", "learning", "drafts", "prototypes", "roadmap", "reference/context",
@@ -171,7 +171,7 @@ def seed_empty_registers(destination, dry_run=False):
             with open(analysis_path, "w", encoding="utf-8") as handle:
                 handle.write(
                     "topic_key,initiative_ids,kind,path,as_of_date,one_line,"
-                    "primary_sources,source_workflow,indexed_date\n"
+                    "primary_sources,source_workflow,indexed_date,stale_since,stale_reason\n"
                 )
     preflight_log = "logs/context-preflight.csv"
     written.append(preflight_log)
@@ -234,6 +234,38 @@ def seed_reference_starter(destination, kit_root=None, dry_run=False):
         if not dry_run:
             os.makedirs(os.path.dirname(learning_readme_dest), exist_ok=True)
             shutil.copyfile(learning_readme_src, learning_readme_dest)
+    return copied
+
+
+# Kit example → live filename. Copied only when the live file is absent.
+CONTEXT_EXAMPLE_SEEDS = (
+    ("reference/context/people.example.md", "reference/context/people.md"),
+    ("reference/context/systems-map.example.md", "reference/context/systems-map.md"),
+    ("reference/context/audiences.example.md", "reference/context/audiences.md"),
+    ("reference/context/writing-style.example.md", "reference/context/writing-style.md"),
+    ("reference/context/product-areas.example.md", "reference/context/product-areas.md"),
+    ("reference/context/workspace-aliases.example.md", "reference/context/workspace-aliases.md"),
+    ("reference/metric-definitions/kr-metric-map.example.md", "reference/metric-definitions/kr-metric-map.md"),
+)
+
+
+def seed_context_examples(destination, kit_root=None, dry_run=False):
+    """Copy context templates to their live names. Never overwrite an existing file."""
+    root = os.path.abspath(kit_root or KIT_ROOT)
+    target = os.path.abspath(destination)
+    copied = []
+    for source_rel, dest_rel in CONTEXT_EXAMPLE_SEEDS:
+        source = os.path.join(root, source_rel)
+        dest = os.path.join(target, dest_rel)
+        if not os.path.isfile(source) or os.path.islink(source):
+            continue
+        if os.path.lexists(dest):
+            continue
+        copied.append(dest_rel)
+        if dry_run:
+            continue
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        shutil.copyfile(source, dest)
     return copied
 
 

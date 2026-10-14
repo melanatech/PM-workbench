@@ -1,4 +1,10 @@
+status: template
+last_updated:
+
 # Current priorities — LIVING context (update weekly, ~2 min)
+
+Remove `status: template` and set `last_updated: YYYY-MM-DD` when the three
+priorities below are real. A file that still has this status is template-empty.
 
 Unlike CLAUDE.md (stable operating rules), this file changes often. /brief daily-brief,
 /report weekly-update, and /report strategy-refresh all read it, so keeping it current is what

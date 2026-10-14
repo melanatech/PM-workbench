@@ -46,6 +46,7 @@ def build_workspace(destination, *, dev_links=False, dry_run=False):
     data_dirs = layout.create_data_dirs(dest, dry_run=dry_run)
     registers = layout.seed_empty_registers(dest, dry_run=dry_run)
     reference = layout.seed_reference_starter(dest, dry_run=dry_run)
+    context = layout.seed_context_examples(dest, dry_run=dry_run)
 
     # Data paths must stay real directories (hooks refuse symlink writes).
     top_data = sorted({p.split("/")[0] for p in layout.DATA_DIRS})
@@ -59,12 +60,15 @@ def build_workspace(destination, *, dev_links=False, dry_run=False):
             print(f"  seed {relative}")
         for relative in reference:
             print(f"  copy {relative}")
+        for relative in context:
+            print(f"  seed {relative}")
         layout.next_steps(dest, mode)
         return 0
 
     print(f"  data dirs: {len(data_dirs)}")
     print(f"  registers/logs seeded: {len(registers)}")
     print(f"  reference starter files: {len(reference)}")
+    print(f"  context templates seeded: {len(context)}")
     layout.write_live_root_marker(dest)
     layout.next_steps(dest, mode)
     return 0

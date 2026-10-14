@@ -12,7 +12,8 @@ The system needs its own product management. One line per item; move to EVOLVING
 - [x] Competitive-scan URL discovery on Bedrock: `scripts/web_search.py` (client-side) — native Claude WebSearch stays unsupported on Bedrock; do not re-open as "ask PM for URLs"
 - [x] First-class web search: `_web-search.md` recipe, `state/web-search/`, fan-out + `web-search` index kind, skill; explore-brief / prd-package search problems · market/category · users · solutions
 - [x] `extract_document.sh` implemented (textutil + pdftotext/PDFKit + `.xlsx`/`.xlsm` via `extract_xlsx.py`); process-inbox prefers it and fails fast on exit 2/3
-- [ ] Implement and test the manual-fallback replacements for `log_metrics.py` and `render_template.py` when a real use case warrants them
+- [x] `render_template.py` writes HTML and Word (`.docx`) with the standard library (2026-10-14). Excel and PowerPoint still exit with a message; a branded Word template in `reference/templates/formatted/` stays optional
+- [ ] `log_metrics.py` is still a stub — append `state/okr-history.csv` by hand until a real use case warrants the script
 - [ ] Confirm an approved, access-controlled company backup destination for registers/context/logs; until then leave snapshots unconfigured (never Git)
 - [ ] Verify slash commands end-to-end in the Claude Code panel from `~/pm-live` after `/login` (Cursor Agent shell proxy can block `claude -p` even when the panel works)
 - [ ] Design first formatted template (likely the leadership one-pager) in Word with Jinja2 tags -> reference/templates/formatted/ (~30 min, unlocks branded output for that deliverable)

@@ -58,7 +58,7 @@ python3 -m unittest discover -s tests -v
 | **Ready to try locally** | `scripts/load_fixture.py`, `scripts/check_run.py`, and the safety tests are runnable local tools. `/quick-close` and `/capture meeting-closeout` are prompts for pasted notes or local files; they still require Claude Code and have not been verified end-to-end against a real workspace. The other command prompts and `prototype-build` skill are present, but many depend on populated data or external sources. |
 | **Needs your configuration** | Real company context, templates, saved views, browser access, and scheduled runs require your tools, URLs, permissions, and policy review. Nothing here is connected to a real company system by default. Browser paths described in SETUP.md are options to test, not verified integrations. |
 | **Requires an approved destination** | `scripts/snapshot-state.sh` creates a local copy only after `PM_STATE_BACKUP` is set to an approved, access-controlled, non-Git location. `scripts/restore-state.sh` previews and restores missing files from an explicitly selected snapshot without replacing differing records. Neither script encrypts or uploads the snapshot. See `STATE-BACKUP.md` for the recovery flow. |
-| **Known script stubs** | `scripts/log_metrics.py` and `scripts/render_template.py` intentionally exit as stubs. `scripts/extract_document.sh` extracts .txt/.md/.csv, Word/RTF/HTML via `textutil`, PDF via `pdftotext` or PDFKit, and Excel `.xlsx`/`.xlsm` — on exit 2/3, re-export or paste. |
+| **Known script stubs** | `scripts/log_metrics.py` still exits as a stub (append metric rows by hand). `scripts/render_template.py` writes HTML and Word (`.docx`) with the standard library; Excel and PowerPoint still exit with a message. `scripts/extract_document.sh` extracts .txt/.md/.csv, Word/RTF/HTML via `textutil`, PDF via `pdftotext` or PDFKit, and Excel `.xlsx`/`.xlsm` — on exit 2/3, re-export or paste. |
 | **Not yet verified** | Browser reads, hook behavior in your Claude Code version, scheduled runs, and any external-system write path. Do not treat examples or allow-lists as evidence that an integration works or is approved. |
 
 `Run PM Workflow.command` and scheduling are optional. Desktop-app capture
@@ -113,6 +113,7 @@ The six cluster commands (`/capture`, `/brief`, `/sync`, `/discover`, `/build`, 
 | Weekly leadership updates | `/report weekly-update` (generated from registers) |
 | Strategy/innovation/revenue docs | `/report strategy-refresh` (Standard by default; from scratch uses the discovery phase and `product-strategy-memo-template.md`; a refresh still starts with the change report) |
 | Roadmap from scratch | `/report roadmap-build` (discovery first; Now / Next / Later; no invented dates). A change to an existing roadmap is `/sync roadmap-update` |
+| Fill living context | `/brief context-setup` (week one; draft first, promote after you accept) |
 | Week one back | `/brief return-brief` (one-time) |
 | Is the system itself working for me | `/report workbench-health` (reads the run log; proposes pruning) |
 | Is it helping: fewer dropped balls, better decisions | `/report monthly-review` (monthly; scheduled; first snapshot starts a 21-day baseline) |

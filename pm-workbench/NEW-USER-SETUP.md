@@ -220,19 +220,22 @@ folder when finished. Do **not** load the fixture into `~/pm-live`.
 In `~/pm-live`:
 
 1. Put private context in `.claude/CLAUDE.local.md` (gitignored).
-2. Seed `reference/links.csv` and `reference/context/current-priorities.md` with
+2. In week one, run `/brief context-setup` once. It drafts living context from
+   material already on disk and asks only for the gaps. The draft stays under
+   `drafts/context-setup/` until you accept that batch.
+3. Seed `reference/links.csv` and `reference/context/current-priorities.md` with
    approved or public links only. Leave
    `reference/context/assumptions-and-open-questions.md` empty — capture fills it.
-3. Drop a meeting transcript into `inbox/meetings/`.
-4. Run `/capture meeting-closeout inbox/meetings/<your-file>.txt` (or
+4. Drop a meeting transcript into `inbox/meetings/`.
+5. Run `/capture meeting-closeout inbox/meetings/<your-file>.txt` (or
    `/capture process-inbox` for a batch). That run should: write DEC-/COM-/RISK-
    rows; **seed** `registers/initiatives.csv` for named product work; append
    assumptions/open questions; update `learning/[area].md` when the meeting
    taught product behavior; queue your personal follow-ups under
    `outputs/todo-proposals/` (nothing is added to `registers/todos.csv` until
    you run `/todo propose` and accept).
-5. Run `python3 scripts/check_run.py`.
-6. Run `/todo propose` and accept the ones you want on your list.
+6. Run `python3 scripts/check_run.py`.
+7. Run `/todo propose` and accept the ones you want on your list.
 
 Also try `/quick-close`, `/todo`, `/brief daily-brief`, and
 `/report workbench-health` once.
@@ -304,8 +307,10 @@ Do these on non-sensitive data. Record pass/fail in `logs/setup-findings.md`.
 5. **Backup:** on the **isolated fixture only**, set `PM_STATE_BACKUP` to a
    non-git path outside the workbench and run `scripts/snapshot-state.sh`. Leave
    live backup unset until company storage is approved.
-6. **Stubs / extract:** `log_metrics.py` and `render_template.py` still exit as
-   stubs. `extract_document.sh` is live for common formats; on failure re-export
+6. **Stubs / extract:** `log_metrics.py` still exits as a stub (append metric
+   rows by hand). `render_template.py` writes HTML and Word (`.docx`) with the
+   standard library; Excel and PowerPoint still exit with a message.
+   `extract_document.sh` is live for common formats; on failure re-export
    or paste rather than retrying inventively.
 
 ## 8. Read next

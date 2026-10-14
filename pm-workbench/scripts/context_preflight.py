@@ -30,8 +30,10 @@ SCAN_DIRS = (
     "outputs/weekly",
     "outputs/monthly",
     "outputs/prds",
+    "outputs/strategy",
     "outputs/research",
     "outputs/todo-drafts",
+    "roadmap",
     "learning",
     "drafts",
     "state/web-search",
@@ -189,7 +191,7 @@ def _scan_files(root: Path, tokens: list[str], limit: int = 12) -> list[dict]:
             if tokens and not any(t in blob for t in tokens):
                 continue
             as_of = _as_of_from_path(rel) or date.fromtimestamp(path.stat().st_mtime).isoformat()
-            derived = rel.startswith("drafts/")
+            derived = rel.startswith("drafts/") or rel.startswith("prototypes/")
             hits.append(
                 {
                     "path": rel,
@@ -200,6 +202,8 @@ def _scan_files(root: Path, tokens: list[str], limit: int = 12) -> list[dict]:
                     "kind": _guess_kind(rel, text),
                     "primary_sources": "",
                     "derived": derived,
+                    "evidence": not derived,
+                    "stale_since": "",
                 }
             )
             seen.add(rel)
@@ -229,16 +233,20 @@ def _index_hits(root: Path, tokens: list[str], init_id: str) -> list[dict]:
         if not match:
             continue
         as_of = r.get("as_of_date") or _as_of_from_path(r.get("path", ""))
+        rel = r.get("path") or ""
+        derived = rel.startswith("drafts/") or rel.startswith("prototypes/")
         out.append(
             {
-                "path": r.get("path", ""),
+                "path": rel,
                 "as_of": as_of,
                 "one_line": r.get("one_line", ""),
                 "age_days": _age_days(as_of),
                 "source": "index",
                 "kind": r.get("kind", "other"),
                 "primary_sources": r.get("primary_sources", ""),
-                "derived": (r.get("path") or "").startswith("drafts/"),
+                "derived": derived,
+                "evidence": not derived,
+                "stale_since": (r.get("stale_since") or "").strip(),
             }
         )
     return out
@@ -336,6 +344,11 @@ def run_preflight(
     newer_signals: list[str] = []
     if verify:
         newer_signals.append("PM asked verify")
+    for hit in hits:
+        stale_since = (hit.get("stale_since") or "").strip()
+        if stale_since:
+            newer_signals.append(f"stale_since {stale_since} on {hit.get('path')}")
+            break
     init_lu = _init_last_updated(root, init_id)
     if init_lu and hits:
         for h in hits:
@@ -444,8 +457,10 @@ def print_marker(marker: dict) -> None:
     for h in hits:
         prim = h.get("primary_sources") or "(none recorded)"
         derived = " derived" if h.get("derived") else ""
+        non_evidence = " non-evidence" if h.get("evidence") is False else ""
+        stale = f" stale_since={h.get('stale_since')}" if h.get("stale_since") else ""
         print(
-            f"  [{h.get('source')}]{derived} {h.get('path')} | as_of={h.get('as_of')} "
+            f"  [{h.get('source')}]{derived}{non_evidence}{stale} {h.get('path')} | as_of={h.get('as_of')} "
             f"| age_days={h.get('age_days')} | {h.get('one_line')}"
         )
         print(f"    primary_sources: {prim}")

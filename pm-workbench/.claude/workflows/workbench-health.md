@@ -7,6 +7,8 @@ Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — 
 
 The system needs its own product management. Run `python3 scripts/workbench_health.py` and use ONLY its numbers — never estimate usage, counts, or dates yourself (the script counts; you interpret).
 
+Also run `python3 scripts/context_health.py --root <live>` and paste its table. That is the context-health report (missing, template-empty, stale, ok). Do not summarize a file you did not get a row for.
+
 Also run `python3 scripts/session_usage.py --root <live> --summary` and report its **by-surface** and **by-model** lines next to those numbers. Do not add the tokens up yourself.
 
 Surfaces, from the transcript `entrypoint` (see `scripts/transcripts.py`):

@@ -57,7 +57,7 @@ Pick the authoritative surface for the question type, read it first, then second
 ## Rule 26 — cache-first analyses
 
 1. Run `context_preflight` (or require a fresh `state/.context-preflight.json`) before investigating.
-2. Cite hits with as_of **and** their `primary_sources` when present.
+2. Cite hits with as_of **and** their `primary_sources` when present. An index hit with `stale_since` set is a staleness signal (`reuse_and_refresh`). `drafts/` hits are non-evidence.
 3. On `reuse_and_refresh` or a conflict, do a targeted refresh and report conflicts (rule 8).
 4. A new durable analysis → `scripts/analysis_index.py append` in the same run (or fan-out).
 5. Forbidden: blank-slate re-investigation when hits exist and there is no staleness or conflict signal; answering "the brief says" for a product-fact check.

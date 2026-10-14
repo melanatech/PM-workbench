@@ -5,6 +5,8 @@ model: haiku
 
 Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
+Context dependencies: soft: current-priorities, kr-metric-map | hard: none
+
 ## Gather plan
 
 List these reads, then batch the independent ones in one turn. Sequence only a step that depends on an earlier result (the brief text depends on the counts). If this session already read a file, pass the distilled brief onward instead of re-reading the raw file. Re-reading the same file for a different task is fine; prompt caching makes that cheap. No session cache.
@@ -20,6 +22,8 @@ Independent (batch together):
 - `inbox/` (counts by type)
 - latest `outputs/weekly/*-jira-reconcile.md` (open flags)
 - `reference/context/current-priorities.md`
+- `python3 scripts/context_health.py --root <live> --brief`
+- `python3 scripts/analysis_index.py stale --root <live> --living`
 - `outputs/todo-drafts/` and `outputs/todo-proposals/` (names and counts of what I have not reviewed)
 - `logs/scheduled-runs.csv` and `logs/run-log.csv` (`BLOCKED:` lines since the last brief)
 - `inbox/meetings/` and living context, for meetings that need prep
@@ -52,11 +56,15 @@ Good morning. Since [date]:
 Suggested: 1) /capture process-inbox  2) /sync jira-reconcile  3) prep for [meeting]  4) /todo list --filter overdue (if any overdue)  5) nothing urgent — carry on
 ```
 
-**Suppression rule: if nothing material changed and nothing is due, say exactly that in one line and stop** — "Nothing needs you today." A brief that always produces content trains you to skim it; one that's silent when silence is true stays trustworthy.
+**Suppression rule: if nothing material changed and nothing is due, say exactly that in one line and stop** — "Nothing needs you today." A brief that always produces content trains you to skim it; one that's silent when silence is true stays trustworthy. Still add the context-health line and the stale-deliverable line when those scripts report a gap. Those are not invented brief content.
 
 **Do not run any of those commands automatically.** The whole point of this brief is that scheduled time triggers a decision point, not unattended work. I pick; you execute.
 
-**If `reference/context/current-priorities.md` is blank:** say so in one line and offer to capture this week's top 3 now — never frame the brief against priorities that were never stated.
+**If `reference/context/current-priorities.md` is blank or template-empty:** say so in one line and offer `/brief context-setup`. If you derive a stand-in from open initiatives and key results, label it "derived, not stated priorities" and ask me to confirm. Never frame the brief against priorities that were never stated.
+
+**Context health:** if `context_health.py --brief` prints `context: ok`, omit the line. Otherwise include that line verbatim.
+
+**Stale living deliverables:** if `analysis_index.py stale --living` prints `stale: none`, omit the line. Otherwise list each PRD, brief, strategy, or roadmap with its `stale_since` and offer a refresh. Do not rewrite them from the brief.
 
 **Blocked scheduled runs:** read `logs/run-log.csv` for any `BLOCKED:` lines since the last brief and list each as a decision point with what the run needed (CLAUDE.md rule 22). Never re-run the blocked command from here — offer it.
 

@@ -145,7 +145,7 @@ class RoutesTableTests(unittest.TestCase):
         design = WORKBENCH / "reference" / "design"
         catalog = (design / "prototype-components.md").read_text(encoding="utf-8")
         shared = (design / "shared-prototype-package.md").read_text(encoding="utf-8")
-        stub = (design / "DEFERRED-shared-prototype-package.md").read_text(encoding="utf-8")
+        self.assertFalse((design / "DEFERRED-shared-prototype-package.md").exists())
         skill = (
             WORKBENCH / ".claude" / "skills" / "prototype-build" / "SKILL.md"
         ).read_text(encoding="utf-8")
@@ -155,7 +155,9 @@ class RoutesTableTests(unittest.TestCase):
         self.assertIn("prototypes/_shared", shared)
         self.assertIn("file:", shared)
         self.assertIn("npm run share", shared)
-        self.assertIn("shared-prototype-package.md", stub)
+        readme = (design / "README.md").read_text(encoding="utf-8")
+        self.assertIn("shared-prototype-package.md", readme)
+        self.assertNotIn("DEFERRED-shared-prototype-package.md", readme)
         self.assertIn("prototype-components.md", skill)
         self.assertIn("Shared kit", skill)
         self.assertIn("Catalog update", skill)

@@ -54,6 +54,7 @@ KINDS = {
     "competitive",
     "web-search",
     "strategy",
+    "roadmap",
     "reconcile",
     "research",
     "brief",
@@ -205,7 +206,7 @@ def mark_stale(
 
 
 LIVING_PREFIXES = ("outputs/prds/", "outputs/strategy/", "roadmap/")
-LIVING_KINDS = {"brief", "strategy"}
+LIVING_KINDS = {"brief", "strategy", "roadmap"}
 
 
 def is_living_deliverable(row: dict) -> bool:

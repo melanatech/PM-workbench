@@ -89,6 +89,7 @@ WORKFLOWS = {
     "ripple-check",
     "context-reconcile",
     "roadmap-update",
+    "roadmap-build",
     "rotate-registers",
     "discovery",
     "research-plan",

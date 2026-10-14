@@ -6,6 +6,6 @@ When process-inbox only has an archive pointer, it must PROPOSE creating the `.m
 
 | Template | Where | What it is | Status |
 |---|---|---|---|
-| *(none yet)* | | | |
+| Product strategy memo | reference/templates/product-strategy-memo-template.md | Initial strategy memo. Heading order is fixed. | templated |
 
 Status values: `index-only` (archive/source only — needs PROPOSAL) · `templated` (link a real `.md` in Where).

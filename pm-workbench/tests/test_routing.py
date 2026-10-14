@@ -509,5 +509,115 @@ class DocsUseTheNewNamesTests(unittest.TestCase):
                 self.assertTrue((COMMANDS / f"{key}.md").exists() or (WORKBENCH / ".claude" / "skills" / key).exists(), f"{name}: {key}")
 
 
+class RoadmapAndStrategyFromScratchTests(unittest.TestCase):
+    def test_roadmap_build_is_report_sonnet_and_phrases_route(self):
+        report = clusters()["report"]
+        self.assertEqual(report["roadmap-build"]["model"], "sonnet")
+        self.assertEqual(report["roadmap-build"]["path"], ".claude/workflows/roadmap-build.md")
+        self.assertEqual(report["strategy-refresh"]["model"], "opus")
+        text = (WORKBENCH / ".claude" / "workflows" / "roadmap-build.md").read_text(encoding="utf-8")
+        self.assertIn("Execution mode: **standard**", text)
+        self.assertIn("Deep upgrades", (WORKBENCH / ".claude" / "commands" / "report.md").read_text(encoding="utf-8"))
+        self.assertIn("dispatch `workflow-runner` on opus", text)
+        self.assertIn("routes.json", text)
+        self.assertNotIn("model: opus", text.split("---", 2)[1])
+        for phrase in (
+            "Discovery phase",
+            "discovery-source-reader",
+            "competitive-capture-agent",
+            "web_search.py",
+            "state/competitive/",
+            "do not re-scan",
+            "context_health.py",
+            "derived, not stated priorities",
+            "one batched QUESTIONS",
+            "before sequencing",
+            "No invented dates",
+            "[NEEDS INPUT]",
+            "Now / Next / Later",
+            "strategy-red-team-reviewer",
+            "Anticipated objections",
+            "Do not silently rewrite",
+            "not impersonation",
+            "optional persona lenses",
+            "Not in the default flow",
+            "external-readiness-reviewer",
+            "audience: internal",
+            "formats: [md]",
+            "Do not call a wiki create API",
+            "BLOCKED: confirm derived priorities",
+            "12 source",
+        ):
+            self.assertIn(phrase, text, phrase)
+        self.assertIn("Fast does not dispatch it", text)
+        self.assertLess(text.index("Discovery phase"), text.index("Cold start"))
+        self.assertLess(text.index("Cold start"), text.index("## Sequence"))
+        self.assertLess(text.index("## Sequence"), text.index("## Red team"))
+        self.assertTrue(text.rstrip().endswith("Do not call a wiki create API or a chat send API from this step."))
+
+    def test_plain_language_skill_and_router_name_the_phrases(self):
+        plain = (WORKBENCH / ".claude" / "workflows" / "_plain-language.md").read_text(encoding="utf-8")
+        self.assertIn("Build a roadmap", plain)
+        self.assertIn("draft a roadmap from scratch", plain)
+        self.assertIn("/report roadmap-build", plain)
+        self.assertIn("Strategy from scratch", plain)
+        self.assertIn("draft a strategy from scratch", plain)
+        self.assertIn("/sync roadmap-update", plain)
+        skill = (WORKBENCH / ".claude" / "skills" / "roadmap-build" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("/report roadmap-build", skill)
+        self.assertIn("build a roadmap", skill.lower())
+        self.assertIn("draft a roadmap from scratch", skill.lower())
+        report = (WORKBENCH / ".claude" / "commands" / "report.md").read_text(encoding="utf-8")
+        self.assertIn("`roadmap-build`", report)
+        self.assertLess(len(report.splitlines()), 60)
+        strategy_skill = (WORKBENCH / ".claude" / "skills" / "strategy-refresh" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("strategy from scratch", strategy_skill.lower())
+
+    def test_strategy_refresh_defaults_to_standard_and_has_from_scratch(self):
+        text = (WORKBENCH / ".claude" / "workflows" / "strategy-refresh.md").read_text(encoding="utf-8")
+        self.assertIn("Execution mode: **standard**", text)
+        self.assertNotIn("Execution mode: **deep**", text)
+        self.assertIn("model: opus", text)
+        self.assertIn("From-scratch mode", text)
+        self.assertIn("product-strategy-memo-template.md", text)
+        self.assertIn("initial version", text)
+        self.assertIn("discovery-source-reader", text)
+        self.assertIn("do not re-scan", text.lower())
+        self.assertIn("derived, not stated priorities", text)
+        self.assertIn("No invented dates", text)
+        self.assertIn("strategy-red-team-reviewer", text)
+        self.assertIn("Anticipated objections", text)
+        self.assertIn("not impersonation", text)
+        self.assertIn("external-readiness-reviewer", text)
+        self.assertIn("Step 4 — Publish", text)
+        self.assertTrue(
+            (WORKBENCH / "reference" / "templates" / "product-strategy-memo-template.md").is_file()
+        )
+        memo = (WORKBENCH / "reference" / "templates" / "product-strategy-memo-template.md").read_text(encoding="utf-8")
+        for heading in (
+            "Vision statement",
+            "Learnings & Discovery",
+            "Product Objectives",
+            "Key Initiatives",
+            "Key dependencies/risks",
+        ):
+            self.assertIn(heading, memo)
+            self.assertIn(heading, text)
+
+    def test_red_team_is_sonnet_and_weekly_update_is_optional(self):
+        agent = (WORKBENCH / ".claude" / "agents" / "strategy-red-team-reviewer.md").read_text(encoding="utf-8")
+        self.assertIn("model: sonnet", agent)
+        self.assertIn("cited sources", agent.lower())
+        self.assertIn("Do not silently rewrite", agent)
+        self.assertNotIn("model: haiku", agent)
+        self.assertNotIn("model: opus", agent)
+        weekly = (WORKBENCH / ".claude" / "workflows" / "weekly-update.md").read_text(encoding="utf-8")
+        self.assertIn("Optional red team", weekly)
+        self.assertIn("Not the default", weekly)
+        self.assertIn("not run in Fast", weekly)
+        self.assertIn("strategy-red-team-reviewer", weekly)
+        self.assertLess(weekly.index("Optional red team"), weekly.index("**Publish.**"))
+
+
 if __name__ == "__main__":
     unittest.main()

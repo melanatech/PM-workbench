@@ -186,7 +186,7 @@ def seed_empty_registers(destination, dry_run=False):
             handle.write(
                 "session_id,message_uuid,timestamp,user_uuid,user_excerpt,category,"
                 "category_source,input_tokens,output_tokens,cache_creation_input_tokens,"
-                "cache_read_input_tokens,model,is_sidechain,project,indexed_date\n"
+                "cache_read_input_tokens,model,is_sidechain,project,indexed_date,surface\n"
             )
     classify_log = "logs/usage-classify-runs.csv"
     written.append(classify_log)

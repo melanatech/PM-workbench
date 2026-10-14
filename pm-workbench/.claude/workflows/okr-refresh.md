@@ -42,3 +42,11 @@ Recommended action: ...
 7. Save the full report to `outputs/monthly/[date]-okr-report.md` (or weekly/ for weekly runs).
 
 When surfaces disagree on **roadmap/status/scope**, resolve by the **Roadmap surface authority** table in `SOURCE-POLICY.md`. Metric authority follows the Official metrics row and the dated-internal-numbers exception there.
+
+## Rule 5 — log the displayed number, never recompute
+
+OKR and metric values are already calculated somewhere. Log the displayed number; never recompute it from raw rows. The usual source is an OKR dashboard. Also valid: an internal leadership or metric deck, a wiki metric page, or an export that shows a named metric with an as-of / report date (and ideally the same definition as the key result).
+
+Append a verified row to `state/okr-history.csv` with `metric,value,as_of_date,retrieved_date,timeframe,filters,delta,chart,notes,source` (valid CSV quoting; header if new). `as_of_date` is the source's report stamp. `retrieved_date` is when you captured it. `timeframe` is the period the number covers (for example past 30 days, or a closed month) — not the same as either date. `filters` is the cohort, product, or device applied on that view (empty if none). `delta` is the displayed change callout if the source shows one — never invent one by subtracting prior history rows. `chart` is the shared label when several series come from one multi-metric chart (one row per series). `notes` is how the figure is defined, as the source states it, plus short caveats. `source` is a concrete path or URL.
+
+Prefer a live dashboard read when both a dashboard and a doc exist and disagree on the same metric and definition. Otherwise prefer the newer `as_of_date` from an internal doc and still report the conflict (rule 8) if definitions or cohorts differ. `scripts/log_metrics.py` is a stub — until tested, append manually and say that automated freshness checks did not run. Web search and external public pages are not metric sources. If a metric has no pre-calculated aggregate anywhere and needs calculation, create a separate, explicitly named workflow. See `reference/metric-definitions/example.yml`. The steps above are how this workflow applies the rule.

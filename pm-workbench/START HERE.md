@@ -67,16 +67,16 @@ select text → right-click → Services. Writes into the live `inbox/`
 (via `~/.pm-workbench/live-root`), not the git kit. See SETUP.md.
 
 ## Files to read, in order
-1. **NEW-USER-SETUP.md** — create `~/pm-live`, preflight, optional Claude plugins, fixture, first capture, troubleshooting
-2. **SETUP.md** — optional local capture and external-access paths, permission examples, hooks, and their verification limits
-3. **CLAUDE.md** — fill only brackets approved for this repository; keep private details in the ignored `.claude/CLAUDE.local.md`; review the rules and command menu
+1. **NEW-USER-SETUP.md** — the single setup path: create `~/pm-live`, preflight, optional plugins, fixture, first capture, troubleshooting
+2. **SETUP.md** — integrations reference only (browser, hooks, templates), after the live folder exists
+3. **CLAUDE.md** — standing rules; personal details go in the ignored `.claude/CLAUDE.local.md`
 4. **SCHEDULING.md** — after 2-3 manual cycles per workflow
 5. **SKILLS.md** — the later upgrade path
-6. **AGENTS.md** — where and why subagents are used (isolated review panels + heavy-read isolation), and which commands deliberately stay plain
-7. **`.claude/workflows/_plain-language.md` + skills** — how everyday phrasing maps to workflows (primetime: users will not memorize slash commands)
-7. **CONNECTIONS.md** — the full write/read map: what every command feeds and cross-checks against
-8. **SOURCE-POLICY.md** — who wins when Jira, Confluence, Slack, and code disagree (short; worth reading early)
-9. **EVOLVING.md** + **BACKLOG.md** — read before adding or changing anything; the system's own changelog and friction log
+6. **AGENTS.md** — subagent index and context-size guardrails
+7. **`.claude/workflows/_plain-language.md`** — command menu and how everyday phrasing maps to workflows
+8. **CONNECTIONS.md** — file map, register schemas, and what every command feeds
+9. **SOURCE-POLICY.md** — claim ladder: who wins when the tracker, wiki, chat, and code disagree
+10. **EVOLVING.md** + **BACKLOG.md** — read before adding or changing anything; the system's own changelog and friction log
 
 ## Using the prompt kit
 Open the folder in a Claude Code-supported environment after verifying that
@@ -90,7 +90,7 @@ Also available:
 - **Scheduled runs** — an optional future setup. Scheduling is not configured or verified; see `SCHEDULING.md` and BACKLOG.md before considering it.
 
 ## Every duty → its workflow
-The six cluster commands (`/capture`, `/brief`, `/sync`, `/discover`, `/build`, `/report`) take the workflow name as their first word; `/quick-close` and `/todo` stand alone. See CLAUDE.md for the cluster table.
+The six cluster commands (`/capture`, `/brief`, `/sync`, `/discover`, `/build`, `/report`) take the workflow name as their first word; `/quick-close` and `/todo` stand alone. The cluster table and command menu are in `.claude/workflows/_plain-language.md`.
 
 | Duty | Workflow(s) |
 |---|---|

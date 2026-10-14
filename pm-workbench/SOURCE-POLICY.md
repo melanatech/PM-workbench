@@ -1,6 +1,8 @@
 # SOURCE-POLICY.md — who wins when sources disagree
 
-Registers and local files are an INDEX and working memory — never the ultimate authority. When sources conflict, report the conflict; never silently pick one (CLAUDE.md rule 7). When you must rank, this is the hierarchy:
+This file owns the claim-type authority ladder. CLAUDE.md points here; do not restate the ladder in other kit docs.
+
+Registers and local files are an INDEX and working memory — never the ultimate authority. When sources conflict, report the conflict; never silently pick one (CLAUDE.md rule 8). When you must rank, this is the hierarchy:
 
 | Information | Authoritative source | Notes |
 |---|---|---|

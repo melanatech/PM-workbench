@@ -46,13 +46,15 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 
 ## Changelog (newest first; one line per real architectural decision — not every edit)
 
+- 2026-10-14 — **Lean CLAUDE.md:** numbered one-line rules stay in CLAUDE.md; rule 5 lives in `okr-refresh.md`; rules 18–20 and 23–24 plus execution modes and model routing live in `_protocol.md` (models still declared in `routes.json`); the command menu lives in `_plain-language.md`; the authority and cache tables live in `authority-lookup`; register schemas and the file map live in CONNECTIONS.md; "Keeping this fast" lives in AGENTS.md. Removed the commitment-lookup alias (phrases folded into authority-lookup), the deferred prototype stub, and two scripts no workflow called.
+
 - 2026-10-13 — **Enforce recurring workbench fixes:** provenance hook covers registers/context; `workspace-aliases.md` + preflight name resolution; Stop/PostToolUse path-link hooks; clipper v0.6 slow DOM transcript (no decrypt); `recurring_corrections.py` + principle 7. Trigger: assume→glossary, phantom COM cites, bare paths, incomplete Stream clips.
 
 - 2026-10-13 — **Session token usage mining (phase 1):** `scripts/session_usage.py` scans Claude Code `~/.claude/projects/…-pm-live/*.jsonl` → `state/usage-history.csv` (L0+L1+L2a; opt-in `--classify` L2b via `claude -p` login / Haiku, not API key). `workbench_metrics` Session tokens info rows; never "tokens saved." Cursor Agent out of scope.
 
 - 2026-10-13 — **Cache-first context stitch (root fix):** `state/analysis-index.csv` + `context_preflight.py` + grounding/repos hooks; SOURCE-POLICY claim-type ladder + `primary_sources` (drafts/prototypes never evidence); `repo_profile.py` surface map; prototype source-derived baseline + `BASELINE-SOURCES.md` QA gate; reconciler accepts brief upstream. Rule 26. Trigger: stitch failures (ignored digests; circular brief citation; invented baseline).
 
-- 2026-10-13 — **Workspace-before-repos (stitch failure):** `prd-context-gatherer` must search prior `outputs/`/`learning/` (events, instrumentation, code-dives) before any `repos/` read; explore-brief forbids clone-only technical claims; rule 25 authority table adds prior-analysis row. Trigger: explanations brief ignored Oct 7 events/instrumentation digests and re-derived from cx-reports.
+- 2026-10-13 — **Workspace-before-repos (stitch failure):** `prd-context-gatherer` must search prior `outputs/`/`learning/` (events, instrumentation, code-dives) before any `repos/` read; explore-brief forbids clone-only technical claims; rule 25 authority table adds prior-analysis row. Trigger: a product brief ignored prior events/instrumentation digests and re-derived behavior from a product-repo clone.
 
 - 2026-10-13 — **Excel extract in-kit:** `scripts/extract_xlsx.py` (stdlib) wired from `extract_document.sh` for `.xlsx`/`.xlsm` — sheet text as TSV; no openpyxl. Legacy `.xls` / encrypted still re-export. process-inbox + SETUP/START HERE updated.
 
@@ -62,7 +64,7 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 
 - 2026-10-12 — **`/discover explore-brief`:** pre-PRD check-in brief (sonnet). Enrich shared `prd-context-gatherer` (decided vs open, sibling COMs, weak patterns); thin workflow assemble → frame → options → `drafts/…-product-brief.md`. Do **not** fold into opus `prd-package` or invent `explore-context-gatherer`. Trigger: COM-012-style explore asks falling through to generic brainstorm without the INIT pack.
 
-- 2026-10-12 — **Authority-first lookups (rule 25):** freeform factual asks must hit the authoritative surface for the question type first (registers / intake / PRD path / board path / etc.), then secondary sources; coverage line when non-obvious. Commitments ladder kept as worked example. Skills: `authority-lookup` + `commitment-lookup` alias. Trigger: double-ask pattern (partial from one transcript → pushback → register had the answer).
+- 2026-10-12 — **Authority-first lookups (rule 25):** freeform factual asks must hit the authoritative surface for the question type first (registers / intake / PRD path / board path / etc.), then secondary sources; coverage line when non-obvious. Commitments ladder kept as worked example. Skill: `authority-lookup` (promise/due phrases included). Trigger: double-ask pattern (partial from one transcript → pushback → register had the answer).
 
 - 2026-10-12 — **Metric history richer capture:** `okr-history.csv` columns add `timeframe`, `filters`, `delta`, `chart`, `notes` (period covered ≠ as_of/retrieved; displayed deltas only; one row per series on multi-metric charts; definition/calculation caveats in `notes`). `metric-definitions/example.yml` + rule 5 / okr-refresh / process-inbox / SOURCE-POLICY updated. Do not invent deltas by subtracting prior rows.
 
@@ -84,7 +86,7 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 
 - 2026-10-06 — **Discovery synthesis checklist** (modes 1/3/4): channel mix + theme cards (evidence-class mix, independent-account count, verbatim/edge cases, INIT touch). Pattern borrowed from https://github.com/msitarzewski/agency-agents/blob/main/product/product-feedback-synthesizer.md — checklist only; no Agency agent install.
 
-- 2026-10-13 — **Scenario Guide + Guardrails lessons:** optional `_scenario-guide.md` / skill `scenario-guide` for prototype-build (evaluator look/do/try panel; reference `explanations-transactions`). Guardrails MCP does not learn across sessions — durable fixes go in `reference/design/ux-guardrails-lessons.md`; prototype-build reads Standing preflight before scaffold and appends lessons after failed checks.
+- 2026-10-13 — **Scenario Guide + Guardrails lessons:** optional `_scenario-guide.md` / skill `scenario-guide` for prototype-build (evaluator look/do/try panel; generic recipe, scripts stay in the feature app). Guardrails MCP does not learn across sessions — durable fixes go in `reference/design/ux-guardrails-lessons.md`; prototype-build reads Standing preflight before scaffold and appends lessons after failed checks.
 
 - 2026-10-13 — **Web search providers:** when DDG serves captcha, Bing’s bot SERP returns dictionary/homepages. `web_search.py` now tries Startpage before Bing, filters dictionary/login/homepage junk, and skips unusable provider responses. Optional Serper/Brave keys still win when set.
 
@@ -98,7 +100,7 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 
 - 2026-10-06 — **Chat ≠ durable equivalence (rule 23):** digests are lossy; ad-hoc answers often expand from transcripts. Forbidden to say "all captured in outputs/…" unless claim-checked or written this turn. Protocol §6a + `_fan-out` ad-hoc enrichment. Trigger: design-meeting chat gave rich 10/2 recall then pointed at thinner `2026-10-05-inbox-meetings-fuller-clips.md`.
 
-- 2026-10-06 — **Plain-language routing (primetime):** `_plain-language.md` + CLAUDE.md Command menu + all six cluster Choosing lists: match → run, never improvise. Thin auto-invoke skills for 23 workflows (+ richer process-inbox / prototype-build). Protocol §1 picks via plain-language rules. Lookups still freeform; operational asks must hit workflows. Trigger: "process web clips" improvisation; generalize for any future user who will not memorize slash commands.
+- 2026-10-06 — **Plain-language routing (primetime):** `_plain-language.md` Command menu + all six cluster Choosing lists: match → run, never improvise. Thin auto-invoke skills for 23 workflows (+ richer process-inbox / prototype-build). Protocol §1 picks via plain-language rules. Lookups still freeform; operational asks must hit workflows. Trigger: "process web clips" improvisation; generalize for any future user who will not memorize slash commands.
 
 - 2026-10-06 — **Plain-language intake:** failures were NL improvisation ("process web clips" → peek inbox), not missing slash-command Step 0. Added `.claude/skills/process-inbox/SKILL.md` for auto-invoke; CLAUDE.md command menu + `/capture` choosing: intake phrases run process-inbox/intake_status immediately — no confirm, no bare folder peek.
 

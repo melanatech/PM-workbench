@@ -55,6 +55,6 @@ question more directly.
 instead? A page-path visit counts everyone who loaded the page, including people who never saw or
 interacted with the specific element the metric claims to measure.
 **How to check:** `your approved column-search / catalog tool` / `execute_query` against the real warehouse —
-not an assumption from the tracking plan's event name alone. This exact repo's own EXAMPLE-ID/CP-5835
-work found real gaps this way (`datasheet.impression` vs. a coarser page-path event materially
+not an assumption from the tracking plan's event name alone. A prior instrumentation check of this
+kind found real gaps this way (a precise impression event vs. a coarser page-path event materially
 changed the measured adopter advantage).

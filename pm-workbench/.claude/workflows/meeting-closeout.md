@@ -43,7 +43,7 @@ Meeting input: $ARGUMENTS
 
 6b. **Assumptions and open questions → living file (do not leave them only in chat/output).** Append any new **assumptions stated** and **unresolved questions** (and unresolved conflicts that are questions, e.g. fees scope) to `reference/context/assumptions-and-open-questions.md`. Create the file from the kit template if missing. Each bullet: date, one line, source path, related INIT-/DEC-/RISK- if known, status `open`. Deduplicate against existing open bullets. When a later meeting resolves one, mark that bullet `resolved YYYY-MM-DD` in place (do not delete). This file is living context like `current-priorities.md`, not an immutable register.
 
-6c. **Product knowledge → `learning/`.** If the meeting taught something durable about how the product works (a Figma walkthrough, report behavior, status labels, export limits), update or create `learning/[area].md` (e.g. `learning/commerce-intelligence.md`) with dated bullets and source paths. Skip one-off scheduling trivia.
+6c. **Product knowledge → `learning/`.** If the meeting taught something durable about how the product works (a Figma walkthrough, report behavior, status labels, export limits), update or create `learning/[area].md` (e.g. `learning/billing.md`) with dated bullets and source paths. Skip one-off scheduling trivia.
 
 7. Draft (do not send) follow-up messages or Jira text only when the meeting implies one. Do not write a "no drafts / only attendee / no Jira" section. Do not draft Jira for eng-only chores the filter skipped unless I ask.
 

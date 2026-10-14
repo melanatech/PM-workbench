@@ -48,7 +48,7 @@ class ProvenanceRegisterTests(unittest.TestCase):
         risks = self.tmp / "registers" / "risks.csv"
         risks.write_text(
             "id,date_raised,risk,severity,mitigation,status,source\n"
-            'RISK-001,2026-10-12,board hygiene,medium,"Fix REPORT-1915 (COM-099)",open,test\n',
+            'RISK-001,2026-10-12,board hygiene,medium,"Fix KEY-100 (COM-099)",open,test\n',
             encoding="utf-8",
         )
         r = self.run_hook(risks)

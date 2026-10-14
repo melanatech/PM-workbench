@@ -28,6 +28,7 @@ CLAUDE.md is read every session for day-to-day operating rules. This file is dif
 4. **Never send/submit/write externally without approval, every time, no exceptions.** Project settings and prompts are not a security boundary; verify the effective permissions for the installed Claude Code version, review any proposed action, and do not rely on unattended workflows to gate external writes.
 5. **Say "not ready" out loud.** Readiness/drift/adversarial gates (`prd-package`, `launch-package`, `experiment-package`) are allowed to produce "this isn't ready yet, here's what's missing" as a valid, useful output — resist the urge to make every command always produce a polished final artifact regardless of input quality.
 6. **Preserve history, update current state deliberately.** Decisions, evidence, participant contact history, raw captures, dated outputs, and run-log events are immutable history. Commitments, risks, initiatives, and to-dos are current-state rows that may be updated in place without changing IDs or order. `learning/` and living context are maintained summaries. See CLAUDE.md rule 7 and the register-write hook.
+7. **A repeated correction needs a hook or test, not another prose rule.** If the PM corrects the same failure twice (`rework_correction` in `usage-history.csv`, surfaced by `scripts/recurring_corrections.py`), the fix is enforcement that fails the run — not another sentence in CLAUDE.md. Prose alone fades under long context.
 
 ## Recipe: adding a new command
 
@@ -45,13 +46,19 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 
 ## Changelog (newest first; one line per real architectural decision — not every edit)
 
+- 2026-10-13 — **Enforce recurring workbench fixes:** provenance hook covers registers/context; `workspace-aliases.md` + preflight name resolution; Stop/PostToolUse path-link hooks; clipper v0.6 slow DOM transcript (no decrypt); `recurring_corrections.py` + principle 7. Trigger: assume→glossary, phantom COM cites, bare paths, incomplete Stream clips.
+
 - 2026-10-13 — **Session token usage mining (phase 1):** `scripts/session_usage.py` scans Claude Code `~/.claude/projects/…-pm-live/*.jsonl` → `state/usage-history.csv` (L0+L1+L2a; opt-in `--classify` L2b via `claude -p` login / Haiku, not API key). `workbench_metrics` Session tokens info rows; never "tokens saved." Cursor Agent out of scope.
 
 - 2026-10-13 — **Cache-first context stitch (root fix):** `state/analysis-index.csv` + `context_preflight.py` + grounding/repos hooks; SOURCE-POLICY claim-type ladder + `primary_sources` (drafts/prototypes never evidence); `repo_profile.py` surface map; prototype source-derived baseline + `BASELINE-SOURCES.md` QA gate; reconciler accepts brief upstream. Rule 26. Trigger: stitch failures (ignored digests; circular brief citation; invented baseline).
 
 - 2026-10-13 — **Workspace-before-repos (stitch failure):** `prd-context-gatherer` must search prior `outputs/`/`learning/` (events, instrumentation, code-dives) before any `repos/` read; explore-brief forbids clone-only technical claims; rule 25 authority table adds prior-analysis row. Trigger: explanations brief ignored Oct 7 events/instrumentation digests and re-derived from cx-reports.
 
-- 2026-10-12 — **Prototype soft reuse:** `reference/design/prototype-components.md` catalog + `prototype-build` copy/adapt from listed `prototypes/` paths; append rows when a piece is reusable. Shared npm `prototypes/_shared/` deferred (`DEFERRED-shared-prototype-package.md` + BACKLOG). Not a second UI-base path.
+- 2026-10-13 — **Excel extract in-kit:** `scripts/extract_xlsx.py` (stdlib) wired from `extract_document.sh` for `.xlsx`/`.xlsm` — sheet text as TSV; no openpyxl. Legacy `.xls` / encrypted still re-export. process-inbox + SETUP/START HERE updated.
+
+- 2026-10-13 — **Shared prototype kit + shareable HTML:** `prototypes/_shared` (`@pm-live/prototype-kit`) live-only; `shared-prototype-package.md` + `prototype-build` prefer `file:../_shared` when present; soft catalog for unpromoted pieces; optional React `npm run share` / static handoff. Guardrails lessons + shared primitives = cross-prototype learning. Not a second UI-base path; baseline “today” still from the PM’s product repo.
+
+- 2026-10-12 — **Prototype soft reuse:** `reference/design/prototype-components.md` catalog + `prototype-build` copy/adapt from listed `prototypes/` paths; append rows when a piece is reusable. Shared npm later superseded by 2026-10-13 `_shared` entry.
 
 - 2026-10-12 — **`/discover explore-brief`:** pre-PRD check-in brief (sonnet). Enrich shared `prd-context-gatherer` (decided vs open, sibling COMs, weak patterns); thin workflow assemble → frame → options → `drafts/…-product-brief.md`. Do **not** fold into opus `prd-package` or invent `explore-context-gatherer`. Trigger: COM-012-style explore asks falling through to generic brainstorm without the INIT pack.
 
@@ -186,4 +193,4 @@ Update AGENTS.md if it changes which steps are isolated and why. Update CONNECTI
 - Whether `claude --chrome` or the Playwright/CDP fallback is actually in use, and whether that's changed since setup.
 - Whether your ticketing/wiki has gained a direct API path Claude can call (an approved integration or token) — would simplify several commands if so.
 - Register file sizes — check whether `/rotate-registers` has actually been run.
-- Whether `scripts/log_metrics.py` and `scripts/render_template.py` have been filled in past their stub state; `extract_document.sh` covers common formats (pptx/xlsx and encrypted Office still manual).
+- Whether `scripts/log_metrics.py` and `scripts/render_template.py` have been filled in past their stub state; `extract_document.sh` covers common formats including `.xlsx`/`.xlsm` (pptx, legacy `.xls`, and encrypted Office still manual).

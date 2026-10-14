@@ -129,7 +129,12 @@ def retain_failed_baseline():
 ALLOWED_DIRS = ('inbox/', 'archive/', 'outputs/', 'registers/', 'state/', 'logs/',
                 'learning/', 'reference/', 'prototypes/', 'drafts/', 'repos/', 'roadmap/')
 INPUT_DIRS = ('inbox/', 'archive/', 'registers/', 'reference/', 'state/', 'fixtures/')
-SKIP = ('.git/', 'node_modules/', '.claude/', 'fixtures/', 'scripts/', 'tools/', 'tests/')
+SKIP_PREFIX = ('.git/', '.claude/', 'fixtures/', 'scripts/', 'tools/', 'tests/')
+# Also skip these directory names anywhere in the path (nested under prototypes/, etc.)
+SKIP_DIR_NAMES = frozenset({
+    'node_modules', '.git', '.venv', 'venv', 'dist', 'build', '.next', 'coverage',
+    '__pycache__', '.turbo', '.cache',
+})
 PROJECT_FILES = {
     'AGENTS.md', 'CLAUDE.md', 'CONNECTIONS.md', 'EVOLVING.md', 'SCHEDULING.md',
     'SETUP.md', 'SKILLS.md', 'SOURCE-POLICY.md', 'START HERE.md', 'STATE-BACKUP.md',
@@ -142,10 +147,15 @@ def WARN(m): warns.append(m)
 def OK(m): oks.append(m)
 
 def walk(prefixes=None):
-    for d, _, files in os.walk('.'):
+    for d, dirnames, files in os.walk('.'):
+        # Prune heavy/irrelevant trees before descending (nested node_modules etc.)
+        dirnames[:] = [name for name in dirnames if name not in SKIP_DIR_NAMES]
         rel = os.path.relpath(d, '.').replace(os.sep, '/')
         rel = '' if rel == '.' else rel + '/'
-        if any(rel.startswith(s) for s in SKIP): continue
+        if any(rel.startswith(s) for s in SKIP_PREFIX):
+            continue
+        if any(part in SKIP_DIR_NAMES for part in rel.split('/')):
+            continue
         for f in files:
             p = rel + f
             if p == 'state/.last-check':
@@ -168,10 +178,28 @@ def file_inventory():
         inventory[path] = digest.hexdigest()
     return inventory
 
-def read(p):
+BINARY_EXT = (
+    '.png', '.jpg', '.jpeg', '.webp', '.gif', '.pdf', '.docx', '.pptx', '.xlsx',
+    '.xlsm', '.xls', '.zip', '.gz', '.wasm', '.cjs', '.ico', '.woff', '.woff2',
+    '.ttf', '.eot', '.mp4', '.mov', '.bin',
+)
+
+def read(p, max_bytes=2_000_000):
+    """Text read for provenance; skip binaries and cap size so --all finishes."""
+    low = p.lower()
+    if low.endswith(BINARY_EXT):
+        return ''
     try:
-        with open(p, encoding='utf-8', errors='replace') as fh: return fh.read()
-    except Exception: return ''
+        size = os.path.getsize(p)
+    except OSError:
+        return ''
+    if size > max_bytes:
+        return ''
+    try:
+        with open(p, encoding='utf-8', errors='replace') as fh:
+            return fh.read()
+    except Exception:
+        return ''
 
 def run_log_row_count():
     try:

@@ -9,6 +9,8 @@ Meeting input: $ARGUMENTS
 
 (This can be typed notes, a downloaded meeting transcript/AI summary (Teams, Zoom, Meet) if you organized the meeting, whatever your meeting tool's AI summary produces if you didn't, or a dictated voice memo transcript — treat all of them the same way below.)
 
+**0. Incomplete / unlabeled transcript gate.** If the source file has frontmatter `incomplete: true`, or a multi-speaker transcript has no speaker labels on lines, **stop before writing COM owners**. Ask once to recapture with the current clipper (slow full DOM pass) or drop a `.vtt`/`.docx` if download is enabled. If the PM says proceed anyway: write the summary with a **provisional** banner, and set any unclear COM `owner` to `[NEEDS INPUT]` — never invent owners from unlabeled speech.
+
 1. Extract: decisions, commitments (owner + due date), risks, assumptions stated, unresolved questions, and anything that changed a prior decision.
 
 2. **PM-scope filter (this is a PM workbench — not an eng ticket tracker).** Before writing any register row, keep only items the PM needs to own, chase, or remember for product work. Apply especially hard to **commitments**:

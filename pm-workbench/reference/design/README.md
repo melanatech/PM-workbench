@@ -4,7 +4,9 @@ Org-agnostic hooks for `/build prototype-build`. Keep **company** component libr
 
 | File | Purpose |
 |---|---|
-| [`prototype-components.md`](prototype-components.md) | **Soft reuse catalog** — name reusable pieces that already live under `prototypes/[feature]/`; next builds copy/adapt from those paths |
-| [`DEFERRED-shared-prototype-package.md`](DEFERRED-shared-prototype-package.md) | Instructions to add a real shared npm package later (`prototypes/_shared/`) — not implemented yet |
+| [`prototype-components.md`](prototype-components.md) | **Soft reuse catalog** — pieces not yet in `_shared`; next builds copy/adapt or promote |
+| [`shared-prototype-package.md`](shared-prototype-package.md) | Live `prototypes/_shared` (`@pm-live/prototype-kit`) convention + shareable HTML handoff |
+| [`ux-guardrails-lessons.md`](ux-guardrails-lessons.md) | Standing preflight + durable Guardrails lessons (feeds `_shared` and prototype-build) |
+| [`DEFERRED-shared-prototype-package.md`](DEFERRED-shared-prototype-package.md) | Stub → points at `shared-prototype-package.md` |
 
 Also check `reference/links.csv` for design-system repos and style-guide URLs.

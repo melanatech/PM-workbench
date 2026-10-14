@@ -25,7 +25,7 @@ Return exactly one block for the user (the router pastes it verbatim and adds no
 
 RESULT
 - Workflow, mode, and what changed (new or edited register rows, one per line). If nothing was written, say that in one sentence and why in at most one more (already on file / blocked / nothing new).
-- For each new or changed artifact: one Markdown `[relative-path](relative-path)` link (workspace-relative from the live root, e.g. `outputs/daily/….md` — never `file://` or `/Users/...`), then the content once (or key sections). Never paste the same summary twice. Never give only a bare absolute path.
+- Every existing workspace file or folder you mention must be a Markdown `[path](path)` link (workspace-relative; folders keep a trailing slash). Never leave a bare or backtick-only path for something that exists. Never use `file://` or `/Users/...`. For each new or changed artifact: the link once, then the content (or key sections). Never paste the same summary twice.
 - Rule 18 line only when you chose among many sources. Omit it for a single input file.
 - Do **not** mention the Stop hook, `state/.run-workflow`, or that a run-log row will be / was written — that is silent plumbing. Only mention `logs/run-log.csv` if you checked and the row is missing (then say so in one line so it can be fixed).
 - Last line of RESULT: `Ran <cluster>/<workflow> on <model>.` so the router has no reason to append a footer.

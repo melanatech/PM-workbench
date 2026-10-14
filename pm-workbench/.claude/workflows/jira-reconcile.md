@@ -47,3 +47,5 @@ Save the report to `outputs/weekly/[date]-jira-reconcile.md`. This turns board m
 **First run:** if `reference/links.csv` has no board bookmark, ask which board/filter view is "my board" (link), save it as an L- row **and note which fields mean delivery stage**. Every reconcile output states how the board was read (Atlassian MCP / browser view / pasted export) per rule 21.
 
 **Tier 1 local fan-out:** observations that correct local registers (e.g. a linked DEC- correction, INIT notes, risk mitigation text) may be written this run with provenance. Do not change initiative stage, owner, or dates without Tier 3 approval. Do not write to Jira without approval.
+
+**Cite only IDs that exist.** Never invent COM-/DEC-/RISK-/EV-/INIT-/TODO- numbers in mitigation text, notes, or the reconcile report. Write the register row first in the same run, then cite it. If a follow-up is only proposed, write `proposed: COM row needed — <description>` with no ID. The provenance hook rejects register writes that cite missing IDs.

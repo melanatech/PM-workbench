@@ -13,7 +13,7 @@ description: >
 Optional add-on for **`/build prototype-build`**.
 
 1. Read `.claude/workflows/_scenario-guide.md` (do not invent a different panel pattern).
-2. Prefer adapting `prototypes/explanations-transactions/src/components/ScenarioGuide.jsx` when that path exists in the live workspace; otherwise follow the recipe’s framework table.
+2. Prefer `ScenarioGuide` from `@pm-live/prototype-kit` when `prototypes/_shared/` exists; keep scripts local. Else adapt `prototypes/explanations-transactions` wrapper/recipe.
 3. Key scripts by the prototype’s variant switcher (concept / persona / surface). Rewrite step copy for this UI — never paste Money Journey / companion scripts from another app.
 4. Wire a **Guide** toggle next to the variant controls; desktop sidebar / mobile sheet; Escape closes.
 5. Update the prototype README and, if reusable, `reference/design/prototype-components.md`.

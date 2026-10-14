@@ -3,8 +3,8 @@
 Use when a prototype needs a **scripted demo/QA panel** so someone new can run
 the same story twice. Not merchant onboarding. Not always required.
 
-Reference implementation: `prototypes/explanations-transactions/src/components/ScenarioGuide.jsx`
-(adapted from dashboard-poc-main’s ScenarioGuide pattern).
+Reference: `@pm-live/prototype-kit` `ScenarioGuide` when `prototypes/_shared/` exists;
+feature apps keep scripts local (see `explanations-transactions/src/scenarios.js`).
 
 ## When to add
 
@@ -30,11 +30,11 @@ Skip for single-screen throwaways and static one-pagers.
 
 ## Port steps
 
-1. Copy / adapt `ScenarioGuide` into `prototypes/[name]/src/components/`.
+1. Import `ScenarioGuide` from `@pm-live/prototype-kit` (or copy/adapt if `_shared` is missing). Put **scripts** in the feature app.
 2. Wire toggle into the prototype controls bar (same bar as variant switcher).
 3. Write **one scenario per variant** first; expand only if demos need a second path.
 4. Re-walk each step against the live UI (labels, Esc, focus).
-5. Catalog the component in `reference/design/prototype-components.md` if reusable.
+5. Catalog only unpromoted local forks in `reference/design/prototype-components.md`.
 6. Document in the prototype README: Guide is evaluator-only.
 
 ## Anti-patterns

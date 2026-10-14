@@ -50,9 +50,12 @@ not rewritten every capture: append one dated bullet under
 `notes`, and name `/report strategy-refresh` or `/report weekly-update` as the
 next consumer — do not leave the insight only in the daily output markdown.
 
+**Cite only IDs that exist.** Never reserve or invent a COM-/DEC-/RISK-/EV-/INIT-/TODO- number in another surface (risk mitigation, notes, digest) before that row is written. Same-run order: write the row, then cite it. Otherwise write `proposed: COM row needed — <description>` with no ID.
+
 ## Anti-patterns (forbidden)
 
 - Writing only DEC-/COM-/RISK-/EV- rows and calling the capture "done"
+- Citing COM-/DEC-/RISK-/EV-/INIT-/TODO- IDs that were never written (phantom citations)
 - Narrowing a multi-theme source to one customer question when other themes
   were in the material (see competitive-scan scope discipline)
 - "Should I also update learning / competitive-log / priorities?" when the

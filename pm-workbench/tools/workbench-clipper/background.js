@@ -108,71 +108,83 @@ async function extractPagePayload() {
     }
   }
 
-  // Prefer Stream's stable ids. Fall back to aria-posinset so we don't
-  // double-count a parent listitem wrapping the same sub-entry.
-  function entryKey(el) {
-    if (el.id && el.id.startsWith('sub-entry-')) return el.id;
-    if (el.querySelector && el.querySelector('[id^="sub-entry-"]')) return '';
-    const pos = el.getAttribute('aria-posinset');
-    if (pos) return 'pos-' + pos;
-    return '';
+  // Stream transcript: each row is
+  //   div[id^=entry-N][role=group][aria-label="Speaker N minutes M seconds"]
+  //   └─ div[id^=sub-entry-N][role=listitem][aria-posinset][aria-setsize]
+  // Class hashes (baseEntry-484) change between builds — use id/ARIA only.
+
+  const DURATION_RE = /\s+(?:(\d+)\s+hours?\s+)?(?:(\d+)\s+minutes?\s+)?(\d+)\s+seconds?\s*$/i;
+
+  function parseSpeakerLabel(label) {
+    if (!label) return { speaker: '', time: '' };
+    const m = label.match(DURATION_RE);
+    if (!m) return { speaker: label.trim(), time: '' };
+    const speaker = label.slice(0, m.index).trim();
+    const h = parseInt(m[1] || '0', 10);
+    const min = parseInt(m[2] || '0', 10);
+    const sec = parseInt(m[3] || '0', 10);
+    const time = h > 0
+      ? `${h}:${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+      : `${min}:${String(sec).padStart(2, '0')}`;
+    return { speaker, time };
   }
 
-  function collectEntries(into) {
-    const nodes = document.querySelectorAll('[id^="sub-entry-"], [role="listitem"][aria-posinset]');
-    for (const el of nodes) {
-      const key = entryKey(el);
-      if (!key || into.has(key)) continue;
-      const line = (el.innerText || '').trim().replace(/\s+/g, ' ');
-      if (line.length < 8 || line.length > 20000) continue;
-      into.set(key, line);
+  function readRow(subEl) {
+    const pos = parseInt(subEl.getAttribute('aria-posinset') || '', 10);
+    if (!Number.isFinite(pos) || pos < 1) return null;
+    const text = (subEl.innerText || '').trim().replace(/\s+/g, ' ');
+    if (!text || text.length > 20000) return null;
+    let speaker = '';
+    let time = '';
+    const group = subEl.closest('[id^="entry-"][role="group"]')
+      || subEl.closest('[role="group"][aria-label]');
+    if (group) {
+      const parsed = parseSpeakerLabel(group.getAttribute('aria-label') || '');
+      speaker = parsed.speaker;
+      time = parsed.time;
     }
-  }
-
-  function readSetSize() {
-    const el = document.querySelector(
-      '[id^="sub-entry-"][aria-setsize], [role="listitem"][aria-setsize]'
-    );
-    if (!el) return 0;
-    const n = parseInt(el.getAttribute('aria-setsize') || '0', 10);
-    return Number.isFinite(n) ? n : 0;
-  }
-
-  function maxPosInset() {
-    let max = 0;
-    for (const el of document.querySelectorAll('[aria-posinset]')) {
-      const n = parseInt(el.getAttribute('aria-posinset') || '0', 10);
-      if (n > max) max = n;
-    }
-    // sub-entry-N is 0-based in Stream; treat id+1 as a pos if present
-    for (const el of document.querySelectorAll('[id^="sub-entry-"]')) {
-      const n = parseInt(String(el.id).replace(/\D/g, ''), 10);
-      if (Number.isFinite(n) && n + 1 > max) max = n + 1;
-    }
-    return max;
-  }
-
-  function lastMountedEntry() {
-    const nodes = document.querySelectorAll('[id^="sub-entry-"], [role="listitem"][aria-posinset]');
-    let best = null;
-    let bestPos = -1;
-    for (const el of nodes) {
-      let pos = parseInt(el.getAttribute('aria-posinset') || '', 10);
-      if (!Number.isFinite(pos) && el.id) {
-        const n = parseInt(String(el.id).replace(/\D/g, ''), 10);
-        if (Number.isFinite(n)) pos = n + 1;
-      }
-      if (Number.isFinite(pos) && pos >= bestPos) {
-        bestPos = pos;
-        best = el;
+    if (!speaker) {
+      const aria = subEl.parentElement
+        && subEl.parentElement.querySelector('[id^="timestampSpeakerAriaLabel-"]');
+      if (aria) {
+        const parsed = parseSpeakerLabel((aria.textContent || '').trim());
+        speaker = parsed.speaker;
+        time = time || parsed.time;
       }
     }
-    return best;
+    if (!speaker) {
+      const item = subEl.closest('[id^="listItem-"]');
+      const nameEl = item && item.querySelector('[id^="itemHeader-"] [class*="itemDisplayName"]');
+      const tsEl = item && item.querySelector('[id^="Header-timestamp-"]');
+      if (nameEl) speaker = (nameEl.textContent || '').trim();
+      if (tsEl) time = (tsEl.textContent || '').trim();
+    }
+    const setSize = parseInt(subEl.getAttribute('aria-setsize') || '0', 10) || 0;
+    return { pos, text, speaker, time, setSize };
+  }
+
+  function collectVisible(byPos) {
+    const nodes = document.querySelectorAll('[id^="sub-entry-"][role="listitem"][aria-posinset]');
+    let minPos = Infinity;
+    let maxPos = 0;
+    let setSize = 0;
+    for (const el of nodes) {
+      const row = readRow(el);
+      if (!row) continue;
+      if (!byPos.has(row.pos)) byPos.set(row.pos, row);
+      if (row.pos < minPos) minPos = row.pos;
+      if (row.pos > maxPos) maxPos = row.pos;
+      if (row.setSize > setSize) setSize = row.setSize;
+    }
+    return {
+      minPos: Number.isFinite(minPos) ? minPos : 0,
+      maxPos,
+      setSize,
+      count: byPos.size
+    };
   }
 
   function findScrollParent(start) {
-    // Prefer the nearest overflow ancestor that actually scrolls; Stream's
-    // virtual list often reports a short scrollHeight until rows mount.
     let el = start;
     let fallback = null;
     while (el && el !== document.body && el !== document.documentElement) {
@@ -187,152 +199,186 @@ async function extractPagePayload() {
     return fallback;
   }
 
-  function sortEntryKeys(keys) {
-    return keys.sort((a, b) => {
-      const na = parseInt(String(a).replace(/\D/g, ''), 10);
-      const nb = parseInt(String(b).replace(/\D/g, ''), 10);
-      if (Number.isFinite(na) && Number.isFinite(nb) && !(na === 0 && nb === 0 && a === b)) {
-        if (na !== nb) return na - nb;
-      }
-      return String(a).localeCompare(String(b));
+  function waitForSettle(scroller, quietMs, maxMs) {
+    return new Promise((resolve) => {
+      let lastChange = Date.now();
+      const start = Date.now();
+      const obs = new MutationObserver(() => { lastChange = Date.now(); });
+      try {
+        obs.observe(scroller, { childList: true, subtree: true, characterData: true });
+      } catch (e) { /* ignore */ }
+      const tick = () => {
+        const now = Date.now();
+        if (now - lastChange >= quietMs || now - start >= maxMs) {
+          try { obs.disconnect(); } catch (e) { /* ignore */ }
+          resolve();
+          return;
+        }
+        setTimeout(tick, 40);
+      };
+      setTimeout(tick, quietMs);
     });
   }
 
-  async function advanceScroller(scroller, pass) {
-    const step = Math.max(Math.floor(scroller.clientHeight * 0.55), 80);
-    const last = lastMountedEntry();
-    // Primary: scroll the last mounted row into view — this is what forces
-    // Stream's virtualizer to mount the next window when scrollHeight stalls.
-    if (last && typeof last.scrollIntoView === 'function') {
-      try {
-        last.scrollIntoView({ block: 'end', inline: 'nearest' });
-      } catch (e) {
-        try { last.scrollIntoView(false); } catch (e2) { /* ignore */ }
+  function formatTranscript(byPos) {
+    const positions = [...byPos.keys()].sort((a, b) => a - b);
+    const parts = [];
+    let prevSpeaker = null;
+    let buf = [];
+    let bufTime = '';
+    const flush = () => {
+      if (!buf.length) return;
+      const head = prevSpeaker
+        ? (bufTime ? `**${prevSpeaker}** [${bufTime}]: ` : `**${prevSpeaker}**: `)
+        : '';
+      parts.push(head + buf.join(' '));
+      buf = [];
+      bufTime = '';
+    };
+    for (const pos of positions) {
+      const row = byPos.get(pos);
+      if (!row) continue;
+      if (row.speaker !== prevSpeaker) {
+        flush();
+        prevSpeaker = row.speaker || null;
+        bufTime = row.time || '';
+        buf = [row.text];
+      } else {
+        if (!bufTime && row.time) bufTime = row.time;
+        buf.push(row.text);
       }
     }
-    // Also nudge the scroll container; virtual lists sometimes need both.
-    const beforeTop = scroller.scrollTop;
-    scroller.scrollTop = Math.min(scroller.scrollTop + step, scroller.scrollHeight);
-    if (scroller.scrollTop === beforeTop) {
-      scroller.scrollTop = scroller.scrollHeight;
-    }
-    // Every few stalled-looking passes, PageDown on the focused panel.
-    if (pass % 5 === 4) {
-      try {
-        scroller.focus({ preventScroll: true });
-        scroller.dispatchEvent(new KeyboardEvent('keydown', {
-          key: 'PageDown', code: 'PageDown', keyCode: 34, which: 34, bubbles: true
-        }));
-      } catch (e) { /* ignore */ }
-    }
+    flush();
+    return parts.join('\n\n');
   }
 
-  // --- Prefer Stream-style transcript: scroll virtualized list, accumulate ---
-  const sample = document.querySelector('[id^="sub-entry-"], [role="listitem"][aria-posinset]');
-  let setSize = readSetSize();
+  function missingPositions(byPos, setSize) {
+    if (!setSize) return [];
+    const miss = [];
+    for (let i = 1; i <= setSize; i++) {
+      if (!byPos.has(i)) miss.push(i);
+    }
+    return miss;
+  }
+
+  async function slowScrollCapture(scroller, byPos) {
+    const startTop = scroller.scrollTop;
+    scroller.scrollTop = 0;
+    await waitForSettle(scroller, 250, 2000);
+    let stats = collectVisible(byPos);
+    let setSize = stats.setSize;
+    let scrollPasses = 0;
+    let stallRounds = 0;
+    let lastCount = byPos.size;
+    const maxPasses = setSize ? Math.min(Math.max(setSize * 2, 80), 600) : 300;
+
+    while (scrollPasses < maxPasses) {
+      scrollPasses += 1;
+      const step = Math.max(Math.floor(scroller.clientHeight * 0.35), 48);
+      const before = scroller.scrollTop;
+      scroller.scrollTop = Math.min(before + step, scroller.scrollHeight);
+      await waitForSettle(scroller, 250, 2000);
+      stats = collectVisible(byPos);
+      if (stats.setSize > setSize) setSize = stats.setSize;
+
+      // Gap: lowest newly-visible pos jumped past what we have
+      const haveMax = Math.max(0, ...byPos.keys());
+      if (stats.minPos > haveMax + 1 && haveMax > 0) {
+        scroller.scrollTop = Math.max(0, scroller.scrollTop - Math.floor(step * 0.5));
+        await waitForSettle(scroller, 250, 2000);
+        collectVisible(byPos);
+      }
+
+      if (setSize && byPos.size >= setSize && missingPositions(byPos, setSize).length === 0) {
+        break;
+      }
+      if (scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 4
+          && scroller.scrollTop === before) {
+        stallRounds += 1;
+        if (stallRounds >= 6) break;
+      } else if (byPos.size > lastCount) {
+        stallRounds = 0;
+        lastCount = byPos.size;
+      } else {
+        stallRounds += 1;
+        if (stallRounds >= 12) break;
+      }
+    }
+
+    // Optional full-height fallback if still missing rows
+    let missing = missingPositions(byPos, setSize);
+    if (missing.length && setSize) {
+      const prevH = scroller.style.height;
+      const prevMax = scroller.style.maxHeight;
+      try {
+        scroller.style.height = scroller.scrollHeight + 'px';
+        scroller.style.maxHeight = 'none';
+        await waitForSettle(scroller, 300, 2500);
+        collectVisible(byPos);
+        for (const pos of missing.slice(0, 40)) {
+          const el = document.querySelector(`[id^="sub-entry-"][aria-posinset="${pos}"]`);
+          if (el && typeof el.scrollIntoView === 'function') {
+            try { el.scrollIntoView({ block: 'center' }); } catch (e) { /* ignore */ }
+            await waitForSettle(scroller, 200, 1500);
+            collectVisible(byPos);
+          }
+        }
+      } finally {
+        scroller.style.height = prevH;
+        scroller.style.maxHeight = prevMax;
+      }
+      missing = missingPositions(byPos, setSize);
+    }
+
+    try { scroller.scrollTop = startTop; } catch (e) { /* ignore */ }
+    return { setSize, scrollPasses, missing };
+  }
+
+  // --- Prefer Stream-style transcript: slow overlapping scroll ---
+  const sample = document.querySelector('[id^="sub-entry-"][role="listitem"][aria-posinset]');
+  const byPos = new Map();
+  let setSize = 0;
   let scrollPasses = 0;
   let maxPos = 0;
   let incomplete = false;
-  const byKey = new Map();
+  let missing = [];
+  let speakers = [];
 
   if (sample) {
     const scroller = findScrollParent(sample);
-    collectEntries(byKey);
-    setSize = setSize || readSetSize();
-    maxPos = Math.max(maxPos, maxPosInset());
-
+    collectVisible(byPos);
     if (scroller) {
-      const startTop = scroller.scrollTop;
-      scroller.scrollTop = 0;
-      await sleep(200);
-      collectEntries(byKey);
-      setSize = Math.max(setSize, readSetSize());
-      maxPos = Math.max(maxPos, maxPosInset());
-
-      // Cap by expected size: ~3 passes per entry is plenty; never under 80.
-      const maxPasses = setSize
-        ? Math.min(Math.max(setSize * 3, 120), 900)
-        : 400;
-      // Only give up after a long stall *and* we can't advance posinset.
-      const stallLimit = setSize ? 40 : 18;
-      let stallRounds = 0;
-      let lastSize = byKey.size;
-      let lastMaxPos = maxPos;
-
-      for (let i = 0; i < maxPasses; i++) {
-        scrollPasses = i + 1;
-        await advanceScroller(scroller, i);
-        // Stream needs time to mount after scrollIntoView; wait longer when stalled.
-        await sleep(stallRounds > 0 ? 180 : 110);
-        collectEntries(byKey);
-        setSize = Math.max(setSize, readSetSize());
-        maxPos = Math.max(maxPos, maxPosInset());
-
-        const reached = setSize > 0 && maxPos >= setSize && byKey.size >= Math.floor(setSize * 0.95);
-        if (reached) break;
-
-        const grew = byKey.size > lastSize || maxPos > lastMaxPos;
-        if (grew) {
-          stallRounds = 0;
-          lastSize = byKey.size;
-          lastMaxPos = maxPos;
-        } else {
-          stallRounds += 1;
-          // Hard nudge: jump near end of current scrollHeight, wait, collect.
-          if (stallRounds === 8 || stallRounds === 16) {
-            scroller.scrollTop = 0;
-            await sleep(150);
-            collectEntries(byKey);
-            scroller.scrollTop = scroller.scrollHeight;
-            const last = lastMountedEntry();
-            if (last) {
-              try { last.scrollIntoView({ block: 'end' }); } catch (e) { /* ignore */ }
-            }
-            await sleep(250);
-            collectEntries(byKey);
-            setSize = Math.max(setSize, readSetSize());
-            maxPos = Math.max(maxPos, maxPosInset());
-            if (byKey.size > lastSize || maxPos > lastMaxPos) {
-              stallRounds = 0;
-              lastSize = byKey.size;
-              lastMaxPos = maxPos;
-              continue;
-            }
-          }
-          if (stallRounds >= stallLimit) break;
-        }
-      }
-
-      try { scroller.scrollTop = startTop; } catch (e) { /* ignore */ }
+      const result = await slowScrollCapture(scroller, byPos);
+      setSize = result.setSize;
+      scrollPasses = result.scrollPasses;
+      missing = result.missing;
     } else {
-      collectEntries(byKey);
-      maxPos = Math.max(maxPos, maxPosInset());
+      const st = collectVisible(byPos);
+      setSize = st.setSize;
+      missing = missingPositions(byPos, setSize);
     }
+    maxPos = byPos.size ? Math.max(...byPos.keys()) : 0;
+    incomplete = !!(setSize && missing.length > 0);
+    const speakerSet = new Set();
+    for (const row of byPos.values()) {
+      if (row.speaker) speakerSet.add(row.speaker);
+    }
+    speakers = [...speakerSet];
 
-    if (byKey.size >= 3) {
-      const keys = sortEntryKeys([...byKey.keys()]);
-      const parts = [];
-      const seenText = new Set();
-      for (const k of keys) {
-        const line = byKey.get(k);
-        if (!line || seenText.has(line)) continue;
-        if ([...seenText].some((s) => s.includes(line) && s.length > line.length + 10)) continue;
-        seenText.add(line);
-        parts.push(line);
-      }
-      const text = parts.join('\n\n').slice(0, LIMIT);
-      // Incomplete if we never reached the last posinset Stream advertised.
-      incomplete = !!(setSize && (maxPos < setSize || byKey.size < Math.floor(setSize * 0.9)));
+    if (byPos.size >= 1) {
+      const text = formatTranscript(byPos).slice(0, LIMIT);
       pushLinks(document);
       return {
         text,
         links,
         source: 'transcript_scroll',
-        entry_count: byKey.size,
+        entry_count: byPos.size,
         aria_setsize: setSize || 0,
         max_posinset: maxPos,
         scroll_passes: scrollPasses,
         incomplete,
+        missing_posinset: missing.slice(0, 80).join(','),
+        speakers,
         truncated_chars: text.length >= LIMIT
       };
     }
@@ -353,6 +399,8 @@ async function extractPagePayload() {
     max_posinset: maxPos,
     scroll_passes: 0,
     incomplete: false,
+    missing_posinset: '',
+    speakers: [],
     truncated_chars: text.length >= LIMIT
   };
 }
@@ -406,6 +454,8 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   let maxPosInset = 0;
   let scrollPasses = 0;
   let incomplete = false;
+  let missingPosinset = '';
+  let speakers = [];
   const selection = (info.selectionText || '').trim();
 
   if (screenshotOnly) {
@@ -417,13 +467,13 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     captureKind = 'selection';
   } else if (tab && tab.id) {
     try {
-      // Meeting captures can take tens of seconds while the panel scrolls.
+      // Meeting captures can take a few minutes — slow overlapping scroll.
       if (chrome.notifications && chrome.notifications.create && category === 'meetings') {
         chrome.notifications.create('pmwb-scroll-' + Date.now(), {
           type: 'basic',
           iconUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
           title: 'PM Workbench',
-          message: 'Scrolling transcript… leave this tab open; may take up to a minute.'
+          message: 'Capturing transcript (slow scroll)… leave this tab open; may take a few minutes.'
         });
       }
       const [{ result }] = await chrome.scripting.executeScript({
@@ -438,6 +488,8 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       maxPosInset = (result && result.max_posinset) || 0;
       scrollPasses = (result && result.scroll_passes) || 0;
       incomplete = !!(result && result.incomplete);
+      missingPosinset = (result && result.missing_posinset) || '';
+      speakers = (result && result.speakers) || [];
       captureKind = (extractSource === 'transcript_scroll' || extractSource === 'transcript_entries')
         ? 'transcript'
         : 'page';
@@ -513,6 +565,8 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     `max_posinset: ${maxPosInset}`,
     `scroll_passes: ${scrollPasses}`,
     `incomplete: ${incomplete}`,
+    `missing_posinset: ${missingPosinset}`,
+    `speakers: ${JSON.stringify(speakers)}`,
     `includes_images: ${screenshotName ? 'viewport_png' : 'false'}`,
     `screenshot: ${screenshotName || ''}`,
     `char_count: ${body.length}`,
@@ -545,9 +599,10 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       } else if (captureKind === 'selection') {
         note = 'Clipped selection only.';
       } else if (captureKind === 'transcript') {
+        const speakerNote = speakers.length ? `; speakers: ${speakers.slice(0, 6).join(', ')}${speakers.length > 6 ? '…' : ''}` : '';
         note = incomplete
-          ? `Clipped ${entryCount} entries (pos ${maxPosInset}/${ariaSetSize || '?'}) — INCOMPLETE. Retry or use Stream Download.`
-          : `Clipped ${entryCount} entries (pos ${maxPosInset}${ariaSetSize ? '/' + ariaSetSize : ''}, ${scrollPasses} passes).`;
+          ? `Clipped ${entryCount}/${ariaSetSize || '?'} entries — INCOMPLETE (missing ${missingPosinset || 'rows'}). Reload clipper + recapture.`
+          : `Clipped ${entryCount}${ariaSetSize ? '/' + ariaSetSize : ''} entries (${scrollPasses} passes${speakerNote}).`;
       } else {
         note = 'Clipped page text.';
       }

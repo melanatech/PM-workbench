@@ -1,17 +1,21 @@
 #!/usr/bin/env bash
 # Extract plain text from a document into a sibling .txt file.
 #
-# Usage: scripts/extract_document.sh <path>
+# Usage: scripts/extract_document.sh <path> [--formulas]
 # Output: <path-without-ext>.extracted.txt (printed as the last line on success)
 #
 # Supported (best-effort, macOS-first):
 #   .txt .md .csv .tsv     — copy through
 #   .doc .docx .rtf .rtfd .html .htm .odt — textutil
 #   .pdf                  — pdftotext if installed, else PDFKit via swift
+#   .xlsx .xlsm           — scripts/extract_xlsx.py (stdlib; cell text as TSV per sheet)
+#                         — pass --formulas to also dump formula text + cached values
+#   .vtt                  — scripts/stream_transcript_parse.py (WebVTT → speaker lines)
 #
 # Charts / image-only slides are NOT in the text output. For those, also run:
 #   scripts/rasterize_pdf.sh <path.pdf>   → <stem>.pages/page-NN.png
 # process-inbox and internal-docs-reader Read those PNGs with vision.
+# Legacy .xls (BIFF) and password-protected workbooks: re-export as .csv/.xlsx/.pdf.
 #
 # Exit codes:
 #   0 success (path printed)
@@ -25,8 +29,24 @@
 set -euo pipefail
 
 FILE="${1:-}"
+shift || true
+XLSX_EXTRA=()
+for arg in "$@"; do
+  case "$arg" in
+    --formulas) XLSX_EXTRA+=(--formulas) ;;
+    -h|--help)
+      echo "Usage: $0 <path-to-file> [--formulas]" >&2
+      exit 1
+      ;;
+    *)
+      echo "Unknown option: $arg (supported: --formulas)" >&2
+      exit 1
+      ;;
+  esac
+done
+
 if [[ -z "$FILE" ]]; then
-  echo "Usage: $0 <path-to-file>" >&2
+  echo "Usage: $0 <path-to-file> [--formulas]" >&2
   exit 1
 fi
 if [[ ! -f "$FILE" ]]; then
@@ -64,6 +84,72 @@ extract_textutil() {
     rm -f "$out"
     return 3
   fi
+  echo "$out"
+  return 0
+}
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+extract_xlsx() {
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "python3 required for .$ext extract. Re-export as .csv/.pdf or paste." >&2
+    return 2
+  fi
+  set +e
+  # With set -u, an empty array expands unbound — expand only when set.
+  python3 "$SCRIPT_DIR/extract_xlsx.py" "$abs" "$out" ${XLSX_EXTRA[@]+"${XLSX_EXTRA[@]}"} 2>/tmp/pmwb-extract-err.$$
+  code=$?
+  set -e
+  if [[ "$code" -ne 0 ]]; then
+    cat /tmp/pmwb-extract-err.$$ >&2 || true
+    rm -f /tmp/pmwb-extract-err.$$ "$out"
+    # extract_xlsx.py uses 2 empty/unsupported, 3 corrupt — pass through
+    if [[ "$code" -eq 2 || "$code" -eq 3 ]]; then
+      return "$code"
+    fi
+    return 3
+  fi
+  rm -f /tmp/pmwb-extract-err.$$
+  if [[ ! -s "$out" ]]; then
+    echo "Excel extract produced empty text. Re-export as .csv/.pdf or paste." >&2
+    rm -f "$out"
+    return 2
+  fi
+  echo "$out"
+  return 0
+}
+
+extract_vtt() {
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "python3 required for .vtt extract. Paste the transcript or re-export." >&2
+    return 2
+  fi
+  set +e
+  EXTRACT_SRC="$abs" EXTRACT_DST="$out" PYTHONPATH="$SCRIPT_DIR${PYTHONPATH:+:$PYTHONPATH}" \
+    python3 -c '
+import os, sys
+from pathlib import Path
+import stream_transcript_parse as stp
+src = Path(os.environ["EXTRACT_SRC"])
+dst = Path(os.environ["EXTRACT_DST"])
+text = src.read_text(encoding="utf-8", errors="replace")
+body = stp.parse_vtt(text)
+if not body.strip():
+    sys.stderr.write("VTT extract produced empty text.\n")
+    sys.exit(2)
+dst.write_text(body + "\n", encoding="utf-8")
+' 2>/tmp/pmwb-extract-err.$$
+  code=$?
+  set -e
+  if [[ "$code" -ne 0 ]]; then
+    cat /tmp/pmwb-extract-err.$$ >&2 || true
+    rm -f /tmp/pmwb-extract-err.$$ "$out"
+    if [[ "$code" -eq 2 || "$code" -eq 3 ]]; then
+      return "$code"
+    fi
+    return 3
+  fi
+  rm -f /tmp/pmwb-extract-err.$$
   echo "$out"
   return 0
 }
@@ -128,7 +214,15 @@ case "$ext" in
     extract_pdf
     exit $?
     ;;
-  ppt|pptx|xls|xlsx|key|pages|numbers)
+  xlsx|xlsm)
+    extract_xlsx
+    exit $?
+    ;;
+  vtt)
+    extract_vtt
+    exit $?
+    ;;
+  ppt|pptx|xls|key|pages|numbers)
     echo "Unsupported in-kit extract for .$ext. Re-export as .txt/.csv/.pdf (or paste), then re-run process-inbox." >&2
     exit 2
     ;;

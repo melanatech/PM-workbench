@@ -4,6 +4,12 @@ The Guardrails MCP does **not** train the model across sessions. Failures only
 persist if we write them here (or into a prototype’s QA notes) and
 `/build prototype-build` reads this file **before** scaffolding.
 
+**Cross-prototype learning path:** when a failure is in a control that belongs in
+`prototypes/_shared` (`@pm-live/prototype-kit`), fix the primitive **there** and
+append a lesson row here in the same run. Feature apps pick up the fix on the
+next `npm install` / link — that is what the MCP cannot provide alone. See
+`shared-prototype-package.md`.
+
 After any Guardrails `check` with failures on a prototype: append dated rows
 below (theme → fix → where seen). Before the next prototype build: apply every
 **Standing preflight** item that fits the surface.
@@ -31,5 +37,6 @@ Use these unless the Feature Contract explicitly forbids them:
 | 2026-10-13 | Side panel covering prototype controls | Non-modal side drawer starts below `--bar-h`; page shifts on wide screens | `explanations-transactions` concepts 2/4 |
 | 2026-10-13 | Sort vs explain on header click | Explain mode uses separate explain targets; does not sort | `explanations-transactions` concept 4 |
 | 2026-10-13 | Guardrails needs real HTML | Snapshot rendered DOM (product only) via Playwright before `check` | `explanations-transactions/qa/render-snapshots.mjs` |
+| 2026-10-13 | Shared kit as learning surface | Drawer / HelpPopover / InfoTip / ScenarioGuide live in `prototypes/_shared`; lessons + kit bump = inheritance | `@pm-live/prototype-kit` |
 
 _Add rows when Guardrails fails again — do not only fix in chat._

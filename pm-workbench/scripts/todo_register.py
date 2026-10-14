@@ -20,6 +20,16 @@ Usage (run from the workbench root)
   python3 scripts/todo_register.py counts [--json]
   python3 scripts/todo_register.py log-proposal --offered N --accepted M [--source TEXT]
                                    (appends one line to logs/todo-proposals.csv for the monthly review)
+  python3 scripts/todo_register.py plan (--ids TODO-001,TODO-002 | --filter due-week |
+      --queue 1,3 | --sweep) [--queue-file PATH] [--out PATH]
+      Queue numbers are promoted in this step (origin proposed). Writes
+      outputs/todo-drafts/[date]-dispatch-plan.md. Does not dispatch.
+  python3 scripts/todo_register.py reconcile [--count] [--projects-dir DIR]
+      Propose likely-done open to-dos. Never changes status.
+
+Register writes take an exclusive lock on state/todo-register.lock for the whole
+read-modify-write, so parallel /todo dispatch workers cannot interleave CSV updates.
+Dispatch itself is scripts/dispatch_todos.py.
 
 Every command accepts --today YYYY-MM-DD (so tests and fixture runs are repeatable) and
 --stdin, which reads the field values as one JSON object from standard input. Use --stdin
@@ -41,11 +51,14 @@ Exit codes: 0 ok, 1 usage or validation error, 2 integrity refusal (nothing was 
 import argparse
 import csv
 import datetime
+import fcntl
 import io
 import json
 import os
+import re
 import sys
 import tempfile
+import time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REGISTER = os.path.join(ROOT, "registers", "todos.csv")
@@ -73,6 +86,42 @@ class Refused(Exception):
 
 class Invalid(Exception):
     """Bad input: nothing was written."""
+
+
+class register_lock:
+    """Exclusive lock around a to-do register read-modify-write.
+
+    fcntl.flock is per process, so two ``todo_register.py`` processes serialize.
+    Do not acquire this twice in one process (it is not reentrant).
+    ``TODO_REGISTER_LOCK_HOLD`` (seconds) and ``TODO_REGISTER_LOCK_TRACE`` (path)
+    exist so tests can show the critical section does not overlap.
+    """
+
+    def __enter__(self):
+        directory = os.path.join(ROOT, "state")
+        os.makedirs(directory, exist_ok=True)
+        self.path = os.path.join(directory, "todo-register.lock")
+        self.handle = open(self.path, "a+", encoding="utf-8")
+        fcntl.flock(self.handle.fileno(), fcntl.LOCK_EX)
+        self.trace = os.environ.get("TODO_REGISTER_LOCK_TRACE") or ""
+        self.pid = str(os.getpid())
+        self._log("acquire")
+        hold = os.environ.get("TODO_REGISTER_LOCK_HOLD") or ""
+        if hold:
+            time.sleep(float(hold))
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        self._log("release")
+        fcntl.flock(self.handle.fileno(), fcntl.LOCK_UN)
+        self.handle.close()
+        return False
+
+    def _log(self, event):
+        if not self.trace:
+            return
+        with open(self.trace, "a", encoding="utf-8") as handle:
+            handle.write(f"{self.pid} {event} {time.time():.6f}\n")
 
 
 def one_line(value):
@@ -237,6 +286,11 @@ def show_rows(rows, heading):
 
 
 def cmd_add(args):
+    with register_lock():
+        _cmd_add(args)
+
+
+def _cmd_add(args):
     values = collect_fields(args)
     validate(values)
     if not values.get("description"):
@@ -256,6 +310,11 @@ def cmd_add(args):
 
 
 def cmd_update(args):
+    with register_lock():
+        _cmd_update(args)
+
+
+def _cmd_update(args):
     values = collect_fields(args)
     values.pop("reason", None)
     for locked in ("origin",):
@@ -283,6 +342,11 @@ def cmd_update(args):
 
 
 def finish(args, status, note_text, require_reason):
+    with register_lock():
+        _finish(args, status, note_text, require_reason)
+
+
+def _finish(args, status, note_text, require_reason):
     values = collect_fields(args)
     if require_reason and not values.get("reason"):
         raise Invalid("drop needs --reason: say why this to-do is being dropped")
@@ -409,6 +473,567 @@ def cmd_log_proposal(args):
     print(f"Logged: {args.accepted} of {args.offered} proposed to-dos accepted.")
 
 
+REGISTER_FOR_PREFIX = {
+    "EV": "registers/evidence.csv",
+    "COM": "registers/commitments.csv",
+    "DEC": "registers/decisions.csv",
+    "RISK": "registers/risks.csv",
+    "INIT": "registers/initiatives.csv",
+    "TODO": "registers/todos.csv",
+}
+_ID_IN_TEXT = re.compile(r"\b(?:EV|COM|DEC|RISK|INIT|TODO)-\d+\b")
+_COMPLETION = re.compile(r"\b(done|sent|finished|shipped|completed|closed out)\b", re.I)
+_NEGATION = re.compile(r"\b(not|never|didn'?t|haven'?t|hasn'?t|won'?t)\b", re.I)
+_USED_DRAFT = re.compile(r"\bused (the |this )?draft\b", re.I)
+
+
+def _slug(description):
+    slug = re.sub(r"[^a-z0-9]+", "-", (description or "").lower()).strip("-")
+    return (slug[:40] or "todo").strip("-")
+
+
+def _looks_like_path(text):
+    text = (text or "").strip()
+    if not text or len(text) > 180:
+        return False
+    if " " in text and "/" not in text:
+        return False
+    return "/" in text or text.endswith((".md", ".txt", ".csv", ".json", ".yml"))
+
+
+def _guess_deliverable(description):
+    text = (description or "").lower()
+    if any(word in text for word in ("email", "slack", "message", "reply", "ask ", "send ", "ping ")):
+        return "message"
+    if any(word in text for word in ("research", "confirm", "find out", "look into", "investigate")):
+        return "research plan"
+    if any(word in text for word in ("jira", "ticket", "spike")):
+        return "ticket draft"
+    return "analysis"
+
+
+def _files_for(row):
+    files = []
+    source = (row.get("source") or "").strip()
+    if _looks_like_path(source) and source not in files:
+        files.append(source)
+    blob = " ".join(row.get(name) or "" for name in ("links", "source", "blocks", "note"))
+    for token in _ID_IN_TEXT.findall(blob):
+        path = REGISTER_FOR_PREFIX.get(token.split("-", 1)[0])
+        if path and path not in files:
+            files.append(path)
+    return files[:12]
+
+
+def _plan_item(row):
+    files = _files_for(row)
+    gaps = [] if files else ["[NEEDS INPUT: no source file or register links]"]
+    deliverable = _guess_deliverable(row.get("description") or "")
+    return {
+        "id": row["id"],
+        "description": row.get("description") or "",
+        "deliverable": deliverable,
+        "files": files,
+        "gaps": gaps,
+        "output": f"outputs/todo-drafts/{row['id']}-{_slug(row.get('description') or '')}.md",
+        "size": "short" if deliverable == "message" else "medium",
+        "note": row.get("note") or "",
+        "links": row.get("links") or "",
+    }
+
+
+def _draft_newer_than(todo_id, last_updated):
+    directory = os.path.join(ROOT, "outputs", "todo-drafts")
+    if not os.path.isdir(directory):
+        return ""
+    try:
+        updated = datetime.datetime.fromisoformat(last_updated)
+    except ValueError:
+        updated = None
+    for name in sorted(os.listdir(directory)):
+        if not (name.startswith(todo_id + "-") and name.endswith(".md")):
+            continue
+        path = os.path.join(directory, name)
+        if updated is None or datetime.datetime.fromtimestamp(os.path.getmtime(path)) > updated:
+            return os.path.relpath(path, ROOT)
+    return ""
+
+
+def _sweep_rows(rows, today):
+    matched = []
+    for row in rows:
+        if row["status"] not in OPEN_STATUSES:
+            continue
+        if not ((row.get("source") or "").strip() or (row.get("links") or "").strip()):
+            continue
+        due = due_of(row)
+        if due is None or due > today + datetime.timedelta(days=2):
+            continue
+        matched.append(row)
+    matched.sort(key=lambda row: (
+        due_of(row) or datetime.date.max,
+        PRIORITY_RANK.get(row["priority"], 1),
+        row["id"],
+    ))
+    return matched[:3]
+
+
+def _split_table_row(line):
+    return [cell.strip() for cell in line.strip().strip("|").split("|")]
+
+
+def _queue_is_reviewed(text):
+    return any(line.strip().lower().startswith("reviewed ") for line in text.splitlines())
+
+
+def _latest_queue_file():
+    directory = os.path.join(ROOT, "outputs", "todo-proposals")
+    if not os.path.isdir(directory):
+        return ""
+    names = sorted(name for name in os.listdir(directory) if name.endswith(".md"))
+    for name in reversed(names):
+        path = os.path.join(directory, name)
+        with open(path, encoding="utf-8") as handle:
+            if not _queue_is_reviewed(handle.read()):
+                return path
+    return ""
+
+
+def parse_queue_items(text):
+    """1-based candidates from a proposals file (table, numbers, or bullets)."""
+    lines = text.splitlines()
+    header_index = None
+    for index, line in enumerate(lines):
+        if not line.strip().startswith("|"):
+            continue
+        cells = [cell.lower() for cell in _split_table_row(line)]
+        if any(cell == "description" or cell.startswith("description ") or cell.startswith("description(") for cell in cells):
+            header_index = index
+            header = []
+            for cell in cells:
+                if cell == "description" or cell.startswith("description ") or cell.startswith("description("):
+                    header.append("description")
+                elif cell.startswith("source"):
+                    header.append("source")
+                elif cell in ("#", "no", "no."):
+                    header.append("number")
+                else:
+                    header.append(cell)
+            break
+    items = []
+    if header_index is not None:
+        for line in lines[header_index + 1:]:
+            if not line.strip().startswith("|"):
+                if items:
+                    break
+                continue
+            if set(line.replace("|", "").strip()) <= {"-", ":", " "}:
+                continue
+            cells = _split_table_row(line)
+            if len(cells) < len(header):
+                cells = cells + [""] * (len(header) - len(cells))
+            record = dict(zip(header, cells))
+            description = record.get("description") or ""
+            if not description or description.lower() == "description":
+                continue
+            number_text = cells[0]
+            number = int(number_text) if number_text.isdigit() else len(items) + 1
+            items.append({
+                "number": number,
+                "description": description,
+                "owner": record.get("owner") or "",
+                "due": record.get("due") or "",
+                "priority": record.get("priority") or "",
+                "initiative": record.get("initiative") or "",
+                "blocks": record.get("blocks") or "",
+                "links": record.get("links") or "",
+                "source": record.get("source file") or record.get("source") or "",
+            })
+        return items
+    for line in lines:
+        stripped = line.strip()
+        match = re.match(r"^(?:[-*]|\d+[.)])\s+(\S.*)$", stripped)
+        if not match:
+            continue
+        description = match.group(1).strip()
+        if description.lower().startswith("queued"):
+            continue
+        due_match = re.search(r"\b(20\d{2}-\d{2}-\d{2})\b", description)
+        links = ", ".join(_ID_IN_TEXT.findall(description))
+        items.append({
+            "number": len(items) + 1,
+            "description": description,
+            "owner": "",
+            "due": due_match.group(1) if due_match else "",
+            "priority": "",
+            "initiative": "",
+            "blocks": "",
+            "links": links,
+            "source": "",
+        })
+    return items
+
+
+def _add_from_queue(item, today, source_path):
+    """Promote one queue item. Caller must already hold register_lock."""
+    item_source = (item.get("source") or "").strip()
+    fields = {
+        "description": item["description"],
+        "origin": "proposed",
+        "source": item_source or source_path,
+    }
+    for name in ("owner", "due", "priority", "initiative", "blocks", "links"):
+        value = (item.get(name) or "").strip()
+        if not value:
+            continue
+        if name == "priority" and value not in PRIORITIES:
+            continue
+        if name == "due":
+            try:
+                parse_date(value, "due")
+            except Invalid:
+                continue
+        fields[name] = value
+    namespace = argparse.Namespace(stdin=False, today=today, reason=None, status=None, **{
+        column: fields.get(column) for column in (
+            "description", "owner", "due", "priority", "initiative", "blocks",
+            "links", "origin", "source", "note",
+        )
+    })
+    _cmd_add(namespace)
+
+
+def _write_dispatch_plan(path, today, mode, items, skipped):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    payload = {
+        "date": today,
+        "approved": False,
+        "mode": mode,
+        "items": items,
+        "skipped": skipped,
+    }
+    lines = [
+        f"# Dispatch plan {today}",
+        "",
+        "Status: PENDING APPROVAL",
+        "Approved: no",
+        "",
+        "Nothing is dispatched until you approve. Add context with "
+        "`todo_register.py update TODO-nnn --note ... --links ...`, edit this file, "
+        "then set `Approved: yes`.",
+        "",
+        "| id | deliverable | files | gaps | output | size |",
+        "|---|---|---|---|---|---|",
+    ]
+    for item in items:
+        files = "; ".join(item["files"]) or "—"
+        gaps = "; ".join(item["gaps"]) or "none"
+        lines.append(
+            "| {id} | {deliverable} | {files} | {gaps} | {output} | {size} |".format(
+                id=item["id"],
+                deliverable=item["deliverable"],
+                files=files.replace("|", "/"),
+                gaps=gaps.replace("|", "/"),
+                output=item["output"],
+                size=item["size"],
+            )
+        )
+    if not items:
+        lines.append("| — | — | — | — | — | — |")
+    lines.append("")
+    for item in items:
+        gap_text = "; ".join(item["gaps"]) or "none"
+        file_text = ", ".join(item["files"]) or "none"
+        lines.extend([
+            f"## {item['id']} — {item['description']}",
+            "",
+            f"- deliverable: {item['deliverable']}",
+            f"- files: {file_text}",
+            f"- gaps: {gap_text}",
+            f"- output: {item['output']}",
+            f"- size: {item['size']}",
+            "",
+        ])
+    if skipped:
+        lines.append("## Skipped")
+        lines.append("")
+        for item in skipped:
+            lines.append(f"- {item['id']}: {item['reason']}")
+        lines.append("")
+    lines.append("```todo-plan")
+    lines.append(json.dumps(payload, indent=2))
+    lines.append("```")
+    lines.append("")
+    text = "\n".join(lines)
+    with open(path, "w", encoding="utf-8") as handle:
+        handle.write(text)
+    return text
+
+
+def cmd_plan(args):
+    today = today_from(args).isoformat()
+    mode = "sweep" if args.sweep else "plan"
+    promoted = []
+    if args.queue:
+        queue_path = args.queue_file or _latest_queue_file()
+        if not queue_path or not os.path.isfile(queue_path):
+            raise Invalid("no unreviewed queue file in outputs/todo-proposals/ (pass --queue-file)")
+        with open(queue_path, encoding="utf-8") as handle:
+            queue_text = handle.read()
+        if _queue_is_reviewed(queue_text):
+            raise Invalid(f"{queue_path} is already reviewed; pass a different --queue-file to promote again")
+        wanted = {int(part) for part in re.split(r"[\s,]+", args.queue.strip()) if part}
+        catalog = {item["number"]: item for item in parse_queue_items(queue_text)}
+        missing = sorted(wanted - set(catalog))
+        if missing:
+            raise Invalid(f"queue has no item number(s): {', '.join(str(n) for n in missing)}")
+        with register_lock():
+            for number in sorted(wanted):
+                item = catalog[number]
+                rows = read_register()
+                existing = {
+                    one_line(row["description"]).casefold(): row["id"]
+                    for row in rows if row["status"] in OPEN_STATUSES
+                }
+                prior = existing.get(one_line(item["description"]).casefold())
+                if prior:
+                    print(f"Queue {number} already open as {prior}; not added again.")
+                    promoted.append(prior)
+                    continue
+                _add_from_queue(item, today, os.path.relpath(queue_path, ROOT))
+                added = read_register()[-1]
+                promoted.append(added["id"])
+        if not queue_text.endswith("\n"):
+            queue_text += "\n"
+        with open(queue_path, "a", encoding="utf-8") as handle:
+            numbers = ",".join(str(n) for n in sorted(wanted))
+            handle.write(f"reviewed {today}: added {numbers} via /todo plan\n")
+    rows = read_register()
+    by_id = {row["id"]: row for row in rows}
+    chosen = []
+    skipped = []
+    seen = set()
+
+    def take(row, skip_reason=""):
+        if row["id"] in seen:
+            return
+        seen.add(row["id"])
+        if skip_reason:
+            skipped.append({"id": row["id"], "reason": skip_reason})
+            return
+        chosen.append(row)
+
+    for todo_id in promoted:
+        row = by_id.get(todo_id)
+        if row:
+            take(row)
+    if args.ids:
+        for token in re.split(r"[\s,]+", args.ids.strip()):
+            if not token:
+                continue
+            take(find_row(rows, token))
+    if args.filter:
+        if args.filter not in FILTERS:
+            raise Invalid(f"--filter must be one of {', '.join(FILTERS)}")
+        probe = argparse.Namespace(filter=args.filter, initiative="", blocks="", id="", days=14)
+        for row in select(rows, probe, today_from(args)):
+            take(row)
+    if args.sweep:
+        for row in _sweep_rows(rows, today_from(args)):
+            newer = _draft_newer_than(row["id"], row.get("last_updated") or "")
+            if newer:
+                take(row, f"draft newer than last_updated ({newer})")
+            else:
+                take(row)
+    if not args.queue and not args.ids and not args.filter and not args.sweep:
+        raise Invalid("plan needs --ids, --filter, --queue, or --sweep")
+    items = [_plan_item(row) for row in chosen]
+    out = args.out or os.path.join(ROOT, "outputs", "todo-drafts", f"{today}-dispatch-plan.md")
+    _write_dispatch_plan(out, today, mode, items, skipped)
+    print(f"Wrote dispatch plan: {os.path.relpath(out, ROOT)}")
+    print(f"items={len(items)} skipped={len(skipped)} promoted={len(promoted)}")
+    print("Approve before dispatch. Context added with update goes on the to-do note and links.")
+
+
+def _has_completion(text):
+    for match in _COMPLETION.finditer(text or ""):
+        prefix = text[max(0, match.start() - 40):match.start()]
+        if _NEGATION.search(prefix):
+            continue
+        return True
+    return False
+
+
+def _mentions_completed(text, todo_id):
+    haystack = text or ""
+    lowered = haystack.lower()
+    needle = todo_id.lower()
+    start = 0
+    while True:
+        index = lowered.find(needle, start)
+        if index < 0:
+            return False
+        window = haystack[max(0, index - 400):index + len(todo_id) + 400]
+        if _has_completion(window) or (_USED_DRAFT.search(window) and "todo-drafts" in window.lower()):
+            return True
+        start = index + len(needle)
+
+
+def _excerpt(text, limit=180):
+    return " ".join((text or "").split())[:limit]
+
+
+def _reconcile_evidence(rows, today, projects_dirs):
+    open_rows = [row for row in rows if row["status"] in OPEN_STATUSES]
+    proposals = []
+    if not open_rows:
+        return proposals
+    dates = []
+    for row in open_rows:
+        try:
+            dates.append(datetime.date.fromisoformat(row.get("last_updated") or ""))
+        except ValueError:
+            pass
+    earliest = min(dates) if dates else today
+    scripts_dir = os.path.dirname(os.path.abspath(__file__))
+    if scripts_dir not in sys.path:
+        sys.path.insert(0, scripts_dir)
+    import transcripts
+    files = transcripts.session_files(projects_dirs)
+    cutoff = datetime.datetime.combine(earliest, datetime.time.min).timestamp()
+    recent_files = []
+    for path in files:
+        try:
+            if path.stat().st_mtime >= cutoff:
+                recent_files.append(path)
+        except OSError:
+            continue
+    turns = list(transcripts.iter_user_turns(recent_files))
+    commitments_path = os.path.join(ROOT, "registers", "commitments.csv")
+    commitments = []
+    if os.path.isfile(commitments_path):
+        with open(commitments_path, newline="", encoding="utf-8") as handle:
+            commitments = list(csv.DictReader(handle))
+    output_hits = []
+    outputs_root = os.path.join(ROOT, "outputs")
+    if os.path.isdir(outputs_root):
+        for dirpath, _dirs, names in os.walk(outputs_root):
+            for name in names:
+                if not name.endswith(".md"):
+                    continue
+                if name.endswith("-reconcile.md") or name.endswith("-dispatch-plan.md"):
+                    continue
+                path = os.path.join(dirpath, name)
+                try:
+                    text = open(path, encoding="utf-8", errors="replace").read()
+                except OSError:
+                    continue
+                output_hits.append((os.path.relpath(path, ROOT), text))
+    for row in open_rows:
+        todo_id = row["id"]
+        try:
+            since = datetime.date.fromisoformat(row.get("last_updated") or "")
+        except ValueError:
+            since = earliest
+        found = []
+        for turn in turns:
+            stamp = (turn.timestamp or "")[:10]
+            try:
+                if datetime.date.fromisoformat(stamp) < since:
+                    continue
+            except ValueError:
+                continue
+            if not _mentions_completed(turn.text, todo_id):
+                continue
+            found.append({
+                "kind": "transcript",
+                "evidence": _excerpt(turn.text),
+                "source": f"transcript {turn.session_id} @ {turn.timestamp} ({turn.path})",
+            })
+        for rel, text in output_hits:
+            if _mentions_completed(text, todo_id):
+                found.append({
+                    "kind": "output",
+                    "evidence": _excerpt(text[text.lower().find(todo_id.lower()):][:180] or text),
+                    "source": rel,
+                })
+        for commitment in commitments:
+            status = (commitment.get("status") or "").strip().lower()
+            if status != "done":
+                continue
+            blob = " ".join(str(value) for value in commitment.values())
+            if not re.search(rf"\b{re.escape(todo_id)}\b", blob):
+                continue
+            found.append({
+                "kind": "commitment",
+                "evidence": _excerpt(commitment.get("description") or blob),
+                "source": f"registers/commitments.csv {commitment.get('id') or ''}".strip(),
+            })
+        if found:
+            proposals.append({"id": todo_id, "description": row.get("description") or "", "evidence": found})
+    return proposals
+
+
+def _write_reconcile(path, today, proposals):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    lines = [
+        f"# Likely done {today}",
+        "",
+        "Nothing in registers/todos.csv was marked done. Confirm, then run "
+        "`todo_register.py done` for each id you accept.",
+        "",
+        "| id | evidence | source |",
+        "|---|---|---|",
+    ]
+    if not proposals:
+        lines.append("| — | none | — |")
+    for proposal in proposals:
+        for item in proposal["evidence"]:
+            lines.append(
+                "| {id} | {evidence} | {source} |".format(
+                    id=proposal["id"],
+                    evidence=item["evidence"].replace("|", "/"),
+                    source=item["source"].replace("|", "/"),
+                )
+            )
+    lines.extend(["", "```reconcile", json.dumps({"date": today, "likely_done": proposals}, indent=2), "```", ""])
+    with open(path, "w", encoding="utf-8") as handle:
+        handle.write("\n".join(lines))
+
+
+def cmd_reconcile(args):
+    """Propose likely-done to-dos. Never changes status."""
+    before = ""
+    if os.path.isfile(REGISTER):
+        with open(REGISTER, encoding="utf-8") as handle:
+            before = handle.read()
+    today = today_from(args)
+    rows = read_register()
+    projects = None
+    if args.projects_dir:
+        projects = [os.path.abspath(os.path.expanduser(part))
+                    for part in args.projects_dir.split(",") if part.strip()]
+    proposals = _reconcile_evidence(rows, today, projects)
+    if os.path.isfile(REGISTER):
+        with open(REGISTER, encoding="utf-8") as handle:
+            after = handle.read()
+        if after != before:
+            raise Refused("reconcile must not change registers/todos.csv")
+    if args.count:
+        print(f"likely_done={len(proposals)}")
+        for proposal in proposals:
+            print(f"likely {proposal['id']}")
+        return
+    out = args.out or os.path.join(
+        ROOT, "outputs", "todo-drafts", f"{today.isoformat()}-reconcile.md")
+    _write_reconcile(out, today.isoformat(), proposals)
+    print(f"likely_done={len(proposals)}")
+    print(f"Wrote reconcile proposal: {os.path.relpath(out, ROOT)}")
+    print("Status was not changed. Confirm before done.")
+    if args.json:
+        print(json.dumps({"as_of": today.isoformat(), "likely_done": proposals}, indent=2))
+
+
 def build_parser():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -459,6 +1084,24 @@ def build_parser():
     proposal.add_argument("--source", default="")
     proposal.add_argument("--today")
     proposal.set_defaults(func=cmd_log_proposal)
+
+    plan = sub.add_parser("plan")
+    plan.add_argument("--ids", default="", help="comma-separated TODO ids or bare numbers")
+    plan.add_argument("--filter", default="", help="open|overdue|due-today|due-week|blocked|done|dropped|all")
+    plan.add_argument("--queue", default="", help="1-based queue item numbers to promote, e.g. 1,3,5")
+    plan.add_argument("--queue-file", default="", help="proposals file; default is the latest unreviewed queue")
+    plan.add_argument("--sweep", action="store_true", help="sweep selection: due within 2 days, with source or links, max 3")
+    plan.add_argument("--out", default="", help="dispatch plan path")
+    plan.add_argument("--today")
+    plan.set_defaults(func=cmd_plan)
+
+    reconcile = sub.add_parser("reconcile")
+    reconcile.add_argument("--count", action="store_true", help="print likely_done=N only; write nothing")
+    reconcile.add_argument("--json", action="store_true")
+    reconcile.add_argument("--out", default="")
+    reconcile.add_argument("--projects-dir", default="", help="comma-separated Claude project dirs of *.jsonl")
+    reconcile.add_argument("--today")
+    reconcile.set_defaults(func=cmd_reconcile)
     return parser
 
 

@@ -4,6 +4,27 @@ description: Draft the weekly leadership update from maintained state, not memor
 
 Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
+## Gather plan
+
+Sequence Step 0 first (preflight, then the live Jira refresh), because the draft is interpreted against that reconciliation. After Step 0, batch the independent local reads in one turn. If this session already read a file, pass the distilled brief onward instead of re-reading the raw file. Re-reading the same file for a different task is fine; prompt caching makes that cheap. No session cache.
+
+First (sequential):
+
+- `python3 scripts/context_preflight.py --root <live> --topic "weekly update"`
+- current Jira status via the bookmarked view or Atlassian MCP (name the access path)
+
+Then batch:
+
+- `registers/initiatives.csv`
+- `reference/context/current-priorities.md`
+- latest `outputs/weekly/*-jira-reconcile.md`
+- `registers/commitments.csv`
+- `registers/decisions.csv` and `registers/risks.csv`
+- latest `outputs/weekly/*-discovery.md`
+- latest `/report okr-refresh` output and `state/okr-history.csv` (displayed values only)
+- last week's update in `outputs/weekly/`
+- `reference/links.csv` rows L-021, L-022, L-023, then those Confluence pages via the Atlassian MCP
+
 **Step 0 — preflight + reconcile** (per CLAUDE.md rules 2, 3, 26): `python3 scripts/context_preflight.py --root <live> --topic "weekly update"` (reuse prior weekly/strategy digests that still apply). Then refresh current Jira status via the bookmarked view; check whether local decisions/commitments are older than what Jira/Confluence now shows; list conflicts and material gaps. For a missing fact that could change an outcome, trend, priority, or leadership ask, ask a focused, batched question and wait before drafting (for example: "I have current Jira, decisions, and risks; I'm missing this week's OKR values and Tuesday's leadership notes. Please provide them, or explicitly confirm that you want a provisional update with those sections incomplete."). Do not generate the update in the same turn as that question. Only proceed with a partial draft if I explicitly choose it; mark the whole update **PROVISIONAL** and put `[NEEDS INPUT: ...]` at every affected claim or section. Keep assumptions separate from sourced facts and never infer missing metrics or outcomes.
 
 Then read maintained state — this update is generated, not recalled:

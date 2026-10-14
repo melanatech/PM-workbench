@@ -5,11 +5,33 @@ model: haiku
 
 Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
+## Gather plan
+
+List these reads, then batch the independent ones in one turn. Sequence only a step that depends on an earlier result (the brief text depends on the counts). If this session already read a file, pass the distilled brief onward instead of re-reading the raw file. Re-reading the same file for a different task is fine; prompt caching makes that cheap. No session cache.
+
+Independent (batch together):
+
+- `state/last-brief-date.txt`
+- `registers/evidence.csv` (rows since the last brief only)
+- `registers/commitments.csv` (due today or overdue)
+- `python3 scripts/todo_register.py counts`
+- `python3 scripts/todo_register.py reconcile --count`
+- `registers/initiatives.csv` (last_updated versus stage)
+- `inbox/` (counts by type)
+- latest `outputs/weekly/*-jira-reconcile.md` (open flags)
+- `reference/context/current-priorities.md`
+- `outputs/todo-drafts/` and `outputs/todo-proposals/` (names and counts of what I have not reviewed)
+- `logs/scheduled-runs.csv` and `logs/run-log.csv` (`BLOCKED:` lines since the last brief)
+- `inbox/meetings/` and living context, for meetings that need prep
+- `python3 scripts/recurring_corrections.py --root <live>` when `state/usage-history.csv` exists
+
+Then write the brief from those results. Do not run the suggested commands.
+
 Summarize what's new since the last brief (check `state/last-brief-date.txt`; create it if absent), reading counts and deltas only — this is a digest, not a deep dive:
 
 - New rows in `registers/evidence.csv` since last brief (count + one-line themes)
 - `registers/commitments.csv` — anything due today or overdue
-- To-dos: run `python3 scripts/todo_register.py counts` and report its line (due today, overdue, blocked, open). Counts only; if `registers/todos.csv` does not exist, skip the line. Do not read the rows.
+- To-dos: run `python3 scripts/todo_register.py counts` and report its line (due today, overdue, blocked, open). Counts only; if `registers/todos.csv` does not exist, skip the line. Do not read the rows. Also run `python3 scripts/todo_register.py reconcile --count`. If it prints `likely_done=N` with N greater than 0, add one line: "N to-dos look done, run /todo reconcile". Do not mark them done from the brief.
 - `registers/initiatives.csv` — anything whose last_updated is stale relative to its stage
 - New files in `inbox/` awaiting processing (count by type)
 - Latest jira-reconcile output — open flags not yet resolved

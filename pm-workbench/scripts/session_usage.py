@@ -15,9 +15,16 @@ Usage
   python3 scripts/session_usage.py --root ~/pm-live --backfill
   python3 scripts/session_usage.py --root ~/pm-live --backfill --classify
   python3 scripts/session_usage.py --root ~/pm-live --reclassify   # L2b bulk on other/none rows
+  python3 scripts/session_usage.py --root ~/pm-live --backfill-surface
   python3 scripts/session_usage.py --root ~/pm-live --summary
 
 Idempotent by (session_id, message_uuid). Never invents "tokens saved."
+
+``surface`` comes from the transcript ``entrypoint`` via ``scripts/transcripts.py``:
+``cli`` → terminal, ``sdk-cli`` → headless (``claude -p``), ``claude-vscode`` →
+panel (VS Code/Cursor). Unknown entrypoints stay as the raw value.
+``--backfill-surface`` rewrites existing rows in place on that key and copies
+the CSV to ``state/usage-history.csv.bak`` first.
 """
 from __future__ import annotations
 
@@ -31,6 +38,8 @@ import subprocess
 import sys
 from datetime import date, datetime, timezone
 from pathlib import Path
+
+import transcripts
 
 # Bulk L2b: ~20 turns/call, short excerpts, keep prompt bounded
 BULK_BATCH_SIZE = 20
@@ -53,6 +62,7 @@ HEADER = [
     "is_sidechain",
     "project",
     "indexed_date",
+    "surface",
 ]
 
 # Coarse enum + workflow:<name> (not open-ended topics)
@@ -209,21 +219,6 @@ def default_projects_dir(root: Path) -> Path:
     if not encoded.startswith("-"):
         encoded = f"-{encoded}"
     return Path.home() / ".claude" / "projects" / encoded
-
-
-def _text_from_message(msg: dict) -> str:
-    content = msg.get("content")
-    if isinstance(content, str):
-        return content
-    if isinstance(content, list):
-        parts = []
-        for block in content:
-            if isinstance(block, dict) and block.get("type") == "text":
-                parts.append(block.get("text") or "")
-            elif isinstance(block, str):
-                parts.append(block)
-        return "\n".join(parts)
-    return ""
 
 
 def classify_l2a(user_text: str) -> tuple[str, str]:
@@ -538,29 +533,19 @@ def scan_session_file(
     rows: list[dict] = []
     last_user_uuid = ""
     last_user_text = ""
-    try:
-        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
-    except OSError:
-        return rows
+    session_entrypoint = ""
 
-    for line in lines:
-        try:
-            obj = json.loads(line)
-        except json.JSONDecodeError:
-            continue
+    for obj in transcripts.iter_records(path):
+        entrypoint = transcripts.record_entrypoint(obj)
+        if entrypoint and not session_entrypoint:
+            session_entrypoint = entrypoint
         typ = obj.get("type")
         msg = obj.get("message") if isinstance(obj.get("message"), dict) else {}
         role = msg.get("role") or typ
 
-        if typ == "user" or role == "user":
-            if obj.get("isMeta") or obj.get("isSidechain"):
-                continue
-            text = _text_from_message(msg)
-            # skip empty command stdout noise without real ask
-            if not text.strip():
-                continue
+        if transcripts.is_human_turn(obj):
             last_user_uuid = obj.get("uuid") or ""
-            last_user_text = text
+            last_user_text = transcripts.message_text(obj)
             continue
 
         if typ != "assistant" and role != "assistant":
@@ -602,9 +587,117 @@ def scan_session_file(
                 "is_sidechain": "yes" if obj.get("isSidechain") else "no",
                 "project": project,
                 "indexed_date": date.today().isoformat(),
+                "surface": transcripts.surface_from_entrypoint(entrypoint or session_entrypoint),
             }
         )
     return rows
+
+
+def _csv_header(path: Path) -> list[str]:
+    if not path.is_file() or path.stat().st_size == 0:
+        return []
+    with path.open(encoding="utf-8", newline="") as fh:
+        line = fh.readline()
+    if not line.strip():
+        return []
+    return next(csv.reader([line]))
+
+
+def _backup_usage(path: Path) -> Path:
+    """Copy the CSV beside itself before an in-place rewrite."""
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    backup = path.with_name(path.name + ".bak")
+    if backup.exists():
+        backup = path.with_name(f"{path.name}.bak-{stamp}")
+    shutil.copy2(path, backup)
+    return backup
+
+
+def _resolve_projects(
+    root: Path,
+    projects_dir: Path | None,
+    projects_dirs: list[Path] | None,
+) -> list[Path]:
+    if projects_dirs:
+        return [p for p in projects_dirs if p.is_dir()]
+    if projects_dir is not None:
+        return [projects_dir] if projects_dir.is_dir() else []
+    return default_projects_dirs(root)
+
+
+def backfill_surface(
+    root: Path,
+    *,
+    projects_dir: Path | None = None,
+    projects_dirs: list[Path] | None = None,
+    all_projects: bool = False,
+) -> tuple[int, int, Path | None]:
+    """Add or refresh ``surface`` on existing rows. Update in place.
+
+    Keyed on ``(session_id, message_uuid)``. Copies the CSV to
+    ``usage-history.csv.bak`` (or a stamped name if that backup exists)
+    before writing. Returns ``(rows_updated, rows_unmatched, backup_path)``.
+    Does not append new usage rows.
+    """
+    path = ensure_usage(root)
+    with path.open(encoding="utf-8", newline="") as fh:
+        rows = list(csv.DictReader(fh))
+    header = _csv_header(path)
+    if not rows and header == HEADER:
+        print("surface_rows_updated=0")
+        print("surface_rows_unmatched=0")
+        return 0, 0, None
+
+    if projects_dirs or projects_dir is not None:
+        projs = _resolve_projects(root, projects_dir, projects_dirs)
+        files = transcripts.session_files(projs)
+    elif all_projects or not header or "surface" not in header:
+        files = transcripts.session_files()
+    else:
+        projs = default_projects_dirs(root)
+        files = transcripts.session_files(projs)
+        if not files:
+            files = transcripts.session_files()
+
+    needed = {(r.get("session_id") or "", r.get("message_uuid") or "") for r in rows}
+    by_message, by_session = transcripts.index_message_surfaces(files, needed=needed)
+
+    updated = 0
+    unmatched = 0
+    column_added = "surface" not in header
+    changed = header != HEADER
+    for row in rows:
+        key = (row.get("session_id") or "", row.get("message_uuid") or "")
+        surface = by_message.get(key) or ""
+        if not surface:
+            surface = transcripts.surface_from_entrypoint(by_session.get(key[0], ""))
+        if not surface:
+            unmatched += 1
+        previous = row.get("surface") or ""
+        if previous != surface:
+            updated += 1
+            changed = True
+        row["surface"] = surface
+        for column in HEADER:
+            row.setdefault(column, "")
+
+    if not changed:
+        print("surface_rows_updated=0")
+        print(f"surface_rows_unmatched={unmatched}")
+        print("surface_backup=none")
+        return 0, unmatched, None
+
+    backup = _backup_usage(path)
+    with path.open("w", encoding="utf-8", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=HEADER, extrasaction="ignore", lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(rows)
+    print(f"surface_rows_updated={updated}")
+    print(f"surface_rows_unmatched={unmatched}")
+    print(f"surface_rows={len(rows)}")
+    print(f"surface_column_added={'yes' if column_added else 'no'}")
+    print(f"surface_backup={backup}")
+    return updated, unmatched, backup
 
 
 def backfill(
@@ -617,6 +710,13 @@ def backfill(
 ) -> tuple[int, int]:
     """Scan jsonl; append new rows. Returns (appended, scanned_files)."""
     ensure_usage(root)
+    header = _csv_header(usage_path(root))
+    if header and header != HEADER:
+        backfill_surface(
+            root,
+            projects_dir=projects_dir,
+            projects_dirs=projects_dirs,
+        )
     keys = read_existing_keys(root)
     if projects_dirs:
         projs = [p for p in projects_dirs if p.is_dir()]
@@ -709,10 +809,12 @@ def reclassify_existing(root: Path, *, claude_bin: str = "") -> int:
         if uid in label_cache and (r.get("category") or "") == "other":
             r["category"] = label_cache[uid]
             r["category_source"] = "l2b"
+        for column in HEADER:
+            r.setdefault(column, "")
 
     _save_label_cache(root, label_cache)
     with path.open("w", encoding="utf-8", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=HEADER, lineterminator="\n")
+        w = csv.DictWriter(fh, fieldnames=HEADER, extrasaction="ignore", lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
     updated = sum(1 for r in rows if r.get("category_source") == "l2b")
@@ -727,6 +829,8 @@ def summarize(root: Path, days: int = 30) -> None:
         return
     today = date.today()
     by_cat: dict[str, int] = {}
+    by_surface: dict[str, list[int]] = {}
+    by_model: dict[str, list[int]] = {}
     totals = {"input": 0, "output": 0, "cache_create": 0, "cache_read": 0, "msgs": 0}
     with path.open(encoding="utf-8", newline="") as fh:
         for row in csv.DictReader(fh):
@@ -750,6 +854,11 @@ def summarize(root: Path, days: int = 30) -> None:
                 + int(row.get("cache_read_input_tokens") or 0)
             )
             by_cat[cat] = by_cat.get(cat, 0) + tok
+            surface = row.get("surface") or "(blank)"
+            model = row.get("model") or "(blank)"
+            for bucket, key in ((by_surface, surface), (by_model, model)):
+                msgs, tokens = bucket.get(key, [0, 0])
+                bucket[key] = [msgs + 1, tokens + tok]
     print(f"last_{days}d_assistant_msgs={totals['msgs']}")
     print(f"input_tokens={totals['input']}")
     print(f"output_tokens={totals['output']}")
@@ -759,6 +868,12 @@ def summarize(root: Path, days: int = 30) -> None:
     print("by_category_tokens (not 'tokens saved'):")
     for cat, n in sorted(by_cat.items(), key=lambda x: -x[1])[:12]:
         print(f"  {cat}: {n} ({100.0 * n / total_tok:.1f}%)")
+    print("by_surface (terminal=cli, headless=sdk-cli/claude -p, panel=claude-vscode; raw if unknown):")
+    for name, (msgs, n) in sorted(by_surface.items(), key=lambda x: -x[1][1]):
+        print(f"  {name}: msgs={msgs} tokens={n} ({100.0 * n / total_tok:.1f}%)")
+    print("by_model:")
+    for name, (msgs, n) in sorted(by_model.items(), key=lambda x: -x[1][1]):
+        print(f"  {name}: msgs={msgs} tokens={n} ({100.0 * n / total_tok:.1f}%)")
 
 
 def main(argv=None) -> int:
@@ -785,6 +900,11 @@ def main(argv=None) -> int:
         default=os.environ.get("CLAUDE_BIN") or "claude",
         help="claude CLI binary for classify/reclassify (default: CLAUDE_BIN or claude on PATH)",
     )
+    p.add_argument(
+        "--backfill-surface",
+        action="store_true",
+        help="update surface on existing rows in place (backs up the CSV first)",
+    )
     p.add_argument("--summary", action="store_true")
     p.add_argument("--days", type=int, default=30)
     args = p.parse_args(argv)
@@ -795,8 +915,15 @@ def main(argv=None) -> int:
     projects_dirs = None
     projects = None
     if args.projects_dir:
-        parts = [p.strip() for p in args.projects_dir.split(",") if p.strip()]
-        projects_dirs = [Path(os.path.expanduser(p)).resolve() for p in parts]
+        parts = [item.strip() for item in args.projects_dir.split(",") if item.strip()]
+        projects_dirs = [Path(os.path.expanduser(item)).resolve() for item in parts]
+    if args.backfill_surface:
+        backfill_surface(
+            root,
+            projects_dir=projects,
+            projects_dirs=projects_dirs,
+            all_projects=not args.projects_dir,
+        )
     if args.backfill:
         backfill(
             root,
@@ -807,10 +934,14 @@ def main(argv=None) -> int:
         )
     if args.reclassify:
         reclassify_existing(root, claude_bin=args.claude)
-    if args.summary or not (args.backfill or args.reclassify):
+    acted = args.backfill or args.reclassify or args.backfill_surface
+    if args.summary or not acted:
         summarize(root, days=args.days)
-    if not args.backfill and not args.summary and not args.reclassify:
-        print("pass --backfill and/or --reclassify and/or --summary", file=sys.stderr)
+    if not acted and not args.summary:
+        print(
+            "pass --backfill and/or --backfill-surface and/or --reclassify and/or --summary",
+            file=sys.stderr,
+        )
         return 2
     return 0
 

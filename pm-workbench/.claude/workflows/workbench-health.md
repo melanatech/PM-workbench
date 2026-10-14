@@ -7,6 +7,16 @@ Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — 
 
 The system needs its own product management. Run `python3 scripts/workbench_health.py` and use ONLY its numbers — never estimate usage, counts, or dates yourself (the script counts; you interpret).
 
+Also run `python3 scripts/session_usage.py --root <live> --summary` and report its **by-surface** and **by-model** lines next to those numbers. Do not add the tokens up yourself.
+
+Surfaces, from the transcript `entrypoint` (see `scripts/transcripts.py`):
+
+- `terminal` — interactive CLI (`entrypoint` `cli`)
+- `headless` — `claude -p` and the CLI SDK (`entrypoint` `sdk-cli`)
+- `panel` — VS Code / Cursor extension (`entrypoint` `claude-vscode`)
+
+An entrypoint that is not one of those three is left as the raw value. If the summary has no `surface` column yet, say so and point at `python3 scripts/session_usage.py --root <live> --backfill-surface` instead of guessing.
+
 Then, in under 200 words, tell me:
 1. **What I actually use** — the 3–5 workflows with the most runs, and whether the daily loop (`/quick-close`, `/capture meeting-closeout`, `/report weekly-update`, `/sync jira-reconcile`) is being used at all.
 2. **What's broken or stuck** — failed runs, `BLOCKED:` scheduled runs (each is a decision I owe), inbox files older than 3 days, stub scripts a used workflow depends on.

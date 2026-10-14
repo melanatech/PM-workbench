@@ -68,6 +68,7 @@ class ProjectsDiscoveryTests(unittest.TestCase):
                         "type": "user",
                         "uuid": uid,
                         "timestamp": "2026-10-10T12:00:00.000Z",
+                        "entrypoint": "sdk-cli" if sid == "s1" else "claude-vscode",
                         "message": {
                             "role": "user",
                             "content": [{"type": "text", "text": "/brief daily-brief"}],
@@ -75,6 +76,7 @@ class ProjectsDiscoveryTests(unittest.TestCase):
                     },
                     {
                         "type": "assistant",
+                        "entrypoint": "sdk-cli" if sid == "s1" else "claude-vscode",
                         "uuid": aid,
                         "timestamp": "2026-10-10T12:00:05.000Z",
                         "message": {
@@ -94,6 +96,9 @@ class ProjectsDiscoveryTests(unittest.TestCase):
         )
         self.assertEqual(files, 2)
         self.assertEqual(n, 2)
+        with (live / "state" / "usage-history.csv").open(encoding="utf-8") as fh:
+            surfaces = {row["surface"] for row in csv.DictReader(fh)}
+        self.assertEqual(surfaces, {"headless", "panel"})
 
 
 class ClassifyL2aTests(unittest.TestCase):
@@ -142,6 +147,7 @@ class BackfillTests(unittest.TestCase):
                     "timestamp": "2026-10-10T12:00:00.000Z",
                     "isMeta": False,
                     "isSidechain": False,
+                    "entrypoint": "cli",
                     "message": {
                         "role": "user",
                         "content": [{"type": "text", "text": "/discover code-dive reports"}],
@@ -151,6 +157,7 @@ class BackfillTests(unittest.TestCase):
                     "type": "assistant",
                     "uuid": "a1",
                     "timestamp": "2026-10-10T12:00:05.000Z",
+                    "entrypoint": "cli",
                     "isSidechain": False,
                     "message": {
                         "role": "assistant",
@@ -207,6 +214,7 @@ class BackfillTests(unittest.TestCase):
         self.assertEqual(rows[0]["user_uuid"], "u1")
         self.assertEqual(int(rows[0]["input_tokens"]), 100)
         self.assertEqual(int(rows[0]["cache_read_input_tokens"]), 200)
+        self.assertEqual(rows[0]["surface"], "terminal")
 
     def test_cli_backfill_and_summary(self):
         r = subprocess.run(
@@ -227,6 +235,9 @@ class BackfillTests(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr + r.stdout)
         self.assertIn("rows_appended=1", r.stdout)
         self.assertIn("code_dive", r.stdout)
+        self.assertIn("by_surface", r.stdout)
+        self.assertIn("terminal", r.stdout)
+        self.assertIn("by_model", r.stdout)
 
     def test_classify_without_claude_cli_skips(self):
         # unlabeled turn + --claude pointing at a missing binary
@@ -332,6 +343,49 @@ class BackfillTests(unittest.TestCase):
     def test_parse_bulk_labels(self):
         parsed = session_usage._parse_bulk_labels("1\tlookup\n2: prototype\n3|capture\n", 3)
         self.assertEqual(parsed, {1: "lookup", 2: "prototype", 3: "capture"})
+
+    def test_backfill_surface_updates_in_place_and_backs_up(self):
+        old = [column for column in session_usage.HEADER if column != "surface"]
+        path = self.live / "state" / "usage-history.csv"
+        with path.open("w", encoding="utf-8", newline="") as fh:
+            writer = csv.DictWriter(fh, fieldnames=old, lineterminator="\n")
+            writer.writeheader()
+            writer.writerow({
+                "session_id": "sess-aaa",
+                "message_uuid": "a1",
+                "timestamp": "2026-10-10T12:00:05.000Z",
+                "user_uuid": "u1",
+                "user_excerpt": "/discover code-dive reports",
+                "category": "code_dive",
+                "category_source": "l2a",
+                "input_tokens": "100",
+                "output_tokens": "50",
+                "cache_creation_input_tokens": "1000",
+                "cache_read_input_tokens": "200",
+                "model": "claude-sonnet-4",
+                "is_sidechain": "no",
+                "project": self.projects.name,
+                "indexed_date": "2026-10-13",
+            })
+        updated, unmatched, backup = session_usage.backfill_surface(
+            self.live, projects_dir=self.projects
+        )
+        self.assertEqual(updated, 1)
+        self.assertEqual(unmatched, 0)
+        self.assertIsNotNone(backup)
+        self.assertTrue(backup.is_file())
+        with backup.open(encoding="utf-8") as fh:
+            self.assertNotIn("surface", fh.readline())
+        with path.open(encoding="utf-8") as fh:
+            rows = list(csv.DictReader(fh))
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["surface"], "terminal")
+        self.assertEqual(rows[0]["message_uuid"], "a1")
+        again, _, second_backup = session_usage.backfill_surface(
+            self.live, projects_dir=self.projects
+        )
+        self.assertEqual(again, 0)
+        self.assertIsNone(second_backup)
 
 
 class MetricsUsageRowsTests(unittest.TestCase):

@@ -5,6 +5,8 @@ argument-hint: [feature name]
 
 Execution mode: **standard** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
+Context dependencies: soft: audiences | hard: none
+
 Launch package for: $ARGUMENTS
 
 **Step 0 — preflight + reconcile:** `python3 scripts/context_preflight.py --root <live> --topic "$ARGUMENTS"` (cite PRD/launch/instrumentation hits). Then refresh current Jira scope and the approved Confluence PRD before anything else; the drift check is worthless against stale inputs.

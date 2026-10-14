@@ -26,4 +26,4 @@ Suggested next step: run /build prd-package | /sync jira-reconcile | /build expe
 
 If it touches nothing tracked yet, say so — not everything needs to ripple, and a false "this affects everything" report is as useless as missing a real connection. Offer to create the missing INIT-/EV-/DEC- row if it should exist, then fan-out.
 
-End with the Surfaces updated / N/A / Cross-initiative block from `_fan-out.md`.
+End with the Surfaces updated / Cross-initiative block from `_fan-out.md`. No N/A list.

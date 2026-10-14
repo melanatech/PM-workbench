@@ -5,6 +5,8 @@ argument-hint: [competitors, or blank for the watchlist]
 
 Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
+Context dependencies: soft: current-priorities | hard: none
+
 Scan: $ARGUMENTS (default: all of `reference/competitive-watchlist.md` — competitor, product areas, optional seed URLs, last-reviewed date).
 
 **Step 0 — preflight:** `python3 scripts/context_preflight.py --root <live> --topic "competitive $ARGUMENTS"`. Reuse recent competitive captures when recommendation is `reuse`; refresh on staleness. Index new captures (`kind=competitive`).

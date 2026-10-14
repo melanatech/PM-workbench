@@ -5,6 +5,8 @@ argument-hint: [what changed, plain language - can cover several features at onc
 
 Execution mode: **standard** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
+Context dependencies: soft: product-areas | hard: none
+
 Roadmap changes: $ARGUMENTS
 
 **Step 0 — preflight:** `python3 scripts/context_preflight.py --root <live> --topic "roadmap $ARGUMENTS"`. Cite prior roadmap/strategy digests before rewriting product facts across surfaces.

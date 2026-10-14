@@ -129,8 +129,20 @@ Every existing workspace path is a clickable Markdown link. Any file or folder t
 
 ## Rule 23 — chat answer is not the durable file
 
-Digests, register rows, and learning notes are lossy on purpose (rule 15). An ad-hoc reply often re-reads a richer source (full transcript, deck) and adds justification the digest never held. **Forbidden:** "it's all captured in `outputs/…`" / "same as the summary" after a richer chat answer, unless you claim-checked (every material claim in the reply appears in that file) or you wrote that content into the file this turn. Allowed: "Answered from `archive/…` transcript; [digest] has headlines only" / "DEC-007 is in the register; the pricing rationale is chat-only unless we append." When the reply surfaces material facts missing from digests, registers, or learning, say the gap and either append (Tier 1, dated source) or list what would be written. Topic overlap (a keyword appears in both) is not claim coverage.
+A chat answer is not the durable file. Full rule: `.claude/workflows/_fan-out.md` (Rule 23).
 
 ## Rule 24 — user-injected context after freeform chat
 
-When the PM adds new facts mid-thread (corrections, "also someone said…", "a stakeholder confirmed…", hallway or chat color that was not in the capture) outside `/capture` / `/quick-close`, treat that as durable input. Do not only acknowledge it in chat. **Clear material claims** (decision, commitment, risk, open conflict, durable product fact, assumption): write the matching surface this turn (Tier 1) or present a one-line PROPOSAL of the exact row or append if Tier 2/3 (scope, owner, dates, send). **Ambiguous** (color vs decision; unclear owner; might supersede an existing DEC-/COM-): ask one short question naming the candidate surface. **Conversational only** (thanks, scheduling trivia, an already-tracked restatement): stay silent on write-back. Source the write as `chat:[date]` or the thread topic plus any archive path named. Same fan-out surfaces as `_fan-out.md`. `/sync ripple-check` is the explicit command for a full cross-check; it is not required for one obvious mid-chat fact.
+Facts added mid-chat are durable input. Write them back or ask once. Full rule: `.claude/workflows/_fan-out.md` (Rule 24).
+
+## Context dependencies
+
+A workflow that needs living context declares it under the execution-mode line:
+
+`Context dependencies: soft: <ids> | hard: <ids or none>`
+
+Ids are the `id` column in `reference/context/_manifest.md`. Before gathering, run `python3 scripts/context_health.py --root <live> --ids <those ids>`.
+
+- **Soft gap** (missing, template-empty, or stale): derive what you can and label it. Priorities, when `current-priorities` is empty, may be drafted from open initiatives plus key-result names in `kr-metric-map.md` when that file is filled. Label the draft "derived, not stated priorities" and ask the PM to confirm. Ask two or three questions instead when a derivation would invent a fact. Do not hard-block. Do not present the derivation as something the PM stated.
+- **Hard gap:** ask the short batch before the artifact is treated as complete. An unattended run marks that section incomplete and appends `BLOCKED:` (rule 22). Still do not invent.
+- The health script exits 0 when the root exists. A gap is a notice, not a failed command.

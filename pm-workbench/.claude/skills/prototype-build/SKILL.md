@@ -49,7 +49,7 @@ Then decide type / complexity / design source. Infer what you can from the flow 
 
 **Design source** — does this pull in company look-and-feel?
 - Check `reference/design/` and `reference/links.csv` for: a **component library / design-system repo** (import and use its real components), and/or a **style-guide doc** (Figma/Confluence/PDF — extract tokens: colors, type, spacing, and match them). If both exist, prefer real components for structure and the style guide for tokens the components don't cover. If neither exists yet, build clean and generic and note in the README that design import is pending — never invent a fake "company style."
-- **Shared kit + soft reuse:** if `prototypes/_shared/package.json` exists, new **web** / **repo** prototypes add `"@pm-live/prototype-kit": "file:../_shared"`, import `@pm-live/prototype-kit/theme.css` + `kit.css`, and use matching exports (Drawer, HelpPopover, InfoTip, ScenarioGuide, …) instead of copying them. Still read `reference/design/prototype-components.md` for pieces **not** promoted (Status ≠ `in _shared`) — copy/adapt those and note `Adapted from …` in the README. If `_shared` is missing, soft-copy only. Promotion rule: catalog row copied ≥2 times → offer move into `_shared` (ask the PM). See `reference/design/shared-prototype-package.md`. If nothing matches, skip — do not invent fake shared components.
+- **Shared kit + soft reuse:** if `prototypes/_shared/package.json` exists, new **web** / **repo** prototypes add `"@pm-live/prototype-kit": "file:../_shared"`, import `@pm-live/prototype-kit/theme.css` + `kit.css`, and use matching exports (Drawer, HelpPopover, InfoTip, ScenarioGuide, …) instead of copying them. Quantity helpers are `sum`, `ratio`, `format`, and `assertInvariant` from `@pm-live/prototype-kit/numbers` (see Grounded numbers in Step 2). Still read `reference/design/prototype-components.md` for pieces **not** promoted (Status ≠ `in _shared`) — copy/adapt those and note `Adapted from …` in the README. If `_shared` is missing, soft-copy only. Promotion rule: catalog row copied ≥2 times → offer move into `_shared` (ask the PM). See `reference/design/shared-prototype-package.md`. If nothing matches, skip — do not invent fake shared components.
 
 ## Step 1 — ground it in the contract (and brief)
 
@@ -73,7 +73,65 @@ If a **component library** is the design source, install/link it and build scree
 
 **Handoff paths (document in README).** (1) **Static** — single `index.html`, open in a browser. (2) **React** — `npm run build` → zip/`preview`; optional `npm run share` (single-file HTML via e.g. `vite-plugin-singlefile`) so stakeholders need not `npm install`. Do not require every concept test to be static.
 
-**Optional — Scenario Guide (evaluator walkthrough).** If the prototype has multiple concepts/personas or a stakeholder demo soon, offer a Guide panel per `.claude/workflows/_scenario-guide.md` / skill `scenario-guide`. Default **off** for single-screen throwaways; when added, import `ScenarioGuide` from `@pm-live/prototype-kit` (if `_shared` exists) or adapt the recipe, and keep **scripts** local to the feature. Do not block the build waiting for a Guide.
+**Optional — Scenario Guide (evaluator walkthrough).** If the prototype has multiple concepts/personas or a stakeholder demo soon, offer a Guide panel per `.claude/workflows/_scenario-guide.md` / skill `scenario-guide`. Default **off** for single-screen throwaways; when added, import `ScenarioGuide` from `@pm-live/prototype-kit` (if `_shared` exists) or adapt the recipe, and keep **scripts** local to the feature. When the Guide shows quantities, it reads them through the same selectors as the screens (see `_scenario-guide.md`). Do not block the build waiting for a Guide.
+
+**Grounded numbers.** When the prototype shows quantities — counts, money, durations, scores, percentages, inventory levels, ratings, or dates — every displayed number comes from one fixture. Skip this when the screen has no quantities. Apply it on new builds; do not retrofit prototypes that already exist.
+
+- **One fixture of raw records** at `src/data/fixture.js` (static HTML: `data/fixture.json`) with a fixed `asOf` date. Records are whatever the product deals in, such as tasks, tickets, or sessions.
+- **Selectors** in `src/data/selectors.js` derive every displayed number. Components import those functions and render them. Mark each displayed quantity with `data-metric="<id>"` on the element that shows it. A genuine constant that is not a product quantity (page size, layout) gets a `quantity-ok` comment on that line or on the nearest preceding non-empty line.
+- **Invariants** in `src/data/invariants.js`, run with `node` (exit nonzero on failure): parts sum to the whole (segments, legend, table, and total agree); rates and percentages stay in bounds, and a filtered subset is never larger than its parent; the same metric comes from the same selector everywhere it appears; dates agree with `asOf` (no future events in a past view). Let `assertInvariant` throw — do not catch it.
+- **Where the helpers live.** `sum`, `ratio`, `format`, and `assertInvariant` ship in `@pm-live/prototype-kit` (`prototypes/_shared/src/data/numbers.js`), importable as `@pm-live/prototype-kit/numbers` and re-exported from the package index. Use that subpath from `src/data/*` so plain `node` does not load React components. `_shared` is live-only: the kit does not ship it, and `create_live_workspace.py` does not seed it. If `_shared` exists but has no `numbers.js` yet, add the module below, re-export it from `src/index.js`, and add `"./numbers": "./src/data/numbers.js"` to the package `exports` map. If there is no `_shared`, put one copy of the same module at the prototype's `src/data/numbers.js` and import that. Do not copy the helpers into components.
+
+```js
+// prototypes/_shared/src/data/numbers.js  (or src/data/numbers.js when _shared is absent)
+function toNumber(value) {
+  const n = Number(value)
+  return Number.isFinite(n) ? n : 0
+}
+
+export function sum(rows, pick) {
+  if (rows == null) return 0
+  const list = typeof pick === 'function' ? Array.from(rows, pick) : Array.from(rows)
+  return list.reduce((total, value) => total + toNumber(value), 0)
+}
+
+export function ratio(part, whole) {
+  const denominator = toNumber(whole)
+  if (denominator === 0) return 0
+  return toNumber(part) / denominator
+}
+
+// kind: count (locale number) | money (USD) | percent (ratio 0–1 → 12.5%) | duration (minutes → 45m or 1h 30m)
+export function format(value, kind = 'count') {
+  const n = toNumber(value)
+  if (kind === 'money') {
+    return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+  }
+  if (kind === 'percent') {
+    const rounded = Math.round(n * 1000) / 10
+    const text = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)
+    return `${text}%`
+  }
+  if (kind === 'duration') {
+    const sign = n < 0 ? '-' : ''
+    const total = Math.round(Math.abs(n))
+    const hours = Math.floor(total / 60)
+    const mins = total % 60
+    if (hours && mins) return `${sign}${hours}h ${mins}m`
+    if (hours) return `${sign}${hours}h`
+    return `${sign}${mins}m`
+  }
+  return n.toLocaleString('en-US')
+}
+
+export function assertInvariant(ok, message) {
+  if (!ok) {
+    const text = `Invariant failed: ${message}`
+    console.error(text)
+    throw new Error(text)
+  }
+}
+```
 
 **Checkpoint after scaffold.** Even for loose static: `python3 scripts/prototype_checkpoint.py --path prototypes/[name] --label after-scaffold` (creates local `git init` if missing; never pushes). See Checkpoints below.
 
@@ -84,6 +142,8 @@ If a **component library** is the design source, install/link it and build scree
 This is the step that distinguishes a real prototype from a plausible-looking one. Run the bundled QA harness in `qa/` (see `qa/README.md` for prerequisites — it needs a local browser via Playwright, free/open-source, no API or cost — see note below).
 
 **Baseline source map gate:** if the prototype has a `baseline` variant (toggle/state/route), QA **fails** when `BASELINE-SOURCES.md` is missing or empty. Fix that before treating QA as passed.
+
+**Grounded-numbers check.** When the prototype shows quantities, run `python3 scripts/check_prototype_data.py prototypes/[name]` before the browser harness, and again after a QA auto-fix that touched displayed numbers. Nonzero exit fails QA. The script flags quantity-like literals in `src/**/*.{js,jsx,tsx,html}` outside `src/data/` (and in a root `index.html` when that file exists), runs `node src/data/invariants.js` when that file exists, and flags a `data-metric` rendered in more than one component from different selectors or local copies. A `quantity-ok` comment allows a real constant. If `node` is missing, the script skips only the invariant run and says so — that skip is not a pass of the invariants. Append the script's stdout to `qa-report.md`. Put quantity-bearing static markup under `src/` (a root `index.html` is scanned too) so the check can see it.
 
 **What the harness does, per type:**
 - **static:** open the file, walk to every declared state, screenshot each, click every interactive element once, assert the DOM changes and no console error fires, confirm instrumentation labels are actually visible in each state.
@@ -137,7 +197,7 @@ Prototypes get **git checkpoints** so a bad revision can be rolled back without 
 
 ## Step 5 — reconcile against upstream (brief or PRD)
 
-If a product brief (`drafts/*-product-brief.md`) **or** `outputs/prds/[feature]/` exists, dispatch `prd-prototype-reconciler` with that upstream. It accepts a brief or a PRD (not PRD-only). When only a brief exists, reconcile against "Starting point / what exists" and Concepts. Explicitly check the `baseline` variant against "what exists today" claims and against `BASELINE-SOURCES.md`. Surface discrepancies both directions and let me decide — don't auto-resolve.
+If a product brief (`drafts/*-product-brief.md`) **or** `outputs/prds/[feature]/` exists, dispatch `prd-prototype-reconciler` with that upstream. It accepts a brief or a PRD (not PRD-only). When only a brief exists, reconcile against "Starting point / what exists" and Concepts. Explicitly check the `baseline` variant against "what exists today" claims and against `BASELINE-SOURCES.md`. Pass the grounded-numbers check stdout (`python3 scripts/check_prototype_data.py`, the same text appended to `qa-report.md`) in with the prototype so quantity drift is part of reconciliation. Surface discrepancies both directions and let me decide — don't auto-resolve.
 
 ## Step 6 — register + repo handoff
 

@@ -9,12 +9,16 @@ Usage (run from the workbench root)
   python3 scripts/todo_register.py add --description "Ask support about export retries" \\
       [--owner me] [--due 2026-10-09] [--priority high|normal|low] [--initiative NAME] \\
       [--blocks "PRD for Bulk Export"] [--links "EV-211, RISK-008"] \\
-      [--origin stated|proposed] [--source "inbox/meetings/..."] [--note TEXT]
+      [--origin stated|proposed|commitment] [--source "inbox/meetings/..."] [--note TEXT]
   python3 scripts/todo_register.py update TODO-001 [--description ...] [--owner ...] [--due ...]
       [--priority ...] [--status open|in_progress|blocked] [--initiative ...] [--blocks ...]
       [--links ...] [--source ...] [--note ...]        (--due "" clears a date)
   python3 scripts/todo_register.py done TODO-001 [--note TEXT]
   python3 scripts/todo_register.py drop TODO-001 --reason TEXT       (the row stays; reason required)
+  python3 scripts/todo_register.py ensure-from-commitment --com COM-001 --description "…" \\
+      [--due YYYY-MM-DD] [--source …] [--priority …] [--initiative …] [--note …]
+      Idempotent twin for a promise the PM owns: adds a to-do linked to that COM, or
+      prints the existing open/in_progress/blocked to-do that already links it.
   python3 scripts/todo_register.py list [--filter open|overdue|due-today|due-week|blocked|done|dropped|all]
       [--initiative TEXT] [--blocks TEXT] [--id TODO-001] [--days N] [--json]
   python3 scripts/todo_register.py counts [--json]
@@ -69,7 +73,8 @@ HEADER = [
 OPEN_STATUSES = ("open", "in_progress", "blocked")
 UPDATABLE_STATUSES = ("open", "in_progress", "blocked")
 PRIORITIES = ("high", "normal", "low")
-ORIGINS = ("stated", "proposed")
+ORIGINS = ("stated", "proposed", "commitment")
+_COM_ID = re.compile(r"^COM-\d+$", re.IGNORECASE)
 FILTERS = ("open", "overdue", "due-today", "due-week", "blocked", "done", "dropped", "all")
 PRIORITY_RANK = {"high": 0, "normal": 1, "low": 2}
 # field name on the command line -> column in the register
@@ -307,6 +312,69 @@ def _cmd_add(args):
             row[column] = values[name]
     write_register(rows, rows + [row])
     show_rows([row], f"Added {row['id']}:")
+    return row
+
+
+def _link_tokens(value):
+    return {token.upper() for token in _ID_IN_TEXT.findall(value or "")}
+
+
+def _open_todo_for_com(rows, com_id):
+    needle = com_id.upper()
+    for row in rows:
+        if (row.get("status") or "").strip() not in OPEN_STATUSES:
+            continue
+        if needle in _link_tokens(row.get("links") or ""):
+            return row
+    return None
+
+
+def cmd_ensure_from_commitment(args):
+    with register_lock():
+        _cmd_ensure_from_commitment(args)
+
+
+def _cmd_ensure_from_commitment(args):
+    com = (args.com or "").strip().upper()
+    if not _COM_ID.match(com):
+        raise Invalid(f"com must look like COM-001, got {args.com!r}")
+    # Reuse flag/stdin collection for description and optional fields; force twin metadata.
+    collected = collect_fields(args)
+    description = collected.get("description") or ""
+    if not description:
+        raise Invalid("ensure-from-commitment needs a description")
+    values = {
+        "description": description,
+        "origin": "commitment",
+        "links": com,
+        "owner": "me",
+    }
+    for name in ("due", "source", "priority", "initiative", "note"):
+        if name in collected and collected[name] != "":
+            values[name] = collected[name]
+        elif name == "due" and "due" in collected:
+            values["due"] = ""
+    validate(values)
+    today = today_from(args).isoformat()
+    rows = read_register()
+    existing = _open_todo_for_com(rows, com)
+    if existing:
+        show_rows([existing], f"Already linked to {com}:")
+        print(f"ensure-from-commitment: existing {existing['id']}")
+        return existing
+    row = {column: "" for column in HEADER}
+    row.update({
+        "id": next_id(rows), "owner": "me", "priority": "normal", "status": "open",
+        "origin": "commitment", "created": today, "last_updated": today,
+        "links": com,
+    })
+    for name, column in FIELD_COLUMNS.items():
+        if name in values and name not in ("status", "origin", "links", "owner"):
+            row[column] = values[name]
+    write_register(rows, rows + [row])
+    show_rows([row], f"Added {row['id']} (twin of {com}):")
+    print(f"ensure-from-commitment: created {row['id']}")
+    return row
 
 
 def cmd_update(args):
@@ -1062,6 +1130,14 @@ def build_parser():
     drop.add_argument("id")
     common(drop, ["reason"])
     drop.set_defaults(func=cmd_drop)
+
+    ensure = sub.add_parser(
+        "ensure-from-commitment",
+        help="idempotent to-do twin for a COM the PM owns",
+    )
+    ensure.add_argument("--com", required=True, help="COM-nnn id to link")
+    common(ensure, ["description", "due", "source", "priority", "initiative", "note"])
+    ensure.set_defaults(func=cmd_ensure_from_commitment)
 
     listing = sub.add_parser("list")
     listing.add_argument("--filter", choices=FILTERS, default="open")

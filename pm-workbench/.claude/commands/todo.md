@@ -8,7 +8,7 @@ Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — 
 
 Input: $ARGUMENTS
 
-A to-do is something I intend to **do** (an action I can execute or chase). It is NOT a commitment (a promise to someone else → `registers/commitments.csv`), NOT a decision or confirmation (→ DEC row, Tier 3 confirm, or assumptions), and NOT an open definitional question ("what does MAPU mean" → assumptions). `propose` and capture workflows must use that action filter — see `todo-worker` propose mode. The list lives in `registers/todos.csv`. **Never edit that file by hand** — every change goes through `python3 scripts/todo_register.py` (IDs, dates and CSV quoting are handled by code, not by you). If a value contains quotes, pass it with `--stdin` and a quoted heredoc (see the script's header) so the shell never has to escape it.
+A to-do is something I intend to **do** (an action I can execute or chase). It is NOT a substitute for a commitment row: promises still live in `registers/commitments.csv`. When **I** own a promise, capture must also put it on this list via `python3 scripts/todo_register.py ensure-from-commitment --com COM-nnn …` (linked twin, `origin=commitment`) — that is the one allowed silent todo write from capture. A to-do is NOT a decision or confirmation (→ DEC / Tier 3 / assumptions), and NOT an open definitional question ("what does MAPU mean" → assumptions). `propose` and capture workflows must use that action filter — see `todo-worker` propose mode. The list lives in `registers/todos.csv`. **Never edit that file by hand** — every change goes through `python3 scripts/todo_register.py` (IDs, dates and CSV quoting are handled by code, not by you). If a value contains quotes, pass it with `--stdin` and a quoted heredoc (see the script's header) so the shell never has to escape it.
 
 ## Route by the first word of the input
 
@@ -34,7 +34,7 @@ If the first word is not one of these and the text reads like a task, treat it a
 
 - **Never invent owner, due date, priority, initiative or links.** Use only what I wrote. Owner defaults to `me` (the script does this); a date that I did not state stays blank. A relative date ("Friday") is resolved against today's real date — if that is ambiguous, ask.
 - `links` takes register IDs I named or that are plainly in my message (e.g. `RISK-008`). Do not add an ID you have not seen in a register.
-- **Promise-like to-dos:** if the text sounds like something I owe someone else ("send Dana the export by Friday"), add the to-do as asked, then say in one line: "This looks like a commitment to Dana — want it in the commitments register too?" Do not write to `commitments.csv` yourself (Tier 3).
+- **Promise-like to-dos:** if the text sounds like something I owe someone else ("send Dana the export by Friday"), add the to-do as asked, then say in one line: "This looks like a commitment to Dana — want it in the commitments register too?" Do not write to `commitments.csv` yourself (Tier 3). If I already have a COM- and accept adding the promise, run `ensure-from-commitment` so the rows stay linked (do not create a second unlinked to-do for the same COM).
 - Changing owner or due date on an existing to-do that came from a meeting or a decision is fine for a to-do, but if it would change a scope, owner or date someone else is relying on, say so in one line.
 - After every change, show the row the script printed. Do not summarise it.
 

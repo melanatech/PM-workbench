@@ -50,11 +50,11 @@ Apply `_source-triage.md` then `_fan-out.md`. Specifically:
 3. **Learning / user-research** — durable product or research facts missing from `learning/` or lacking a research summary → write/update with dated source paths. Strategy-frame and business-process baselines go here.
 4. **Competitive** — vendor claims in archive/research that are not in `competitive-log.md` / `state/competitive/` → append a dated section or capture stub labeled with access path (e.g. "from archive research, not live WebFetch").
 5. **Priorities** — only if sources clearly change this week's top 3 / leadership pressure / dated milestones; **proposal only** (Tier 3); do not invent or write silently from strategy-frame.
-6. **To-do proposals (never silent `/todo` add)** — rebuild or append `outputs/todo-proposals/[today]-context-reconcile.md`:
-   - Candidates from: open COM- I own or chase, INIT notes that imply a **concrete action**, competitive/strategy gaps with a named verify step I can run
-   - Same filter as `todo-worker` propose: **actions only**. Open assumptions/questions that are only "decide/confirm/define X" stay in assumptions (or get `next consumer: …`) — do **not** list them as to-do candidates
-   - Mark each: `new` / `already TODO-nnn` / `already in proposals` / `skip (not mine)` / `skip (decision or open question — not a to-do)`
-   - Header: `QUEUED — nothing added to registers/todos.csv`
+6. **COM twins + to-do proposals** — first, for each open COM- I own (`owner=me` or my name) that has no open TODO linking that COM-: run `python3 scripts/todo_register.py ensure-from-commitment --com COM-nnn --description "…" [--due …] [--source …]` (mechanical twin; say what you created). Then rebuild or append `outputs/todo-proposals/[today]-context-reconcile.md` for everything else:
+   - Candidates from: open COM- I **chase** (someone else owns), INIT notes that imply a **concrete action**, competitive/strategy gaps with a named verify step I can run
+   - Same filter as `todo-worker` propose: **actions only**. Open assumptions/questions that are only "decide/confirm/define X" stay in assumptions (or get `next consumer: …`) — do **not** list them as to-do candidates. Do not re-propose COMs already twinned.
+   - Mark each: `new` / `already TODO-nnn` / `already in proposals` / `skip (not mine)` / `skip (decision or open question — not a to-do)` / `skip (COM twin ensured)`
+   - Header: `QUEUED — freeform candidates only; COM twins may have been written via ensure-from-commitment`
 7. **Todos hygiene report** (read-only on `todos.csv` unless I approved changes): list open TODO-nnn that look stale, duplicate of a proposal, or contradicted by a resolved question. Propose `/todo drop` / `/todo update` / accept-from-proposals as a **PROPOSALS** block — do not edit `todos.csv` status/priority/dates without Tier 3 approval. Adding brand-new todos still goes through `/todo propose` accept.
 8. **Held → promoted** — for each source-index `hold` that now has a confirming primary source, promote via fan-out and `source_index.py promote`.
 

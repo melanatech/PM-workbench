@@ -31,7 +31,7 @@ Pick the authoritative surface for the question type, read it first, then second
 
 | Question type | Authoritative surface first | Then (only if needed) |
 |---|---|---|
-| Promises / due / "didn't I commit" / meeting action items | `registers/commitments.csv` (open/overdue; filter owner/due/topic) | todos → digests → specific meeting files |
+| Promises / due / "didn't I commit" / meeting action items | `registers/commitments.csv` (open/overdue; filter owner/due/topic); for work I still owe, also open `TODO-` rows with `links` containing that `COM-` (`origin=commitment`) | digests → specific meeting files |
 | My action list / TODO-nnn | `registers/todos.csv` via `scripts/todo_register.py` | digests / source links on the row |
 | What did we decide | `registers/decisions.csv` | digests → transcript for exact wording |
 | Initiative / feature status and links | `registers/initiatives.csv` | linked PRD/outputs; the tracker if delivery dates are disputed |

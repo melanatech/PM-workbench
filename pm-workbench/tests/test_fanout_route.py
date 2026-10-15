@@ -31,6 +31,7 @@ class FanoutRouteTests(unittest.TestCase):
             "strategy-frame": {3, 4, 5, 6, 12, 15},
             "semantic-definition": {3, 4, 6, 13, 15},
             "stakeholder-stance": {15},
+            "visual": {16},
         }
         self.assertEqual(set(fanout_route.ROUTES), set(expected))
         for key, surfaces in expected.items():
@@ -56,6 +57,7 @@ class FanoutRouteTests(unittest.TestCase):
         self.assertIn("Rule 23", text)
         self.assertIn("Rule 24", text)
         self.assertIn("state/source-index.csv", text)
+        self.assertIn("state/image-catalog.csv", text)
         self.assertIn("proposal only", text.lower())
         self.assertIn("business-level", text)
         for key in fanout_route.ROUTES:

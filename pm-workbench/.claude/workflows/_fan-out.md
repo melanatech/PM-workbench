@@ -34,10 +34,11 @@ python3 scripts/fanout_route.py --types decision,evidence
 | strategy-frame | 3, 4, 5, 6, 12, 15 | Company OKRs, planning Q&A, board/DOP decks. Dated frame in `learning/` (objectives, KRs, implications, inferences labeled); map `related_okr` on INIT rows they plausibly drive (mark hypothesis when the doc names no initiative); log dated metrics; name `/report strategy-refresh` as next consumer. **Surface 5 is proposal only (Tier 3)** — never write `current-priorities.md` directly. Do not skip as "business-level." |
 | semantic-definition | 3, 4, 6, 13, 15 | Product/report term, metric, or enumerated value with an agreed meaning (not a glossary acronym). Update learning entities / definition artifacts; note conflicts in assumptions; index the analysis. Acronyms stay `term` → 11 |
 | stakeholder-stance | 15 | Preference or position from a named stakeholder. Write the dated, sourced stance to `reference/context/people.md` via `_source-triage.md`; index the source |
+| visual | 16 | An image that was vision-read or indexed (screenshot, PDF page, walkthrough step, design). One-line catalog row only — not evidence |
 
-Surfaces: 1 registers (decisions, commitments, risks) · 2 `registers/evidence.csv` · 3 `registers/initiatives.csv` · 4 `reference/context/assumptions-and-open-questions.md` · 5 `reference/context/current-priorities.md` · 6 `learning/` · 7 `reference/user-research/` · 8 `state/competitive/` and `outputs/monthly/competitive-log.md` · 9 `outputs/todo-proposals/` · 10 `drafts/` · 11 `reference/context/glossary.md` · 12 `state/okr-history.csv` · 13 `state/analysis-index.csv` · 14 `state/web-search/` · 15 `state/source-index.csv`.
+Surfaces: 1 registers (decisions, commitments, risks) · 2 `registers/evidence.csv` · 3 `registers/initiatives.csv` · 4 `reference/context/assumptions-and-open-questions.md` · 5 `reference/context/current-priorities.md` · 6 `learning/` · 7 `reference/user-research/` · 8 `state/competitive/` and `outputs/monthly/competitive-log.md` · 9 `outputs/todo-proposals/` · 10 `drafts/` · 11 `reference/context/glossary.md` · 12 `state/okr-history.csv` · 13 `state/analysis-index.csv` · 14 `state/web-search/` · 15 `state/source-index.csv` · 16 `state/image-catalog.csv`.
 
-**Surface budget.** Do not add a fan-out surface unless a type has nowhere to go. Output staleness extends surface 13 (it is not a new surface). Entity links are written by `jira-reconcile`, not by this checklist. Surface 15 is the triage index; every classified source lands there via `_source-triage.md`.
+**Surface budget.** Do not add a fan-out surface unless a type has nowhere to go. Output staleness extends surface 13 (it is not a new surface). Entity links are written by `jira-reconcile`, not by this checklist. Surface 15 is the triage index; every classified source lands there via `_source-triage.md`. Surface 16 is the visual catalog (one line per image + related INIT-/EV- ids); no embeddings.
 
 ## Mechanical writes
 
@@ -47,6 +48,7 @@ No model reasoning for these. Call the script.
 - **Analysis** → `python3 scripts/analysis_index.py append --root <live> --topic-key "…" --path <rel> --kind <kind> --as-of YYYY-MM-DD --one-line "…" --primary-sources "…" --initiative-ids "…" --source-workflow <name>`. Idempotent by path. After the deliverable itself is updated, `append --refresh` clears `stale_since`.
 - **Staleness** → when a new fact shares an `initiative_ids` token or a `primary_sources` token with an indexed row: `python3 scripts/analysis_index.py mark-stale --root <live> --initiative-ids "…" --primary-sources "…" --since YYYY-MM-DD --reason "…" --except-path <the new output>`. Sets `stale_since` and `stale_reason`. Does not rewrite the PRD, brief, strategy, or roadmap. The earliest `stale_since` is kept.
 - **Source triage** → `python3 scripts/source_index.py append --root <live> --path <rel> --source-role … --temporal-status … --origin … --outcome … --reason "…" --entities "…" --summary "…"`. Then `match` / `promote` / `find-duplicate` as `_source-triage.md` requires.
+- **Visual** → `python3 scripts/image_catalog.py append --root <live> --path <image> --kind screenshot|pdf-page|walkthrough-step|design|diagram|other --one-line "…" --related-ids "INIT-…,EV-…" --parent-path <doc> [--vision-path <stem>.vision.md]`. Idempotent by path. Lookup: `match --entities` / `--related-ids` or `list`.
 
 ## End block
 

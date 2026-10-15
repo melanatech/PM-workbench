@@ -104,6 +104,12 @@ Storyboards, phase playgrounds, capability maps, prototypes, mockups:
 - Role `design-artifact`. Index and link to the matching initiative and
   strategy page as statements of **product intent**. Not facts or evidence.
 - Vision-read when they arrive as images or PDFs.
+- Every vision-read PNG (and each PDF page PNG kept) gets a
+  `state/image-catalog.csv` row via `scripts/image_catalog.py append`:
+  one line on what it shows, `related_ids` for any INIT-/EV-/DEC- it
+  touches, `parent_path` / `vision_path` when known. Sibling screenshots
+  of an indexed page still catalog (they are findable); source-index may
+  mark them `duplicate`.
 
 ### Other teams' business processes
 

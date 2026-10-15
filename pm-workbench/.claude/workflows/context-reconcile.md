@@ -51,8 +51,9 @@ Apply `_source-triage.md` then `_fan-out.md`. Specifically:
 4. **Competitive** — vendor claims in archive/research that are not in `competitive-log.md` / `state/competitive/` → append a dated section or capture stub labeled with access path (e.g. "from archive research, not live WebFetch").
 5. **Priorities** — only if sources clearly change this week's top 3 / leadership pressure / dated milestones; **proposal only** (Tier 3); do not invent or write silently from strategy-frame.
 6. **To-do proposals (never silent `/todo` add)** — rebuild or append `outputs/todo-proposals/[today]-context-reconcile.md`:
-   - Candidates from: open assumptions/questions that imply *my* action, open COM- I own or chase, INIT notes that imply follow-ups, competitive/strategy gaps that need a verify step
-   - Mark each: `new` / `already TODO-nnn` / `already in proposals` / `skip (not mine)`
+   - Candidates from: open COM- I own or chase, INIT notes that imply a **concrete action**, competitive/strategy gaps with a named verify step I can run
+   - Same filter as `todo-worker` propose: **actions only**. Open assumptions/questions that are only "decide/confirm/define X" stay in assumptions (or get `next consumer: …`) — do **not** list them as to-do candidates
+   - Mark each: `new` / `already TODO-nnn` / `already in proposals` / `skip (not mine)` / `skip (decision or open question — not a to-do)`
    - Header: `QUEUED — nothing added to registers/todos.csv`
 7. **Todos hygiene report** (read-only on `todos.csv` unless I approved changes): list open TODO-nnn that look stale, duplicate of a proposal, or contradicted by a resolved question. Propose `/todo drop` / `/todo update` / accept-from-proposals as a **PROPOSALS** block — do not edit `todos.csv` status/priority/dates without Tier 3 approval. Adding brand-new todos still goes through `/todo propose` accept.
 8. **Held → promoted** — for each source-index `hold` that now has a confirming primary source, promote via fan-out and `source_index.py promote`.

@@ -8,7 +8,7 @@ Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — 
 
 Input: $ARGUMENTS
 
-A to-do is something I intend to do. It is NOT a commitment (a promise to someone else, which lives in `registers/commitments.csv`) and NOT a decision. The list lives in `registers/todos.csv`. **Never edit that file by hand** — every change goes through `python3 scripts/todo_register.py` (IDs, dates and CSV quoting are handled by code, not by you). If a value contains quotes, pass it with `--stdin` and a quoted heredoc (see the script's header) so the shell never has to escape it.
+A to-do is something I intend to **do** (an action I can execute or chase). It is NOT a commitment (a promise to someone else → `registers/commitments.csv`), NOT a decision or confirmation (→ DEC row, Tier 3 confirm, or assumptions), and NOT an open definitional question ("what does MAPU mean" → assumptions). `propose` and capture workflows must use that action filter — see `todo-worker` propose mode. The list lives in `registers/todos.csv`. **Never edit that file by hand** — every change goes through `python3 scripts/todo_register.py` (IDs, dates and CSV quoting are handled by code, not by you). If a value contains quotes, pass it with `--stdin` and a quoted heredoc (see the script's header) so the shell never has to escape it.
 
 ## Route by the first word of the input
 

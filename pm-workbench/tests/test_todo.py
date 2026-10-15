@@ -169,6 +169,50 @@ class TodoScriptTests(unittest.TestCase):
         self.assertEqual(rows[2][4], "high")
         self.assertEqual(rows[1][11:13], ["2026-10-02", "2026-10-02"])
 
+    def test_ensure_from_commitment_creates_linked_twin(self):
+        result = self.todo(
+            "ensure-from-commitment",
+            "--com", "COM-012",
+            "--description", "Send Dana the export",
+            "--due", "2026-10-20",
+            "--source", "archive/meetings/x.md",
+            "--today", "2026-10-15",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("created TODO-001", result.stdout)
+        rows = read_rows(self.register)
+        self.assertEqual(rows[1][0], "TODO-001")
+        self.assertEqual(rows[1][1], "Send Dana the export")
+        self.assertEqual(rows[1][3], "2026-10-20")
+        self.assertEqual(rows[1][8], "COM-012")
+        self.assertEqual(rows[1][9], "commitment")
+        self.assertEqual(rows[1][10], "archive/meetings/x.md")
+
+    def test_ensure_from_commitment_is_idempotent(self):
+        args = (
+            "ensure-from-commitment",
+            "--com", "COM-012",
+            "--description", "Send Dana the export",
+            "--today", "2026-10-15",
+        )
+        first = self.todo(*args)
+        second = self.todo(*args)
+        self.assertEqual(first.returncode, 0, first.stderr)
+        self.assertEqual(second.returncode, 0, second.stderr)
+        self.assertIn("created TODO-001", first.stdout)
+        self.assertIn("existing TODO-001", second.stdout)
+        self.assertEqual(len(read_rows(self.register)), 2)  # header + one row
+
+    def test_ensure_from_commitment_rejects_bad_com(self):
+        result = self.todo(
+            "ensure-from-commitment",
+            "--com", "TODO-001",
+            "--description", "x",
+            "--today", "2026-10-15",
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertFalse(self.register.exists())
+
     def test_add_needs_description_and_valid_date_and_priority(self):
         self.assertEqual(self.todo("add").returncode, 1)
         self.assertEqual(self.todo("add", "--description", "x", "--due", "10/09").returncode, 1)

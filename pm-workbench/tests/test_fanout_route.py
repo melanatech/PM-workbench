@@ -60,6 +60,7 @@ class FanoutRouteTests(unittest.TestCase):
         self.assertIn("state/image-catalog.csv", text)
         self.assertIn("proposal only", text.lower())
         self.assertIn("business-level", text)
+        self.assertIn("ensure-from-commitment", text)
         for key in fanout_route.ROUTES:
             self.assertIn(key, text)
 

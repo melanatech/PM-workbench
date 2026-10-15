@@ -20,7 +20,7 @@ python3 scripts/fanout_route.py --types decision,evidence
 | Type | Surfaces | Write when |
 |---|---|---|
 | decision | 1, 3, 5 | A decision. 3 when an initiative is named (every INIT touched). 5 only if this week's priorities moved |
-| commitment | 1 | A PM-scoped promise |
+| commitment | 1 | A PM-scoped promise. When the PM **owns** the promise (owner `me` or the PM's own name), also run the mechanical twin to-do below — not a silent freeform todo add, and not surface 9 |
 | risk | 1, 5 | A risk. 5 only if it is top-of-mind this week |
 | evidence | 2, 3, 7 | A discovery signal about users/product. 7 when the source is research. Not for internal directions (use exploratory-thinking hold) |
 | metric | 12 | A pre-calculated number with an as-of date. Never recompute |
@@ -49,6 +49,7 @@ No model reasoning for these. Call the script.
 - **Staleness** → when a new fact shares an `initiative_ids` token or a `primary_sources` token with an indexed row: `python3 scripts/analysis_index.py mark-stale --root <live> --initiative-ids "…" --primary-sources "…" --since YYYY-MM-DD --reason "…" --except-path <the new output>`. Sets `stale_since` and `stale_reason`. Does not rewrite the PRD, brief, strategy, or roadmap. The earliest `stale_since` is kept.
 - **Source triage** → `python3 scripts/source_index.py append --root <live> --path <rel> --source-role … --temporal-status … --origin … --outcome … --reason "…" --entities "…" --summary "…"`. Then `match` / `promote` / `find-duplicate` as `_source-triage.md` requires.
 - **Visual** → `python3 scripts/image_catalog.py append --root <live> --path <image> --kind screenshot|pdf-page|walkthrough-step|design|diagram|other --one-line "…" --related-ids "INIT-…,EV-…" --parent-path <doc> [--vision-path <stem>.vision.md]`. Idempotent by path. Lookup: `match --entities` / `--related-ids` or `list`.
+- **Commitment the PM owns** → after the COM- row exists: `python3 scripts/todo_register.py ensure-from-commitment --com COM-nnn --description "…" [--due YYYY-MM-DD] [--source …]`. Idempotent: creates a `origin=commitment` to-do with `links=COM-nnn`, or no-ops if an open to-do already links that COM. Prefer COM `owner=me` for PM-owned promises. **Do not** twin when someone else owns the promise (chase stays a follow-up / propose candidate).
 
 ## End block
 

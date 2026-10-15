@@ -11,8 +11,8 @@ Input: $ARGUMENTS (typed, dictated as a voice memo, or pasted from a meeting-too
 This is the between-meetings version of `/capture meeting-closeout` — built for the 90 seconds you have before your next call or before you have to leave. Do the minimum, fast:
 
 1. Save the raw input verbatim to `inbox/meetings/[timestamp]-quick.md` with a timestamp. Nothing else required.
-2. If it's obviously one clear decision or one clear commitment (owner + date stated plainly), log it directly to the register. If it's ambiguous or needs judgment, don't guess — just save it raw and stop there.
-3. Respond with ONE line: what got saved, nothing more. No summary, no analysis, no "here's what I noticed."
+2. If it's obviously one clear decision or one clear commitment (owner + date stated plainly), log it directly to the register. If **I** own the commitment, also run `python3 scripts/todo_register.py ensure-from-commitment --com COM-nnn --description "…" [--due …] [--source inbox/meetings/…]` so it lands on my to-do list. If it's ambiguous or needs judgment, don't guess — just save it raw and stop there.
+3. Respond with ONE line: what got saved (include COM- and twin TODO- ids when created), nothing more. No summary, no analysis, no "here's what I noticed."
 
 **Full reconciliation against registers, initiatives, and Jira happens later** — at the next `/brief daily-brief` or nightly `/capture process-inbox` run, when there's actually time to do it right. This command exists specifically so "I don't have 5 minutes right now" is never a reason a decision goes unrecorded. If you have the actual 5 minutes, use `/capture meeting-closeout` instead — it does the real reconciliation this command defers.
 

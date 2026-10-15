@@ -33,6 +33,7 @@ SURFACES = {
     13: "state/analysis-index.csv",
     14: "state/web-search/",
     15: "state/source-index.csv",
+    16: "state/image-catalog.csv",
 }
 
 # Type -> surfaces to read and, when the item applies, write.
@@ -56,6 +57,7 @@ ROUTES = {
     "strategy-frame": (3, 4, 5, 6, 12, 15),
     "semantic-definition": (3, 4, 6, 13, 15),
     "stakeholder-stance": (15,),
+    "visual": (16,),
 }
 
 

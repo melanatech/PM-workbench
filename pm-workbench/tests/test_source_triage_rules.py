@@ -94,6 +94,11 @@ class SourceTriageRulesTests(unittest.TestCase):
         self.assertIn("source_index.py", RECONCILE)
         self.assertIn("people.md", PREP)
 
+    def test_image_catalog_required_after_vision(self):
+        self.assertIn("image-catalog.csv", TRIAGE)
+        self.assertIn("image_catalog.py", PROCESS)
+        self.assertIn("images catalogued", PROCESS.lower())
+
     def test_ask_budget(self):
         self.assertIn("Ask budget", TRIAGE)
         self.assertIn("at most one batch", TRIAGE.lower())

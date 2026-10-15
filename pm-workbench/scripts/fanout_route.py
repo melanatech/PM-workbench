@@ -32,11 +32,14 @@ SURFACES = {
     12: "state/okr-history.csv",
     13: "state/analysis-index.csv",
     14: "state/web-search/",
+    15: "state/source-index.csv",
 }
 
 # Type -> surfaces to read and, when the item applies, write.
 # Surface 3 is included for types that can name an initiative.
+# Surface 5 for strategy-frame is proposal-only (Tier 3); never a direct write.
 # Surface 10 is included for follow-up only when the workflow is already drafting a ticket.
+# Surface 15 is written by source triage for every classified source.
 ROUTES = {
     "decision": (1, 3, 5),
     "commitment": (1,),
@@ -50,6 +53,9 @@ ROUTES = {
     "follow-up": (9, 10),
     "analysis": (13,),
     "external-grounding": (14,),
+    "strategy-frame": (3, 4, 5, 6, 12, 15),
+    "semantic-definition": (3, 4, 6, 13, 15),
+    "stakeholder-stance": (15,),
 }
 
 

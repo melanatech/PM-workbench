@@ -30,6 +30,11 @@ The system needs its own product management. One line per item; move to EVOLVING
 - [ ] Baseline instrumentation: after ~3 weeks of run-log data, compare against pre-system time estimates
 
 ## Friction log (add as you go)
--
 
 - [x] 2026-10-05 process-inbox: unreadable sensitivity-labelled .docx re-exported and processed; extractor now kit-owned (PDFKit path included). Encrypted Office files still need human re-export.
+- [ ] 2026-10-15 process-inbox: scripts/extract_document.sh exits 0 but returns almost nothing for JS-rendered HTML (data held in an inline script; Commerce 2027 OKRs Oct12). Consider extracting inline-script data or warning on near-empty output.
+- [x] 2026-10-15 kit: company OKRs skipped as "business-level" — fixed via `strategy-frame` + `_source-triage.md`; guarded by `tests/test_source_triage_rules.py::test_business_level_is_forbidden_skip_reason` and `tests/test_fanout_route.py` strategy-frame routes.
+- [x] 2026-10-15 kit: definitions / semantic work only routable as glossary terms — fixed via `semantic-definition` type; guarded by fanout route + triage rules tests.
+- [x] 2026-10-15 kit: exploratory "things to think about" logged as EV-107..110 and triggered owner/decision questions — fixed via exploratory-thinking hold (no EV/DEC/COM); guarded by `test_exploratory_thinking_forbids_ev_and_owner_questions` and `test_parked_marker_honored`.
+- [x] 2026-10-15 kit: ordinary phrases ("end-to-end evals", "Airo supported features matrix") added to glossary — fixed via acronyms-only rule; guarded by `test_glossary_limited_to_acronyms`.
+

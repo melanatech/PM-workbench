@@ -28,6 +28,9 @@ class FanoutRouteTests(unittest.TestCase):
             "follow-up": {9, 10},
             "analysis": {13},
             "external-grounding": {14},
+            "strategy-frame": {3, 4, 5, 6, 12, 15},
+            "semantic-definition": {3, 4, 6, 13, 15},
+            "stakeholder-stance": {15},
         }
         self.assertEqual(set(fanout_route.ROUTES), set(expected))
         for key, surfaces in expected.items():
@@ -52,8 +55,22 @@ class FanoutRouteTests(unittest.TestCase):
         self.assertIn("Surface budget", text)
         self.assertIn("Rule 23", text)
         self.assertIn("Rule 24", text)
+        self.assertIn("state/source-index.csv", text)
+        self.assertIn("proposal only", text.lower())
+        self.assertIn("business-level", text)
         for key in fanout_route.ROUTES:
             self.assertIn(key, text)
+
+    def test_strategy_frame_surface_5_is_proposal_only_in_doc(self):
+        text = (WORKBENCH / ".claude/workflows/_fan-out.md").read_text(encoding="utf-8")
+        # Surface 5 for strategy-frame must be proposal-only (Tier 3).
+        self.assertRegex(
+            text,
+            r"strategy-frame[\s\S]{0,400}proposal only",
+            msg="strategy-frame must declare surface 5 proposal-only",
+        )
+        self.assertIn(15, fanout_route.SURFACES)
+        self.assertEqual(fanout_route.orphan_surfaces(), [])
 
 
 class StalenessTests(unittest.TestCase):

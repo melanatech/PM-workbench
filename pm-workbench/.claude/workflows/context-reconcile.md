@@ -35,24 +35,27 @@ Read (relevant rows / recent sections only):
 
 From the window, pick up to 12 highest-signal files (prefer customer calls, roadmap/board exports, research summaries, competitive log, strategy baselines). Prefer `reference/user-research/` and `learning/` summaries over re-reading raw binaries when a summary exists. Prefer an existing `<stem>.vision.md` over re-visioning every PNG when the vision file is fresh.
 
+Also load `state/source-index.csv` for the window: re-check rows with `outcome=hold` or `status=open` via `python3 scripts/source_index.py match --root <live> --entities "<topics from focus>"`. Promote when a primary source now confirms; conflict → assumptions.
+
 **If any selected source is a long strategy/deck/research pack** (multi-page PDF, large `.vision.md`, strategy memo, initiative-list sheet): **dispatch `internal-docs-reader`** with those paths + the reconcile focus before writing INIT notes. Work from its brief. Do **not** skim "for context constraints" or replace a full fan-out with a thinner vision-only summary (CLAUDE.md: no context shortchanging).
 
-For each source (or for the reader brief), ask: what durable claims exist here that are **missing** from the surfaces in `_fan-out.md`?
+For each source (or for the reader brief): apply `_source-triage.md` if it has no source-index row yet, then ask what durable claims are **missing** from the surfaces in `_fan-out.md`.
 
 ## Step 3 — reconcile (Tier 1 writes in this run)
 
-Apply `_fan-out.md`. Specifically:
+Apply `_source-triage.md` then `_fan-out.md`. Specifically:
 
-1. **Open questions** — every unresolved question found in sources or digests that is not already under `## Open` in `assumptions-and-open-questions.md` → append (dedupe). Fix hygiene: bullets under `## Resolved` that still say `open` → either move to Open or mark `resolved YYYY-MM-DD` with evidence.
-2. **Initiatives** — append cross-cutting notes / EV links to **every** INIT- a theme touches (not only the primary). Seed only when PM-scoped product work is clearly named and missing (same rules as meeting-closeout).
-3. **Learning / user-research** — durable product or research facts missing from `learning/` or lacking a research summary → write/update with dated source paths.
+1. **Open questions** — every unresolved question found in sources or digests that is not already under `## Open` in `assumptions-and-open-questions.md` → append (dedupe). Skip questions marked `parked YYYY-MM-DD` unless a new source touches them. Fix hygiene: bullets under `## Resolved` that still say `open` → either move to Open or mark `resolved YYYY-MM-DD` with evidence.
+2. **Initiatives** — append cross-cutting notes / EV links to **every** INIT- a theme touches (not only the primary). Seed only when PM-scoped product work is clearly named and missing (same rules as meeting-closeout). Raise `INITIATIVE CANDIDATE` when ≥3 criteria hold; do not create silently.
+3. **Learning / user-research** — durable product or research facts missing from `learning/` or lacking a research summary → write/update with dated source paths. Strategy-frame and business-process baselines go here.
 4. **Competitive** — vendor claims in archive/research that are not in `competitive-log.md` / `state/competitive/` → append a dated section or capture stub labeled with access path (e.g. "from archive research, not live WebFetch").
-5. **Priorities** — only if sources clearly change this week's top 3 / leadership pressure / dated milestones; do not invent.
+5. **Priorities** — only if sources clearly change this week's top 3 / leadership pressure / dated milestones; **proposal only** (Tier 3); do not invent or write silently from strategy-frame.
 6. **To-do proposals (never silent `/todo` add)** — rebuild or append `outputs/todo-proposals/[today]-context-reconcile.md`:
    - Candidates from: open assumptions/questions that imply *my* action, open COM- I own or chase, INIT notes that imply follow-ups, competitive/strategy gaps that need a verify step
    - Mark each: `new` / `already TODO-nnn` / `already in proposals` / `skip (not mine)`
    - Header: `QUEUED — nothing added to registers/todos.csv`
 7. **Todos hygiene report** (read-only on `todos.csv` unless I approved changes): list open TODO-nnn that look stale, duplicate of a proposal, or contradicted by a resolved question. Propose `/todo drop` / `/todo update` / accept-from-proposals as a **PROPOSALS** block — do not edit `todos.csv` status/priority/dates without Tier 3 approval. Adding brand-new todos still goes through `/todo propose` accept.
+8. **Held → promoted** — for each source-index `hold` that now has a confirming primary source, promote via fan-out and `source_index.py promote`.
 
 Do **not** re-append duplicate evidence rows. Link existing `EV-nnn` instead.
 

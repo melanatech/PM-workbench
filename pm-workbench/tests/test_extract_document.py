@@ -124,6 +124,35 @@ class ExtractDocumentTests(unittest.TestCase):
         out = Path(r.stdout.strip().splitlines()[-1])
         self.assertIn("rtf extract works", out.read_text(encoding="utf-8"))
 
+    def test_html_includes_embedded_javascript_data_when_visible_text_is_sparse(self):
+        src = self.tmp / "okr.html"
+        src.write_text(
+            """<!doctype html>
+<html>
+<head><title>Commerce OKRs</title><style>.app { display: grid; }</style></head>
+<body>
+  <main id="app">DOP Q&amp;A prep</main>
+  <script>
+    const OBJS = [
+      {n: 1, objective: "Grow commerce", krs: ["Increase adoption to 40%"]},
+      {n: 2, objective: "Improve retention", krs: ["Reduce churn to 5%"]}
+    ];
+    function render() { return OBJS.map(x => x.objective).join(", "); }
+  </script>
+</body>
+</html>
+""",
+            encoding="utf-8",
+        )
+        r = self.run_extract(src)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        text = Path(r.stdout.strip().splitlines()[-1]).read_text(encoding="utf-8")
+        self.assertIn("Commerce OKRs", text)
+        self.assertIn("## Embedded JavaScript data", text)
+        self.assertIn('objective: "Grow commerce"', text)
+        self.assertIn('krs: ["Reduce churn to 5%"]', text)
+        self.assertNotIn("function render", text)
+
     def test_unsupported_extension_exits_2(self):
         src = self.tmp / "deck.pptx"
         src.write_bytes(b"not a real pptx")

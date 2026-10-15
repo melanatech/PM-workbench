@@ -6,7 +6,8 @@
 #
 # Supported (best-effort, macOS-first):
 #   .txt .md .csv .tsv     — copy through
-#   .doc .docx .rtf .rtfd .html .htm .odt — textutil
+#   .doc .docx .rtf .rtfd .odt — textutil
+#   .html .htm             — visible text + static JS data fallback
 #   .pdf                  — pdftotext if installed, else PDFKit via swift
 #   .xlsx .xlsm           — scripts/extract_xlsx.py (stdlib; cell text as TSV per sheet)
 #                         — pass --formulas to also dump formula text + cached values
@@ -89,6 +90,28 @@ extract_textutil() {
 }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+extract_html() {
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "python3 required for HTML extraction. Re-export as .txt/.pdf or paste." >&2
+    return 2
+  fi
+  set +e
+  python3 "$SCRIPT_DIR/extract_html.py" "$abs" "$out" 2>/tmp/pmwb-extract-err.$$
+  code=$?
+  set -e
+  if [[ "$code" -ne 0 ]]; then
+    cat /tmp/pmwb-extract-err.$$ >&2 || true
+    rm -f /tmp/pmwb-extract-err.$$ "$out"
+    if [[ "$code" -eq 2 ]]; then
+      return 2
+    fi
+    return 3
+  fi
+  rm -f /tmp/pmwb-extract-err.$$
+  echo "$out"
+  return 0
+}
 
 extract_xlsx() {
   if ! command -v python3 >/dev/null 2>&1; then
@@ -206,8 +229,12 @@ case "$ext" in
   txt|md|csv|tsv|json|log)
     copy_through
     ;;
-  doc|docx|rtf|rtfd|html|htm|odt|webarchive)
+  doc|docx|rtf|rtfd|odt|webarchive)
     extract_textutil
+    exit $?
+    ;;
+  html|htm)
+    extract_html
     exit $?
     ;;
   pdf)

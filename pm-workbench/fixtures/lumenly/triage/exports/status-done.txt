@@ -1,0 +1,2 @@
+EXPORT reliability ticket LUM-423 is done and at 100%.
+(Status claim — tag needs-authority; verify in Jira when available.)

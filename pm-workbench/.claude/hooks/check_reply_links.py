@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""Stop hook: last assistant message must link every existing workspace path.
+"""Stop hook: note unlinked workspace paths in the last assistant message.
 
-Exit 2 → Claude Code asks the model to fix the reply in the same turn.
+Always exits 0. A blocking Stop hook makes Claude Code generate the reply
+again, which repeats the whole answer. Written markdown is still blocked by
+check_md_links.py on Write and Edit.
 """
 import json
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
-from _common import payload, root, block, warn
+from _common import payload, root, warn
 from _paths import find_unlinked_paths
 
 
@@ -56,15 +58,11 @@ try:
     if not unlinked:
         sys.exit(0)
     lines = [
-        "LINK CHECK FAILED — convert these existing paths to workspace-relative Markdown links:",
+        "Unlinked workspace paths in the reply (left as-is; not asking for another reply):",
     ]
     for u in unlinked:
-        lines.append(f"  `{u}` → `[{u}]({u})`")
-    lines.append(
-        "Rule 20: every existing file/folder mentioned in the reply must be clickable. "
-        "Rewrite the reply with links (exceptions: fenced code, shell commands, globs, missing paths)."
-    )
-    block("\n".join(lines))
+        lines.append(f"  {u} → [{u}]({u})")
+    warn("\n".join(lines))
 except SystemExit:
     raise
 except Exception as e:

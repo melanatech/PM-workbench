@@ -19,6 +19,11 @@ browser-profiles/
 .claude/CLAUDE.local.md
 .claude/skills/ux-guardrails/
 .claude/settings.local.json
+.cursor/skills/impeccable/
+.cursor/agents/impeccable-*.md
+PRODUCT.md
+DESIGN.md
+.impeccable/
 __pycache__/
 tools/clipboard-capture/SendToPMWorkbench/build/
 # reference/links.csv and roadmap/*.csv are trackable; review for company data before committing.

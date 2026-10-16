@@ -50,6 +50,22 @@ company policy allows, install from the Claude Code panel (exact IDs):
 /plugin install chrome-devtools-mcp@claude-plugins-official
 ```
 
+**Optional — Impeccable** ([impeccable.style](https://impeccable.style/#downloads)): design
+vocabulary for **internal** HTML / presentations in the live folder — not for
+merchant-facing `prototypes/` (those stay on company UX Guardrails +
+`frontend-design` / prototype-build). Install is user/live-only (not kit git):
+
+```sh
+# Claude Code (user scope — avoids writing into a symlinked kit .claude/)
+npx impeccable install -y --user --providers=claude-code --no-hooks
+# Cursor (project scope inside the live folder)
+cd ~/pm-live && npx impeccable install -y --project --providers=cursor --no-hooks
+```
+
+Then in chat: `/impeccable init` (or keep a live `PRODUCT.md` / soft `DESIGN.md`).
+Company palette is a preference, not a hard dependency. Details:
+[NEW-USER-SETUP.md §2b](NEW-USER-SETUP.md).
+
 Details and policy notes: [NEW-USER-SETUP.md §2b](NEW-USER-SETUP.md). These do
 not replace the Workbench Clipper, clipboard Services capture, or a live-folder
 `.mcp.json` Playwright bridge — they are additional access paths you must name

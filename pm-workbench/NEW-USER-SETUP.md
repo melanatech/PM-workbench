@@ -182,6 +182,7 @@ In the Claude Code panel:
 | `github` | Repo/PR lookups for prototypes and kit PRs (not a substitute for local `git`) |
 | `figma` | Design tokens / frames when `reference/design/` is thin |
 | `chrome-devtools-mcp` | Inspect a live Chrome tab (perf, network, DOM) — separate from the Workbench Clipper and Playwright `browser-bridge` |
+| **Impeccable** (optional, not a Claude marketplace plugin) | Internal HTML / presentation polish via `/impeccable …` ([install](https://impeccable.style/#downloads)). **Not** for merchant prototypes — use UX Guardrails + `frontend-design` there. Prefer: `npx impeccable install -y --user --providers=claude-code --no-hooks` plus Cursor project install under the live folder. Soft company design preference only; do not force private design-system packages. Note it in `.claude/CLAUDE.local.md` if you use it. |
 
 If a plugin is “not found,” refresh the marketplace:
 `/plugin marketplace update claude-plugins-official` (or

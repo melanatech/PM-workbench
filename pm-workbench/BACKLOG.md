@@ -39,4 +39,5 @@ The system needs its own product management. One line per item; move to EVOLVING
 - [x] 2026-10-15 kit: ordinary phrases ("end-to-end evals", "Airo supported features matrix") added to glossary — fixed via acronyms-only rule; guarded by `test_glossary_limited_to_acronyms`.
 - [x] 2026-10-15 kit: process-inbox / propose queued "confirm/decide/what does X mean" as to-dos — fixed via action-only filter in `todo-worker` propose + meeting-closeout / process-inbox / context-reconcile; guarded by `tests/test_todo_propose_rules.py`.
 - [x] 2026-10-15 kit: promises I own only lived in commitments.csv, so they never showed on my to-do list — fixed via `todo_register.py ensure-from-commitment` + closeout/quick-close/reconcile/fan-out wiring; guarded by `test_ensure_from_commitment_*` and `test_pm_owned_commitment_twins_a_todo`.
+- [x] 2026-10-15 kit: Claude Code still prompted for Atlassian MCP after allow changes — root cause was invalid `mcp__*` (skipped); fixed via server-scoped `mcp__plugin_atlassian_atlassian__*` in kit + user settings; guarded by `tests/test_settings_profiles.py`.
 

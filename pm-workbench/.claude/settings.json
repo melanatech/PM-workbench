@@ -38,13 +38,16 @@
       "Grep",
       "WebSearch",
       "WebFetch",
+      "mcp__plugin_atlassian_atlassian__*",
+      "mcp__browser-bridge__*",
       "mcp__browser-bridge__browser_snapshot",
       "mcp__browser-bridge__browser_navigate",
       "mcp__browser-bridge__browser_navigate_back",
       "mcp__browser-bridge__browser_tabs",
       "mcp__browser-bridge__browser_take_screenshot",
       "mcp__browser-bridge__browser_wait_for",
-      "mcp__browser-bridge__browser_console_messages"
+      "mcp__browser-bridge__browser_console_messages",
+      "mcp__ux_guardrails__*"
     ],
     "deny": [
       "mcp__browser-bridge__browser_click",

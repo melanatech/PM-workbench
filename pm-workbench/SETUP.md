@@ -77,8 +77,8 @@ mode indicator. Your build may only show a subset — **Auto is not always liste
 **To reduce Bash prompts without Auto:**
 
 1. Prefer **allow rules**, not mode switching. Workbench defaults live in
-   `~/.claude/settings.json` as `Bash(python3 *)` (and similar). **Start a new
-   Claude Code conversation** after changing that file — an open chat keeps the
+   `.claude/settings.json` (and optional `~/.claude/settings.json`). **Start a new
+   Claude Code conversation** after changing those files — an open chat keeps the
    old rules.
 2. In Claude Code, type `/permissions` and add allow rules for commands that still
    prompt (exact strings Claude shows in the prompt).
@@ -88,6 +88,15 @@ mode indicator. Your build may only show a subset — **Auto is not always liste
    permissions**, then pick **Bypass permissions** from the mode menu if it appears.
 
 `Edit automatically` alone will keep asking for `python3` — that is expected.
+
+**MCP allow rules (Atlassian / plugins):** Claude Code **skips** unanchored allow
+globs such as `mcp__*` — they do nothing and you keep getting approval prompts.
+Allow a **named server** instead: `mcp__plugin_atlassian_atlassian__*` (all tools
+from the official Atlassian plugin), `mcp__browser-bridge__*` (reads; click/type
+stay on `deny`), `mcp__ux_guardrails__*`. Per-tool allows (`…__getJiraIssue`) only
+cover that one tool; a new tool name prompts again. Kit profiles ship the
+server-scoped rules; copy them into `~/.claude/settings.json` if you edited that
+file by hand.
 
 File path allows must use `Edit(./…)` — Claude Code 2.1+ rejects `Write(./…)` in permissions.allow (scheduled `claude -p` exits 1 immediately).
 
@@ -118,13 +127,9 @@ File path allows must use `Edit(./…)` — Claude Code 2.1+ rejects `Write(./�
       "Agent",
       "WebSearch",
       "WebFetch",
-      "mcp__browser-bridge__browser_snapshot",
-      "mcp__browser-bridge__browser_navigate",
-      "mcp__browser-bridge__browser_navigate_back",
-      "mcp__browser-bridge__browser_tabs",
-      "mcp__browser-bridge__browser_take_screenshot",
-      "mcp__browser-bridge__browser_wait_for",
-      "mcp__browser-bridge__browser_console_messages"
+      "mcp__plugin_atlassian_atlassian__*",
+      "mcp__browser-bridge__*",
+      "mcp__ux_guardrails__*"
     ],
     "deny": [
       "mcp__browser-bridge__browser_click",

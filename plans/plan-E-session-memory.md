@@ -478,8 +478,8 @@ to turn on.
    `logs/scheduled-runs.csv`, and a deliberately broken job shows up in the
    next daily brief. This also closes the Plan D first-run checks in BACKLOG.
 
-Build steps 1, 2 and 5 at the start of Phase 2, so each later phase installs
-its own job as part of being done. Install `metrics-snapshot`,
+Build steps 1, 2 and 5 right after Phase 0, before Part 1, so each later phase
+installs its own job as part of being done. Install `metrics-snapshot`,
 `workbench-health` and `monthly-review` immediately, before Part 1, so the
 baseline exists before anything changes; otherwise there is no "before" to
 compare Plan E against. `usage-backfill` and `decisions-integrity` follow as

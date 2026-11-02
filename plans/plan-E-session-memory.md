@@ -72,6 +72,26 @@ Findings from reading the repo on 2026-11-02. Confirm each before relying on it.
   installing code from this repo works, and third-party plugin marketplaces
   are allowed (the company runs one).
 
+## Before Phase 0: fix the failing test on main
+
+`test_generalization.GeneralizationTests.test_tracked_kit_does_not_name_a_company_ux_checker`
+fails on `main` as of commit 74ffd8c, before any Plan E change. The test bans
+the strings "the company UX checker", "company-ux-checker" and "the company UX checker" in tracked
+kit files, and two lines name it:
+
+- `pm-workbench/NEW-USER-SETUP.md` line 185 (the Impeccable row: "use UX
+  Guardrails + `frontend-design` there")
+- `pm-workbench/SETUP.md` line 55
+
+Replace the name with a generic phrase (for example "your company's UX
+checker, if you have one, named in `.claude/CLAUDE.local.md`"), keeping the
+meaning. Do not weaken the test. The `mcp__ux_guardrails__*` allow entry in
+the three settings files doesn't trip the test (underscores); leave it unless
+the user wants it generalized too. Run the full suite and confirm only the
+two tests that read the machine's own `~/.claude/settings.json` can still fail
+on a machine whose user settings differ from the kit. Commit this on its own,
+separate from Plan E work, so CI on `main` is green before Phase 1 starts.
+
 ## Phase 0: confirm before building
 
 Report results, then stop for review.
@@ -102,6 +122,13 @@ Report results, then stop for review.
    it does, Part 2 ships as a plugin; if not, as an install script.
 5. **Transcript fields:** where timestamps, user text, assistant text, tool
    errors and `message.usage` live, using `transcripts.py` as the reference.
+6. **Cost baseline with optimAIzr.** Run `npx optimaizr` and
+   `npx optimaizr sessions` once on the work machine and save the summary
+   numbers (not prompts) to the Phase 0 report: share of spend on re-reading
+   context, cold-cache returns and their cost, and the costliest sessions.
+   Read its SECURITY.md first; it states it runs locally and reads token
+   counts and tool-call arguments, not prompts. This is the "before" picture
+   the weekly review compares against. See "Relationship to optimAIzr" below.
 
 ## Part 1: register supersession in the workbench (Phase 1)
 
@@ -137,6 +164,42 @@ Goal: a corrected decision stops being cited, without breaking rule 7
    resolution check to context-reconcile. If it didn't, leave it.
 8. **Out of scope unless Phase 0 shows a problem:** evidence.csv, risks,
    commitments (current-state registers already update in place with status).
+8a. **Fresh start for existing registers.** A script,
+   `scripts/register_reset.py --root ~/pm-live`, so the user can stop carrying
+   old, possibly stale rows without breaking rule 7 (nothing is deleted).
+    1. `--dry-run` by default. With `--apply`, first copy every file in
+       `registers/` plus `reference/context/assumptions-and-open-questions.md`
+       to `archive/registers-<YYYY-MM-DD>/`, unchanged. The archive is the
+       full history; outputs and `source_link`s that cite old ids still
+       resolve there.
+    2. Propose a carry-forward list as one Tier 2 batch: decisions that are
+       still active (after the migration in step 5, so reversed ones are
+       already excluded), commitments and risks not closed, to-dos not done
+       or dropped, initiatives not killed, open questions not resolved. For
+       each, a one-line reason it might be stale (older than 60 days, no
+       mention in recent outputs, an `affects` value with a later decision).
+       The user ticks what to keep. Evidence and research-participants are
+       history only and are not carried; they stay in the archive.
+    3. Write new register files with the current headers (including
+       `supersedes`) and only the kept rows. Ids keep their original values so
+       existing references still work; new rows continue numbering from the
+       highest old id, so ids never collide with the archive.
+    4. Log the reset to `logs/run-log.csv` and add a dated line to
+       `reference/context/current-priorities.md` saying registers were reset
+       and where the archive is, so later workflows don't treat missing rows as
+       never having existed (rule 16).
+    5. Make the register-write hook and `/sync rotate-registers` agree with
+       this: BACKLOG already notes rotation conflicts with the hook's "no lost
+       rows" check. The reset runs as a script outside the hook, and the hook
+       accepts a fresh file when an archive copy dated today exists. Resolve
+       the rotate-registers item the same way.
+    6. Tests: dry run writes nothing; apply archives byte-for-byte; kept ids
+       unchanged; next id continues numbering; the hook accepts the reset and
+       still rejects an ordinary write that drops rows.
+
+   Run the reset after the Part 1 migration, not before, so the carry-forward
+   list already knows which decisions were reversed. Session-memory registers
+   (Part 2) start empty and need no reset.
 9. **Tests** in `pm-workbench/tests/`: chain resolution (A superseded by B
    superseded by C → only C active), multi-id supersedes, hook rejection of a
    dangling id, the Lumenly fixture still scoring the same, and a check that
@@ -154,6 +217,35 @@ after backing it up, with `--uninstall`. Either way: no third-party packages,
 Python standard library only, every script fails open (exits 0 on any error
 or unrecognized payload), and every headless call sets
 `SESSION_MEMORY_INTERNAL=1`, which makes every script exit 0 immediately.
+
+### Relationship to optimAIzr
+
+[optimAIzr](https://github.com/blendbunjaku/optimaizr) is an open-source local
+CLI (MIT, first released September 2026) that overlaps with part of Phase 3.
+Its `guard` uses Claude Code hooks to hold a message sent to a long
+conversation whose cache has expired, once, with the cost; sending again goes
+through. It also has a cache-countdown status line, a `/optimaizr handoff`
+note, cost reports per session, and a `results` command that compares spend
+before and after a change.
+
+Use it for measurement, not as a dependency:
+
+- **Baseline and results:** Phase 0 step 6, and the weekly review compares
+  against it. Its numbers are cost per session and cold-cache rewrites; the
+  `rework_correction` share from `session_usage.py` measures forgetting. Both
+  are needed, because Plan E targets both.
+- **Not its guard.** Its guard is deliberately soft (a resend goes through),
+  and the user wants a block that needs `!force`. Running both guards means
+  two hooks deciding on the same prompt. Pick ours; if the user prefers its
+  guard after trying it, drop Phase 3's guard and keep the detector.
+- **Not its handoff.** Session registers already hold the handoff state.
+- **Optional:** its status line, which doesn't conflict with anything here.
+- Its README figures (one-hour cache window, dollar amounts) are the author's.
+  Calibrate thresholds from this machine's transcripts (see Testing), not
+  from its README.
+
+It is young and changing quickly. Check its current README and SECURITY.md
+before running it, and pin the version used for the baseline.
 
 ### The register
 
@@ -335,6 +427,7 @@ revival of a large conversation or one round of rework.
 ## Rollback
 
 Part 1: the `supersedes` column is additive; reverting the readers to raw
-`decisions.csv` restores old behavior. Part 2: uninstall the plugin, or run
+`decisions.csv` restores old behavior. A register reset is undone by copying
+the dated folder in `archive/` back into `registers/`. Part 2: uninstall the plugin, or run
 `install.py --uninstall`, which restores the settings backup. Registers can
 stay; nothing reads them without the hooks.

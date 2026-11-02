@@ -5,6 +5,7 @@ The system needs its own product management. One line per item; move to EVOLVING
 ## Known open items (from reviews, not yet built)
 - [x] **Plan 8:** Lumenly isolate smoke of `/brief daily-brief` and `/capture meeting-closeout` against the lean CLAUDE.md. Completed 2026-10-14 (fixture score found 1, missed 0, invented 0).
 - [x] **Session token usage mining (phase 1):** `scripts/session_usage.py` L0–L2a `--backfill` → `state/usage-history.csv`; `workbench_metrics` Session tokens info rows; docs in `workbench-metrics.md`; monthly-review surfaces them. Claude Code / pm-live only.
+- [ ] **Plan E:** register supersession (decisions that were later reversed keep being cited) and user-level session memory for long Claude Code sessions. Plan: [../plans/plan-E-session-memory.md](../plans/plan-E-session-memory.md). Not started; Phase 0 verifies the cause on real registers first.
 - [ ] **Session usage L2b polish:** exercise `--classify` once via `claude -p` (existing login); optional scheduled `--backfill` (no classify) after a week of use. Still never invent "tokens saved."
 - [x] **Shared prototype package** (`prototypes/_shared/` + npm `file:` deps): convention in `reference/design/shared-prototype-package.md`; soft catalog keeps unpromoted pieces. Live package is created in `~/pm-live` (not kit git).
 - [x] First-run live workspace bootstrap (`scripts/create_live_workspace.py` + `NEW-USER-SETUP.md`); scheduled wrapper uses `--permission-mode dontAsk` (Claude Code 2.1+ rejects `--permission-prompts`)

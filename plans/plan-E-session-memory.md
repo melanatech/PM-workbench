@@ -428,18 +428,33 @@ to turn on.
    absolute paths to `python3` and `claude` resolved at install time.
    `--dry-run` prints the plists, `--uninstall` removes them, and a re-run is
    idempotent. It prints what's installed and when each next runs. Offer to
-   install the existing workflow schedules (daily-brief, inbox-watch,
-   todo-sweep, weekly-update-draft, monthly-review) in the same pass, as one
-   Tier 2 choice; don't switch them on silently.
-3. **The jobs Plan E adds:**
+   install the other existing workflow schedules (daily-brief, inbox-watch,
+   todo-sweep, weekly-update-draft) in the same pass, as one Tier 2 choice;
+   don't switch them on silently. All schedules default to weekdays.
+3. **The jobs Plan E schedules.** Weekdays only unless noted; nothing is
+   expected to run on weekends. The first three are the workbench's
+   effectiveness measurement from Plan C, which exists as code but only runs
+   when asked; they are part of this plan, not an optional extra.
 
 | Job | When | Model | What it does |
 |---|---|---|---|
-| `usage-backfill` | Nightly, 2:30am | None | `session_usage.py --backfill` (rules-first categories, including `rework_correction`) |
-| `usage-classify` | Sundays, 3:00am | Haiku, bulk | `session_usage.py --reclassify` on rows the rules left unlabeled |
-| `register-audit` | Nightly, 3:15am | Haiku | Runs the session-register audit on any session with captures since the last audit, so stale entries are caught even if a session never reached 10 captures |
+| `metrics-snapshot` | Fridays, 4:00pm | None | `workbench_metrics.py --snapshot` → `state/health-history.csv`. The first run starts the 21-day baseline, so install this first. |
+| `workbench-health` | Fridays, 4:15pm | None | `workbench_health.py` counts: runs, BLOCKED, failures, unused workflows. Feeds the daily brief and the monthly review. |
+| `monthly-review` | First weekday of the month, 7:00am | Per `routes.json` | `/report monthly-review` (already a task in `run_scheduled.py`). Writes `outputs/monthly/`; manual notes it can't fill are marked `[NEEDS INPUT]` (rule 22). |
+| `usage-backfill` | Weeknights, 2:30am | None | `session_usage.py --backfill` (rules-first categories, including `rework_correction`) |
+| `usage-classify` | Fridays, 3:00am | Haiku, bulk | `session_usage.py --reclassify` on rows the rules left unlabeled |
+| `register-audit` | Weeknights, 3:15am | Haiku | The session-register audit on any session with captures since the last audit, so stale entries are caught even if a session never reached 10 captures |
+| `decisions-integrity` | Weeknights, 3:30am | None | Checks `decisions.csv`: dangling `supersedes` ids, decisions with the same `affects` value and no link between them (possible unrecorded reversals), outputs from the last 7 days that cite a superseded id |
 | `memory-weekly-review` | Mondays, 6:00am | Sonnet | The Phase 5 review: session-memory logs, `rework_correction` share before and after, optimAIzr cost numbers if installed, proposed tuning changes |
-| `decisions-integrity` | Nightly, 3:30am | None | Checks `decisions.csv`: dangling `supersedes` ids, decisions with the same `affects` value and no link between them (possible unrecorded reversals), outputs from the last 7 days that cite a superseded id |
+
+   **Plan E's own effect goes into the same metrics.** Add to
+   `workbench_metrics.py` (and `reference/workbench-metrics.md`): the weekly
+   `rework_correction` share of turns, superseded decisions still cited in
+   outputs (from `decisions-integrity`), and session-memory counts (entries
+   captured, superseded, dropped by audit; pick-up offers accepted). Then the
+   monthly review reports whether Plan E helped alongside everything else,
+   instead of in a separate report nobody opens. Like the rest of the file,
+   these are counts from code, never model estimates.
 
    Model jobs run after the script jobs so they read fresh data. Each job is
    small enough to finish within the run cap; if the cap is hit, the next
@@ -454,15 +469,21 @@ to turn on.
      never applied by a scheduled run. They wait for approval (rule 22).
 5. **Health check.** `workbench_health.py` reports each installed job's last
    successful run, and the daily brief flags any job that hasn't succeeded in
-   48 hours. A schedule that silently stopped is the same as no schedule.
+   72 hours, so a Friday run that worked doesn't raise a flag on Monday. Jobs
+   that run weekly or monthly are flagged when they miss their own slot by
+   more than a day. A schedule that silently stopped is the same as no
+   schedule.
 6. **Done when** `install_schedules.py` has run on the work machine, `--list`
    shows every job, each has logged at least one successful run in
    `logs/scheduled-runs.csv`, and a deliberately broken job shows up in the
    next daily brief. This also closes the Plan D first-run checks in BACKLOG.
 
 Build steps 1, 2 and 5 at the start of Phase 2, so each later phase installs
-its own job as part of being done. `usage-backfill` and `decisions-integrity`
-can be installed as soon as Part 1 lands.
+its own job as part of being done. Install `metrics-snapshot`,
+`workbench-health` and `monthly-review` immediately, before Part 1, so the
+baseline exists before anything changes; otherwise there is no "before" to
+compare Plan E against. `usage-backfill` and `decisions-integrity` follow as
+soon as Part 1 lands.
 
 ## Testing for Part 2
 

@@ -405,6 +405,65 @@ A `SessionStart` (startup) hook has Claude offer the report in one line the
 next time a session starts. Changes apply only after the user approves them;
 the system never rewrites its own rules about what to remember.
 
+## Schedules: nothing in this plan waits to be asked
+
+Every recurring job runs on the OS scheduler, and its results reach the user
+where they already look. A script that exists but only runs on request
+doesn't count as done.
+
+**Current gap.** The kit's scheduler entry point, `scripts/run_scheduled.py`,
+runs workflows (slash commands through `claude -p`) with good guardrails:
+pause file, daily cap, lock, BLOCKED logging. But installing a schedule means
+pasting a crontab or writing a launchd plist by hand (SCHEDULING.md), and the
+Plan D first-run checks in BACKLOG are still open. So it's likely nothing is
+scheduled today. Plan E fixes that for its own jobs and makes the kit's easy
+to turn on.
+
+1. **Script tasks in `run_scheduled.py`.** Add a second task type that runs a
+   kit script directly (no `claude -p`, no model, no permission questions),
+   with the same pause, lock, cap and logging. `--list` shows both kinds.
+2. **`scripts/install_schedules.py`.** Writes one launchd agent per job into
+   `~/Library/LaunchAgents/` (launchd rather than cron: a job missed while the
+   laptop slept runs once on wake), each calling `run_scheduled.py`, with
+   absolute paths to `python3` and `claude` resolved at install time.
+   `--dry-run` prints the plists, `--uninstall` removes them, and a re-run is
+   idempotent. It prints what's installed and when each next runs. Offer to
+   install the existing workflow schedules (daily-brief, inbox-watch,
+   todo-sweep, weekly-update-draft, monthly-review) in the same pass, as one
+   Tier 2 choice; don't switch them on silently.
+3. **The jobs Plan E adds:**
+
+| Job | When | Model | What it does |
+|---|---|---|---|
+| `usage-backfill` | Nightly, 2:30am | None | `session_usage.py --backfill` (rules-first categories, including `rework_correction`) |
+| `usage-classify` | Sundays, 3:00am | Haiku, bulk | `session_usage.py --reclassify` on rows the rules left unlabeled |
+| `register-audit` | Nightly, 3:15am | Haiku | Runs the session-register audit on any session with captures since the last audit, so stale entries are caught even if a session never reached 10 captures |
+| `memory-weekly-review` | Mondays, 6:00am | Sonnet | The Phase 5 review: session-memory logs, `rework_correction` share before and after, optimAIzr cost numbers if installed, proposed tuning changes |
+| `decisions-integrity` | Nightly, 3:30am | None | Checks `decisions.csv`: dangling `supersedes` ids, decisions with the same `affects` value and no link between them (possible unrecorded reversals), outputs from the last 7 days that cite a superseded id |
+
+   Model jobs run after the script jobs so they read fresh data. Each job is
+   small enough to finish within the run cap; if the cap is hit, the next
+   night catches up.
+4. **Results surface without asking.** Nothing new to remember to open:
+   - The daily brief gets one line when something needs attention: a stale
+     citation found, a weekly review waiting, a job BLOCKED. Silent otherwise
+     (the brief's existing suppression rule).
+   - A `SessionStart` (startup) hook offers a waiting review in one line
+     (Phase 5), so it reaches the user in any project, not only `~/pm-live`.
+   - Proposed changes (thresholds, Haiku instructions, supersession links) are
+     never applied by a scheduled run. They wait for approval (rule 22).
+5. **Health check.** `workbench_health.py` reports each installed job's last
+   successful run, and the daily brief flags any job that hasn't succeeded in
+   48 hours. A schedule that silently stopped is the same as no schedule.
+6. **Done when** `install_schedules.py` has run on the work machine, `--list`
+   shows every job, each has logged at least one successful run in
+   `logs/scheduled-runs.csv`, and a deliberately broken job shows up in the
+   next daily brief. This also closes the Plan D first-run checks in BACKLOG.
+
+Build steps 1, 2 and 5 at the start of Phase 2, so each later phase installs
+its own job as part of being done. `usage-backfill` and `decisions-integrity`
+can be installed as soon as Part 1 lands.
+
 ## Testing for Part 2
 
 Unit tests with fixture transcripts for every script: fail-open on bad,

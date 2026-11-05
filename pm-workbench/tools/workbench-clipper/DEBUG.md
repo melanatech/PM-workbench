@@ -14,11 +14,15 @@ Older clipper versions only read whatever was mounted when you clicked, or scrol
 in large jumps (`scrollIntoView` + 55% steps) and stopped at ~95% coverage — rows
 were skipped and speakers were lost.
 
-**Clipper v0.6.0+** does one **slow overlapping scroll** (~35% of panel height per
-step), waits until the DOM settles (~250 ms quiet), checks `aria-posinset` gaps,
-parses speaker+time from each entry’s `aria-label`, and sets `incomplete: false`
-**only** when every position from 1..`aria_setsize` was collected. Leave the tab
-focused; a long meeting can take a few minutes.
+**Clipper v0.6.1** scrolls the transcript (~28% of the panel per step) and does
+**not** stop when the scroll position sticks at the current scroll height.
+A virtualized list reports that height before the real end. While rows are
+missing, a stuck position steps back, sends a wheel event, and continues if
+the height or the row count grows. It gives up only after eight probes that
+grow neither. Holes are then jumped to by position, not by looking up rows
+that are not in the page. `incomplete: false` only when every position from
+1..`aria_setsize` was collected. Leave the tab focused; a long meeting can
+take a few minutes. Reload the extension or Chrome keeps 0.6.0 and the old stop.
 
 **Encrypted CDN payload:** Stream fetches `/cdnmedia/transcripts` encrypted
 (`kid` key ID). The clipper does **not** decrypt that response. Supported path =
@@ -26,7 +30,7 @@ displayed DOM text. If Download is enabled, drop a `.vtt`/`.docx` in `inbox/meet
 
 ## Quick verify after a clip
 
-1. `chrome://extensions` → PM Workbench Clipper → confirm version **0.6.0+** → **Reload**.
+1. `chrome://extensions` → PM Workbench Clipper → confirm version **0.6.1** → **Reload**.
 2. Open a Stream transcript → *Send to PM Workbench* → *Meeting notes / summary*.
    Wait — do not switch tabs until the count notification appears.
 3. Open the `.md` in Downloads / inbox and check frontmatter:
@@ -60,10 +64,9 @@ If `mounted << setSize`, virtualization is active — a non-scrolling scraper wi
 
 ## Fallback if scroll still misses rows
 
-1. Reload extension 0.6.0+ and recapture (primary).
-2. If Download is enabled: save `.vtt`/`.docx` → `inbox/meetings/` → `/capture process-inbox`
-   (`extract_document.sh` parses `.vtt`).
-3. Do **not** ask the kit to decrypt `/cdnmedia/transcripts` unless IT/security approves.
+1. Confirm version **0.6.1** and that the extension was reloaded, then recapture.
+2. Teams blocks `.vtt` download when you are not the meeting owner. Do not use a transcript download as the plan for those meetings.
+3. Do **not** decrypt `/cdnmedia/transcripts`.
 
 ## Do not use Selection only for long meetings
 

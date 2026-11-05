@@ -2,7 +2,7 @@
 
 **What it does:** right-click a page (or a selection) in Chrome → *Send to PM Workbench* → pick a category → a markdown file lands in `~/Downloads/pm-workbench-inbox/<category>/`, plus a viewport screenshot PNG for non-meeting categories. **Walkthrough mode** records clicks/URLs + viewport PNGs in your **logged-in** tab until you Stop (SSO-safe alternative to Playwright). It never auto-clicks, types, submits, or talks to the network.
 
-**Version:** **0.6.0+** required for complete Stream transcripts (slow overlapping scroll + speaker labels). **0.5.0+** for walkthrough. **After updating this folder:** open `chrome://extensions` → find PM Workbench Clipper → **Reload**. Until you reload, Chrome keeps the old menu.
+**Version:** **0.6.1** for Stream transcripts. The scroll keeps going when the list reports a short height, and it does not save just because the scroll position stopped moving. **0.5.0+** for walkthrough. **After updating this folder:** open `chrome://extensions` → find PM Workbench Clipper → **Reload**. Until you reload, Chrome keeps the old scroll and clips will still stop early.
 
 **Why Downloads (and not `inbox/` directly):** Chrome's extension downloads API can only write under the browser Downloads folder.
 
@@ -32,7 +32,7 @@ python3 scripts/pull_clips.py
 | **No** | Embedded page images, video frames, automatic full-page stitch, keystroke/password values, decryption of Stream’s encrypted CDN transcript payload |
 | **Menu** | Categories scrape transcript/page; **Selection only**; **Screenshot only**; **Walkthrough** Start / Mark / Stop |
 
-Stream tip: right-click the transcript → *Meeting notes / summary* and **leave the tab open** — a long meeting can take a few minutes. Check the notification (`entries/aria_setsize`). Frontmatter must show `incomplete: false` and `speakers: [...]`. See [DEBUG.md](DEBUG.md) if clips still stop early. Do not use **Selection only** for long meetings. **Download** on Stream is often disabled for view-only recordings; the DOM capture is the supported path.
+Stream tip: right-click the transcript → *Meeting notes / summary* and **leave the tab open** — a long meeting can take a few minutes. Check the notification (`entries/aria_setsize`). Frontmatter must show `incomplete: false` and `speakers: [...]`. See [DEBUG.md](DEBUG.md) if clips still stop early. Do not use **Selection only** for long meetings. Teams blocks transcript download when you are not the meeting owner, so the on-screen scroll is the capture.
 
 ## Install (Chrome or Edge, macOS or Windows)
 1. Open `chrome://extensions` (Edge: `edge://extensions`).

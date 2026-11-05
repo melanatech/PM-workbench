@@ -96,6 +96,36 @@ async function extractPagePayload() {
     return new Promise((r) => setTimeout(r, ms));
   }
 
+  const policy = (typeof globalThis !== 'undefined' && globalThis.pmwbScrollPolicy) || {
+    formatMissing: function (missing) {
+      if (!missing || !missing.length) return '';
+      const parts = [];
+      let start = missing[0];
+      let prev = missing[0];
+      for (let i = 1; i < missing.length; i += 1) {
+        const n = missing[i];
+        if (n === prev + 1) { prev = n; continue; }
+        parts.push(start === prev ? String(start) : start + '-' + prev);
+        start = n;
+        prev = n;
+      }
+      parts.push(start === prev ? String(start) : start + '-' + prev);
+      return parts.join(',');
+    },
+    scrollTopForPos: function (scrollHeight, clientHeight, pos, setSize) {
+      const maxTop = Math.max(0, scrollHeight - clientHeight);
+      const size = setSize > 1 ? setSize : 2;
+      const ratio = Math.min(1, Math.max(0, (pos - 1) / (size - 1)));
+      return Math.round(ratio * maxTop);
+    },
+    noteProbe: function (dead, probe) {
+      const grew = probe && (probe.countGrew || probe.heightGrew);
+      if (grew) return { dead: 0, giveUp: false };
+      const next = (dead || 0) + 1;
+      return { dead: next, giveUp: next >= 8 };
+    }
+  };
+
   function pushLinks(root) {
     for (const a of Array.from((root || document).querySelectorAll('a[href]'))) {
       const href = a.href || a.getAttribute('href') || '';
@@ -184,19 +214,41 @@ async function extractPagePayload() {
     };
   }
 
-  function findScrollParent(start) {
+  function scrollCandidates(start) {
+    const found = [];
+    const seen = new Set();
     let el = start;
-    let fallback = null;
     while (el && el !== document.body && el !== document.documentElement) {
-      const style = window.getComputedStyle(el);
-      const oy = style.overflowY;
-      if (oy === 'auto' || oy === 'scroll' || oy === 'overlay') {
-        if (el.scrollHeight > el.clientHeight + 20) return el;
-        if (!fallback) fallback = el;
+      if (!seen.has(el)) {
+        seen.add(el);
+        const style = window.getComputedStyle(el);
+        const oy = style.overflowY;
+        if ((oy === 'auto' || oy === 'scroll' || oy === 'overlay')
+            && el.scrollHeight > el.clientHeight + 8) {
+          found.push(el);
+        }
       }
       el = el.parentElement;
     }
-    return fallback;
+    return found;
+  }
+
+  function wheelBy(el, deltaY) {
+    try {
+      el.dispatchEvent(new WheelEvent('wheel', {
+        deltaY: deltaY,
+        bubbles: true,
+        cancelable: true
+      }));
+    } catch (e) { /* ignore */ }
+    try {
+      el.dispatchEvent(new Event('scroll', { bubbles: true }));
+    } catch (e) { /* ignore */ }
+  }
+
+  function findScrollParent(start) {
+    const candidates = scrollCandidates(start);
+    return candidates.length ? candidates[0] : null;
   }
 
   function waitForSettle(scroller, quietMs, maxMs) {
@@ -205,7 +257,13 @@ async function extractPagePayload() {
       const start = Date.now();
       const obs = new MutationObserver(() => { lastChange = Date.now(); });
       try {
-        obs.observe(scroller, { childList: true, subtree: true, characterData: true });
+        obs.observe(scroller, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+          attributes: true,
+          attributeFilter: ['aria-posinset', 'aria-setsize', 'aria-label']
+        });
       } catch (e) { /* ignore */ }
       const tick = () => {
         const now = Date.now();
@@ -261,74 +319,134 @@ async function extractPagePayload() {
     return miss;
   }
 
+  async function pickScroller(start, byPos) {
+    const candidates = scrollCandidates(start);
+    if (!candidates.length) return start;
+    for (const el of candidates) {
+      const before = collectVisible(byPos);
+      const top = el.scrollTop;
+      const step = Math.max(48, Math.floor(el.clientHeight * 0.25));
+      el.scrollTop = Math.min(top + step, Math.max(0, el.scrollHeight - el.clientHeight));
+      wheelBy(el, step);
+      await waitForSettle(el, 160, 800);
+      const after = collectVisible(byPos);
+      const windowMoved = after.maxPos > before.maxPos || (after.minPos > before.minPos && before.minPos > 0);
+      if (windowMoved) return el;
+      try { el.scrollTop = top; } catch (e) { /* ignore */ }
+    }
+    return candidates[0];
+  }
+
   async function slowScrollCapture(scroller, byPos) {
+    scroller = await pickScroller(scroller, byPos);
     const startTop = scroller.scrollTop;
     scroller.scrollTop = 0;
+    wheelBy(scroller, -400);
     await waitForSettle(scroller, 250, 2000);
     let stats = collectVisible(byPos);
     let setSize = stats.setSize;
     let scrollPasses = 0;
-    let stallRounds = 0;
+    let dead = 0;
     let lastCount = byPos.size;
-    const maxPasses = setSize ? Math.min(Math.max(setSize * 2, 80), 600) : 300;
+    const maxPasses = setSize ? Math.min(Math.max(setSize * 3, 120), 500) : 300;
 
     while (scrollPasses < maxPasses) {
       scrollPasses += 1;
-      const step = Math.max(Math.floor(scroller.clientHeight * 0.35), 48);
-      const before = scroller.scrollTop;
-      scroller.scrollTop = Math.min(before + step, scroller.scrollHeight);
-      await waitForSettle(scroller, 250, 2000);
+      let missing = missingPositions(byPos, setSize);
+      if (setSize && missing.length === 0) break;
+
+      const step = Math.max(Math.floor(scroller.clientHeight * 0.28), 40);
+      const beforeTop = scroller.scrollTop;
+      const beforeHeight = scroller.scrollHeight;
+      const haveMax = Math.max(0, ...byPos.keys());
+      const firstMissing = missing.length ? missing[0] : haveMax + 1;
+      const atBottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 4;
+
+      if (stats.minPos > firstMissing && firstMissing >= 1 && dead >= 1) {
+        scroller.scrollTop = policy.scrollTopForPos(
+          scroller.scrollHeight, scroller.clientHeight, firstMissing, setSize || firstMissing
+        );
+      } else if (atBottom) {
+        // Leave the clamp so the next scroll is a real change. A virtualized
+        // list grows its height only after that event.
+        scroller.scrollTop = Math.max(0, scroller.scrollTop - step);
+        wheelBy(scroller, step);
+        scroller.scrollTop = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+      } else {
+        const maxTop = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+        scroller.scrollTop = Math.min(beforeTop + step, maxTop);
+        wheelBy(scroller, step);
+      }
+
+      await waitForSettle(scroller, 220, 1600);
       stats = collectVisible(byPos);
       if (stats.setSize > setSize) setSize = stats.setSize;
 
-      // Gap: lowest newly-visible pos jumped past what we have
-      const haveMax = Math.max(0, ...byPos.keys());
       if (stats.minPos > haveMax + 1 && haveMax > 0) {
-        scroller.scrollTop = Math.max(0, scroller.scrollTop - Math.floor(step * 0.5));
-        await waitForSettle(scroller, 250, 2000);
-        collectVisible(byPos);
+        scroller.scrollTop = Math.max(0, scroller.scrollTop - Math.floor(step * 0.7));
+        await waitForSettle(scroller, 200, 1200);
+        stats = collectVisible(byPos);
+        if (stats.setSize > setSize) setSize = stats.setSize;
       }
 
-      if (setSize && byPos.size >= setSize && missingPositions(byPos, setSize).length === 0) {
+      missing = missingPositions(byPos, setSize);
+      if (setSize && missing.length === 0) break;
+
+      const verdict = policy.noteProbe(dead, {
+        countGrew: byPos.size > lastCount,
+        heightGrew: scroller.scrollHeight > beforeHeight + 8
+      });
+      dead = verdict.dead;
+      if (byPos.size > lastCount) lastCount = byPos.size;
+      if (!verdict.giveUp && dead === 4 && missing.length) {
+        scroller.scrollTop = policy.scrollTopForPos(
+          scroller.scrollHeight, scroller.clientHeight, missing[0], setSize
+        );
+        wheelBy(scroller, step);
+        await waitForSettle(scroller, 250, 1600);
+        stats = collectVisible(byPos);
+        if (stats.setSize > setSize) setSize = stats.setSize;
+        const jumped = policy.noteProbe(dead, {
+          countGrew: byPos.size > lastCount,
+          heightGrew: scroller.scrollHeight > beforeHeight + 8
+        });
+        dead = jumped.dead;
+        if (byPos.size > lastCount) lastCount = byPos.size;
+        if (jumped.giveUp) break;
+      } else if (verdict.giveUp) {
         break;
       }
-      if (scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 4
-          && scroller.scrollTop === before) {
-        stallRounds += 1;
-        if (stallRounds >= 6) break;
-      } else if (byPos.size > lastCount) {
-        stallRounds = 0;
-        lastCount = byPos.size;
-      } else {
-        stallRounds += 1;
-        if (stallRounds >= 12) break;
-      }
     }
 
-    // Optional full-height fallback if still missing rows
     let missing = missingPositions(byPos, setSize);
-    if (missing.length && setSize) {
-      const prevH = scroller.style.height;
-      const prevMax = scroller.style.maxHeight;
-      try {
-        scroller.style.height = scroller.scrollHeight + 'px';
-        scroller.style.maxHeight = 'none';
-        await waitForSettle(scroller, 300, 2500);
-        collectVisible(byPos);
-        for (const pos of missing.slice(0, 40)) {
-          const el = document.querySelector(`[id^="sub-entry-"][aria-posinset="${pos}"]`);
-          if (el && typeof el.scrollIntoView === 'function') {
-            try { el.scrollIntoView({ block: 'center' }); } catch (e) { /* ignore */ }
-            await waitForSettle(scroller, 200, 1500);
-            collectVisible(byPos);
-          }
-        }
-      } finally {
-        scroller.style.height = prevH;
-        scroller.style.maxHeight = prevMax;
+    const regions = [];
+    for (const pos of missing) {
+      if (!regions.length || pos > regions[regions.length - 1].end + 1) {
+        regions.push({ start: pos, end: pos });
+      } else {
+        regions[regions.length - 1].end = pos;
       }
-      missing = missingPositions(byPos, setSize);
     }
+    for (const region of regions.slice(0, 24)) {
+      scroller.scrollTop = policy.scrollTopForPos(
+        scroller.scrollHeight, scroller.clientHeight, region.start, setSize
+      );
+      wheelBy(scroller, 80);
+      await waitForSettle(scroller, 250, 1500);
+      collectVisible(byPos);
+      for (let i = 0; i < 6; i += 1) {
+        const still = missingPositions(byPos, setSize);
+        if (!still.some((p) => p >= region.start && p <= region.end)) break;
+        const step = Math.max(32, Math.floor(scroller.clientHeight * 0.2));
+        const maxTop = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+        scroller.scrollTop = Math.min(scroller.scrollTop + step, maxTop);
+        wheelBy(scroller, step);
+        await waitForSettle(scroller, 180, 1000);
+        const seen = collectVisible(byPos);
+        if (seen.setSize > setSize) setSize = seen.setSize;
+      }
+    }
+    missing = missingPositions(byPos, setSize);
 
     try { scroller.scrollTop = startTop; } catch (e) { /* ignore */ }
     return { setSize, scrollPasses, missing };
@@ -377,7 +495,7 @@ async function extractPagePayload() {
         max_posinset: maxPos,
         scroll_passes: scrollPasses,
         incomplete,
-        missing_posinset: missing.slice(0, 80).join(','),
+        missing_posinset: policy.formatMissing(missing),
         speakers,
         truncated_chars: text.length >= LIMIT
       };
@@ -474,6 +592,12 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
           iconUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
           title: 'PM Workbench',
           message: 'Capturing transcript (slow scroll)… leave this tab open; may take a few minutes.'
+        });
+      }
+      if (category === 'meetings') {
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: ['scroll-policy.js']
         });
       }
       const [{ result }] = await chrome.scripting.executeScript({

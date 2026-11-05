@@ -1,0 +1,44 @@
+{
+  "description": "Path patterns for shareable outputs that must pass design + number gates before the agent can claim ready.",
+  "root": "outputs",
+  "include_globs": [
+    "**/*.html",
+    "**/*slack-draft*.md",
+    "**/*jira-drafts*/**",
+    "**/*confluence*.md",
+    "**/*readout*",
+    "**/*deck*"
+  ],
+  "exclude_globs": [
+    "**/*-number-ledger.md",
+    "**/*-supplement.md",
+    "**/*-method*.md",
+    "**/*-question-plan.md",
+    "**/*-plan.md",
+    "**/*-workbench-notes.md",
+    "**/_*",
+    "**/*.py",
+    "**/*.csv",
+    "**/*.json"
+  ],
+  "claim_check": {
+    "notes": "outputs .md files that state an absence, staleness, assignment, or PM-name claim must carry a | Claim | Source | table. Files with none of those phrases pass untouched. No number gate on these.",
+    "include_globs": [
+      "**/*.md"
+    ],
+    "exclude_globs": [
+      "**/*-number-ledger.md",
+      "**/*-method*.md",
+      "**/*-question-plan.md",
+      "**/*-workbench-notes.md",
+      "**/*.sources.md",
+      "**/_*",
+      "external/**"
+    ]
+  },
+  "ledger_convention": {
+    "sibling_suffix": "-number-ledger.md",
+    "notes": "Matches _protocol.md Publish: outputs/.../<artifact-stem>-number-ledger.md next to the source readout / artifact. Ledger may declare ## Gate sources (saved-result paths); check_number_consistency.py loads them so hooks only need --ledger. Add explicit artifact-to-ledger pairs under ledger_by_artifact when a ledger is not the sibling file."
+  },
+  "ledger_by_artifact": {}
+}

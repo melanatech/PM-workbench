@@ -19,6 +19,7 @@ browser-profiles/
 *.pptx
 .claude/CLAUDE.local.md
 .claude/settings.local.json
+.claude/.settings.json.lock
 .cursor/hooks/pm-identity.json
 .cursor/hooks/dispatch-block.md
 .cursor/skills/impeccable/

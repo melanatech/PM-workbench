@@ -1,0 +1,4 @@
+# Copy to .codex/config.toml in the live workspace. Do not put tokens in the kit.
+
+[mcp_servers.example]
+url = "https://example.internal/mcp"

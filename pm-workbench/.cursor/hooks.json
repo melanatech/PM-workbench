@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterFileEdit": [
+      {
+        "command": ".cursor/hooks/after_file_edit.py",
+        "timeout": 60
+      }
+    ],
+    "stop": [
+      {
+        "command": ".cursor/hooks/stop_gate.py",
+        "failClosed": true,
+        "loop_limit": 3
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": ".cursor/hooks/dispatch_inject.py",
+        "timeout": 10
+      }
+    ],
+    "subagentStart": [
+      {
+        "command": ".cursor/hooks/subagent_start.py"
+      }
+    ],
+    "subagentStop": [
+      {
+        "command": ".cursor/hooks/subagent_claims_gate.py",
+        "timeout": 20,
+        "loop_limit": 2
+      }
+    ],
+    "afterAgentResponse": [
+      {
+        "command": ".cursor/hooks/relay_claims_check.py",
+        "timeout": 10
+      }
+    ],
+    "beforeMCPExecution": [
+      {
+        "command": ".cursor/hooks/before_mcp.py",
+        "failClosed": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+---
+description: Workbench standing rules for Cursor
+alwaysApply: true
+---
+
+Follow CLAUDE.md, .claude/workflows/_operator-rules.md, .claude/workflows/_protocol.md, and AGENTS.md.
+
+Edit an existing artifact in place. Keep its design, CSS, markup structure, layout, components, and copy voice. A new design needs an explicit ask.
+
+Shared artifacts that carry numbers need a ledger and must pass scripts/check_number_consistency.py. HTML must pass scripts/check_design_preserved.py.
+
+Do not write to a ticket tracker, chat, or wiki without approval.
+
+A question is not blocked until a source-scout record exists.
+
+## Cursor only
+
+The PM's identity lives in `.cursor/hooks/pm-identity.json` (local, gitignored; copy `pm-identity.example.json`). "The PM", "me", and "my" mean that person. Never infer a person's name from a username, path, or account name. Cursor does not expand the `@reference/context/pm-brain.md` import in CLAUDE.md: read that file yourself when PM context matters.
+
+Before dispatching a worker for a workbench job, read the routed workflow file yourself (`.claude/workflows/_plain-language.md` → `.claude/workflows/<name>.md`) and name its path in the worker prompt. Start every Task prompt with: "First read `.cursor/hooks/dispatch-block.md` in full and follow it." That file holds the PM identity, dispatch header, number gate, and claim-table rule (render it with `python3 .cursor/hooks/dispatch_inject.py --write-block`). Hooks cannot add it for you on the CallDynamicTool path; a subagentStop hook sends back any worker result with unsourced absence or person claims.
+
+Override of `_protocol.md` § 3 "Relay = paste, then stop" in Cursor: there is no `workflow-runner` here, so verification is yours. Before relaying a worker's result, spot-check its riskiest claims against the source yourself: every absence or staleness claim (no ticket, no PRD, no epic, empty description, stale, needs a PRD) and every named person, owner, or assignee. Use a tracker fetch or query, the wiki page and version, or file:line. For an absence claim, check the artifact's own links and Sources section. Correct or drop what fails, then relay. A worker's word is not a source.

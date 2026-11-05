@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "example-docs": {
+      "url": "https://example.internal/mcp"
+    }
+  }
+}

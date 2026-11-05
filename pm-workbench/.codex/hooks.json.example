@@ -1,0 +1,48 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .codex/hooks/validate_register_write.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 .codex/hooks/require_guardrails_auth_for_prototypes.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .codex/hooks/check_external_artifact.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 .codex/hooks/check_output_provenance.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 .codex/hooks/check_kit_generic.py"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .codex/hooks/check_reply_links.py"
+          }
+        ]
+      }
+    ]
+  }
+}

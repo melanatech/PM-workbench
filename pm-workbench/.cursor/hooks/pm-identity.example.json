@@ -1,0 +1,8 @@
+{
+  "name": "Your Name",
+  "email": "you@example.com",
+  "jira_account_id": "",
+  "source": "Tracker current-user lookup, YYYY-MM-DD",
+  "username_examples": ["your-os-username"],
+  "not_the_pm": []
+}

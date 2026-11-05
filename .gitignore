@@ -5,3 +5,5 @@ node_modules/
 .vscode/
 .idea/
 pm-workbench.zip
+# Personal multi-root workspace (machine paths). The shareable starter is the example.
+pm-workbench.code-workspace

@@ -47,18 +47,40 @@ Suggested set:
 
 Pick minutes that are not :00 or :30 if exact time matters; the API is busiest then.
 
-### macOS (launchd or cron)
+### macOS (launchd)
 
-cron is the shortest. Run `crontab -e` and paste, fixing the path (use the full path to `python3`, from `which python3`; cron has almost no PATH, so also set `PATH` to include the folder holding `claude`, from `which claude`):
+Prefer launchd. A calendar job whose time passed while the laptop slept runs once at wake. From the live folder (`$HOME/pm-live`):
 
 ```
-PATH=/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin
-27 7 * * 1-5 cd "$HOME/pm-workbench" && python3 scripts/run_scheduled.py daily-brief
-12 8-18 * * 1-5 cd "$HOME/pm-workbench" && python3 scripts/run_scheduled.py inbox-watch --if-new-inbox
-43 7 * * 1-5 cd "$HOME/pm-workbench" && python3 scripts/run_scheduled.py todo-sweep
+bash scripts/install_schedules.sh
 ```
 
-Prefer launchd if the laptop sleeps often: a launchd calendar job whose time passed during sleep runs once at wake, where cron simply skips it. cron may also need Full Disk Access if the folder is under Documents or Desktop (System Settings, Privacy & Security). Easiest of all: keep the folder under your home directory outside those.
+That writes and loads three agents in `~/Library/LaunchAgents`. Each runs `/usr/bin/python3` on `$HOME/pm-live/scripts/run_scheduled.py`, with working directory `$HOME/pm-live`, and logs to `$HOME/pm-live/logs/sched-<task>.out.log` and `.err.log`.
+
+| Label | When |
+|---|---|
+| `com.pm-workbench.daily-brief` | Weekdays 7:27, with 9:27 and 11:27 catch-up slots and `--once-per-day` |
+| `com.pm-workbench.todo-sweep` | Weekdays 7:43, with 9:43 and 11:43 catch-up slots and `--once-per-day` |
+| `com.pm-workbench.inbox-watch` | Weekdays, every hour at minute 12 from 8 through 18, with `--if-new-inbox` |
+| `com.pm-workbench.metrics-snapshot` | Fridays 16:00, only with `--with-measurement` (script task, no model) |
+| `com.pm-workbench.workbench-health` | Fridays 16:15, only with `--with-measurement` (script task, no model) |
+
+`--dry-run` prints the plists and writes nothing. Script tasks (`python3 scripts/run_scheduled.py --list` marks them `script:`) run a kit script directly, obey `state/PAUSE`, don't count toward the daily cap, and save their output to `state/scheduled/<task>.txt`. `python3 scripts/workbench_health.py` lists each installed calendar job's last success under "Scheduled jobs" and marks it `STALE` after 72 hours without one (weekly jobs: more than a day past their slot); the daily brief surfaces those.
+
+Three guards keep one bad morning from silently costing the day. Each prompt gets `--timeout-minutes` (default 45) of awake time; a run past that is stopped and logged BLOCKED, so it cannot hold the lock and make the next job skip. Before taking the lock, the wrapper opens a TCP connection to the model gateway named in `ANTHROPIC_BASE_URL` (environment, else `~/.claude/settings.json` `env`); if three tries fail it logs `skipped-offline` and the next slot retries (`--no-probe` turns this off). A run that fails because the gateway reports the spend budget exceeded says so in its BLOCKED note: only the gateway admin can reset that.
+
+Remove them with `bash scripts/install_schedules.sh --uninstall`.
+
+cron is the shorter alternative, and it skips a run if the computer was asleep. Run `crontab -e` and set `PATH` so it includes the folder that holds `claude` (`which claude`):
+
+```
+PATH=/usr/bin:/bin:$HOME/.gocode/shims
+27 7 * * 1-5 cd "$HOME/pm-live" && /usr/bin/python3 scripts/run_scheduled.py daily-brief
+12 8-18 * * 1-5 cd "$HOME/pm-live" && /usr/bin/python3 scripts/run_scheduled.py inbox-watch --if-new-inbox
+43 7 * * 1-5 cd "$HOME/pm-live" && /usr/bin/python3 scripts/run_scheduled.py todo-sweep
+```
+
+cron may also need Full Disk Access if the folder is under Documents or Desktop (System Settings, Privacy & Security). Keep the folder under your home directory outside those.
 
 ### Windows (Task Scheduler)
 

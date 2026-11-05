@@ -15,7 +15,7 @@ import recurring_corrections as rc  # noqa: E402
 
 class ThemeMatchTests(unittest.TestCase):
     def test_assume_vs_search(self):
-        self.assertEqual(rc._match_theme("you assumed glossary for term registers"), "assume_vs_search")
+        self.assertEqual(rc._match_theme("you assumed glossary for the metric list"), "assume_vs_search")
 
     def test_nonexistent_id(self):
         self.assertEqual(rc._match_theme("COM-032 doesn't exist in commitments"), "nonexistent_id")
@@ -30,7 +30,7 @@ class ThemeMatchTests(unittest.TestCase):
 class SummarizeTests(unittest.TestCase):
     def test_needs_two_hits(self):
         rows = [
-            {"user_excerpt": "term registers wrong file", "timestamp": "2026-10-10T12:00:00"},
+            {"user_excerpt": "you assumed the wrong file", "timestamp": "2026-10-10T12:00:00"},
             {"user_excerpt": "you guessed the glossary", "timestamp": "2026-10-13T12:00:00"},
             {"user_excerpt": "one-off random complaint", "timestamp": "2026-10-13T13:00:00"},
         ]

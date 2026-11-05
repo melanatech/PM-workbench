@@ -1,5 +1,6 @@
 """Pattern-borrow deliverables: templates, provenance tags, workflow hooks, agent addenda."""
 from pathlib import Path
+import sys
 import unittest
 
 WORKBENCH = Path(__file__).resolve().parents[1]
@@ -36,13 +37,11 @@ HYGIENE_FILES = [
     TEMPLATES / "stakeholder-lenses.md",
 ]
 
-FORBIDDEN = (
-    "example" + "-commerce",
-    "pm-" + "hub",
-    "pag" + "rawal",
-    "commerce-product" + ".int",
-    "pm-ch-" + "mockup",
-)
+sys.path.insert(0, str(WORKBENCH / "scripts"))
+import check_kit_generic  # noqa: E402
+
+# Private terms live in the gitignored terms file, never in this public test.
+FORBIDDEN = tuple(check_kit_generic.plain_terms())
 
 
 class PatternBorrowTests(unittest.TestCase):
@@ -73,9 +72,9 @@ class PatternBorrowTests(unittest.TestCase):
         self.assertIn("CLAUDE.local", text)
 
     def test_claude_and_protocol_provenance_tags(self):
-        claude = (WORKBENCH / "CLAUDE.md").read_text(encoding="utf-8")
+        rules = (WORKFLOWS / "_operator-rules.md").read_text(encoding="utf-8")
         protocol = (WORKFLOWS / "_protocol.md").read_text(encoding="utf-8")
-        for text in (claude, protocol):
+        for text in (rules, protocol):
             self.assertIn("[hypothesis:", text)
             self.assertIn("[external::training]", text)
             self.assertIn("assumptions-and-open-questions", text)

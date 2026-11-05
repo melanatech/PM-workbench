@@ -45,7 +45,7 @@ This claim does not move a ticket and does not prove what users see (see Deploy 
 
 **Verification questions** ("how did you check?", "where did the baseline come from?"): answer with the chain down to the primary source (path:line, commit, capture). If the chain stops at a draft, say **unverified** and climb the ladder — never answer "the brief says."
 
-**Deploy lag:** code at a commit is not proof of what merchants see (flags, shared packages, lagging `main`). Flag those gaps when the claim is about live UI.
+**Deploy lag:** code at a commit is not proof of what customers see (flags, shared packages, lagging `main`). Flag those gaps when the claim is about live UI.
 
 **Cache-first:** prefer a dated analysis that already cites a primary source (`state/analysis-index.csv` / `context_preflight.py`) over re-reading `repos/` blank-slate. Reuse must carry the analysis's `primary_sources` forward, not treat the digest as the authority.
 

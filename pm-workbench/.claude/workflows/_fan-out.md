@@ -25,7 +25,7 @@ python3 scripts/fanout_route.py --types decision,evidence
 | evidence | 2, 3, 7 | A discovery signal about users/product. 7 when the source is research. Not for internal directions (use exploratory-thinking hold) |
 | metric | 12 | A pre-calculated number with an as-of date. Never recompute |
 | competitor | 3, 8 | Competitor behavior, including from a meeting or a research doc |
-| term | 11 | A standing acronym or internal name (W+M, MAPU, AAB). Ordinary phrases stay in learning |
+| term | 11 | A standing acronym or internal name (ARR, SLA, a team codename). Ordinary phrases stay in learning |
 | durable-product-fact | 3, 6 | How the product works. Area file plus `learning/entities/` when a named entity is claimed |
 | assumption | 4 | An assumption, open question, or unresolved conflict |
 | follow-up | 9, 10 | Mine. 9 is a proposal, never a silent todo add. 10 only when this workflow is already drafting a ticket |
@@ -70,7 +70,13 @@ Digests, register rows, and learning notes are lossy on purpose (rule 15). An ad
 
 ## Rule 24 — user-injected context after freeform chat
 
-When the PM adds new facts mid-thread outside `/capture` / `/quick-close`, treat that as durable input. Do not only acknowledge it in chat. **Clear material claims** (decision, commitment, risk, open conflict, durable product fact, assumption): write the matching surface this turn (Tier 1) or present a one-line PROPOSAL of the exact row or append if Tier 2/3 (scope, owner, dates, send). **Ambiguous:** ask one short question naming the candidate surface. **Conversational only:** stay silent on write-back. Source the write as `chat:[date]` or the thread topic plus any archive path named. Route the claim through the type table above. `/sync ripple-check` is the full cross-check; it is not required for one obvious fact. `/sync context-reconcile` reuses `scripts/chat_harvest.py` for facts that were said in chat and never written back. When the PM parks a question ("not yet", "just notes"), mark it `parked YYYY-MM-DD` in assumptions and do not re-ask unless a new source touches it.
+**The scenario this rule exists for:** mid-chat, including outside `/capture` / `/quick-close`, the PM literally says to remember something ("remember this," "remember that," "don't forget," or they tell you to write it into pm-brain). The rule is at the top of `reference/context/pm-brain.md`. Write a short dated line there, in their words, and update every current-state register row that still states the old fact. One line: "Updated RISK-010, COM-010, TODO-022: …". Replace the stale wording. Record the previous wording and date in the existing note, or the supersession column CONNECTIONS.md already names; use a superseded status when the register has one. Do not delete rows or add a column. History registers append a new row that supersedes the old one; do not rewrite history. Later drafts cite the current wording only, and do not copy text marked superseded.
+
+**Otherwise do not write to pm-brain.** A correction, a decision, a scope, a date, a taste note, a page rule, or something the agent said is not a remember-ask, even if the next session might re-ask it. Do not ask the PM whether to remember it. The answer stays in that work's artifact. "Yes, those four are bugs — file them" is sign-off on work (`outputs/todo-proposals/`, `drafts/`). Route that claim through the type table above (`follow-up`, `durable-product-fact`, DEC/COM/RISK). Session-start catch-up adds a brain line only when their own turn literally says to remember it. It does not reconstruct an answer or a decision into the brain.
+
+About 750 words is a fine size. Word count is not a reason to condense. Condense when a line is a chat answer or a one-off decision, or when it duplicates a file that already holds it. Mark a superseded line `(replaced <date>)`.
+
+A sentence the PM just said is a resolution (rule 8), not a conflict. Tier 3 stays for a date, scope, owner, or commitment the model would be inventing, and for anything sent or any customer contact. **Ambiguous:** ask one short question naming the candidate surface. **Conversational only:** stay silent on write-back. Source the write as `chat:[date]` or the thread topic plus any archive path named. That write is a register or learning surface. pm-brain is not that write unless the PM literally said to remember it. `/sync ripple-check` is the full cross-check; it is not required for one obvious fact. `/sync context-reconcile` reuses `scripts/chat_harvest.py` for facts that were said in chat and never written back. It does not add a pm-brain line unless their turn literally says to remember it. When the PM parks a question ("not yet", "just notes"), mark it `parked YYYY-MM-DD` in assumptions and do not re-ask unless a new source touches it.
 
 ## Anti-patterns
 
@@ -83,3 +89,4 @@ When the PM adds new facts mid-thread outside `/capture` / `/quick-close`, treat
 - Skipping a company OKR or strategy doc as "business-level"
 - Logging internal directions as evidence rows
 - Writing `current-priorities.md` from a strategy-frame without Tier 3 confirmation
+- Writing to `pm-brain.md` when the PM did not literally say to remember it. Rule 24 has no other trigger

@@ -1,79 +1,40 @@
-"""Kit surfaces must not anchor on one company, person, or internal role.
+"""Kit surfaces must not anchor on one person, company, project, or internal system.
 
-Extends the local bans in test_routing.py (example-commerce, project keys) to a
-walk of instruction files. Excludes the fictional Lumenly fixture, gitignored
-local context, and tests/ (tests may quote a banned token inside an assertion).
+The terms themselves live in the gitignored `.claude/kit-private-terms.txt` and the
+local PM identity file, so this public test never lists them. Built-in patterns
+(emails, home-directory paths, private wiki or dashboard URLs) run even without
+that file. See `scripts/check_kit_generic.py`.
 """
+import subprocess
+import sys
 import unittest
 from pathlib import Path
 
 
 WORKBENCH = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(WORKBENCH / "scripts"))
 
-# Substrings that mark a company, person, product area, or internal ticket.
-BANNED = (
-    "Antonio",
-    "Seamless",
-    "a company",
-    "a company",
-    "example",
-    "credited impact",
-    "explanations-transactions",
-    "cx-reports",
-    "commerce-intelligence",
-    "CP-5835",
-    "REPORT-1915",
-    "DATASHEET-VS-CUBE",
-    "term registers",
-    "term-registers",
-)
-
-SKIP_DIR_NAMES = {
-    ".git",
-    "__pycache__",
-    "node_modules",
-    "fixtures",
-    "tests",
-    "inbox",
-    "archive",
-    "state",
-    "logs",
-    "registers",
-    "repos",
-    "outputs",
-    "browser-profiles",
-}
-SKIP_FILES = {
-    WORKBENCH / ".claude" / "CLAUDE.local.md",
-}
-TEXT_SUFFIXES = {".md", ".py", ".json", ".yml", ".yaml", ".html", ".js", ".jsx", ".sh", ".css"}
-
-
-def kit_texts():
-    for path in WORKBENCH.rglob("*"):
-        if not path.is_file():
-            continue
-        if path.suffix not in TEXT_SUFFIXES and path.name not in {"Run PM Workflow.command"}:
-            continue
-        if any(part in SKIP_DIR_NAMES for part in path.relative_to(WORKBENCH).parts):
-            continue
-        if path in SKIP_FILES or path.name == "CLAUDE.local.md":
-            continue
-        # fixtures/ is skipped via the directory name; lumenly lives there.
-        yield path
+import check_kit_generic  # noqa: E402
 
 
 class GeneralizationTests(unittest.TestCase):
-    def test_no_company_person_or_role_anchors(self):
-        hits = []
-        for path in kit_texts():
-            text = path.read_text(encoding="utf-8", errors="replace")
-            for token in BANNED:
-                if token in text:
-                    line_no = text[: text.index(token)].count("\n") + 1
-                    rel = path.relative_to(WORKBENCH)
-                    hits.append(f"{rel}:{line_no}: {token}")
-        self.assertEqual(hits, [], "company/person anchors:\n" + "\n".join(hits))
+    def test_no_private_terms_in_any_kit_file(self):
+        hits = check_kit_generic.scan(check_kit_generic.kit_files())
+        self.assertEqual(hits, [], "private terms in the kit:\n" + "\n".join(hits))
+
+    def test_terms_file_and_local_context_are_gitignored(self):
+        root = WORKBENCH.parent
+        for rel in (".claude/kit-private-terms.txt", ".claude/CLAUDE.local.md", ".cursor/hooks/pm-identity.json"):
+            r = subprocess.run(["git", "check-ignore", "-q", f"{WORKBENCH.name}/{rel}"], cwd=root)
+            self.assertEqual(r.returncode, 0, f"{rel} must be gitignored")
+
+    def test_checker_catches_a_planted_term(self):
+        terms = [("Acme Widgets", check_kit_generic._plain("Acme Widgets"))]
+        hits = check_kit_generic.scan_text("Ask the Acme Widgets team.\nmail a.b@" + "corpmail.com", terms)
+        labels = {h[1] for h in hits}
+        self.assertIn("Acme Widgets", labels)
+        self.assertIn("email address", labels)
+        self.assertEqual(check_kit_generic.scan_text("See /Users/someone/x and a@example.com", terms), [])
 
     def test_named_surfaces_point_at_aliases_not_a_company_workbook(self):
         claude = (WORKBENCH / "CLAUDE.md").read_text(encoding="utf-8")
@@ -83,28 +44,6 @@ class GeneralizationTests(unittest.TestCase):
         self.assertNotIn("Orders", example)
         self.assertNotIn("Payments", example)
         self.assertNotIn("Cube", example)
-
-    def test_tracked_kit_does_not_name_a_company_ux_checker(self):
-        import subprocess
-
-        root = WORKBENCH.parent
-        listed = subprocess.check_output(["git", "ls-files", "pm-workbench"], cwd=root, text=True)
-        banned = ("the company UX checker", "company-ux-checker", "the company UX checker")
-        hits = []
-        for rel in listed.splitlines():
-            if "/tests/" in f"/{rel}":
-                continue
-            path = root / rel
-            if not path.is_file():
-                continue
-            if path.suffix not in TEXT_SUFFIXES and path.name not in {"Run PM Workflow.command"}:
-                continue
-            text = path.read_text(encoding="utf-8", errors="replace")
-            for token in banned:
-                if token in text:
-                    line_no = text[: text.index(token)].count("\n") + 1
-                    hits.append(f"{rel}:{line_no}: {token}")
-        self.assertEqual(hits, [], "company UX checker in the tracked kit:\n" + "\n".join(hits))
 
 
 if __name__ == "__main__":

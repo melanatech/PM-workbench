@@ -33,13 +33,14 @@ The system needs its own product management. One line per item; move to EVOLVING
 ## Friction log (add as you go)
 
 - [x] 2026-10-05 process-inbox: unreadable sensitivity-labelled .docx re-exported and processed; extractor now kit-owned (PDFKit path included). Encrypted Office files still need human re-export.
-- [ ] 2026-10-15 process-inbox: scripts/extract_document.sh exits 0 but returns almost nothing for JS-rendered HTML (data held in an inline script; Commerce 2027 OKRs Oct12). Consider extracting inline-script data or warning on near-empty output.
+- [ ] 2026-10-15 process-inbox: scripts/extract_document.sh exits 0 but returns almost nothing for JS-rendered HTML (data held in an inline script; a 2027 OKR page, Oct 12). Consider extracting inline-script data or warning on near-empty output.
 - [x] 2026-10-15 kit: company OKRs skipped as "business-level" — fixed via `strategy-frame` + `_source-triage.md`; guarded by `tests/test_source_triage_rules.py::test_business_level_is_forbidden_skip_reason` and `tests/test_fanout_route.py` strategy-frame routes.
 - [x] 2026-10-15 kit: definitions / semantic work only routable as glossary terms — fixed via `semantic-definition` type; guarded by fanout route + triage rules tests.
 - [x] 2026-10-15 kit: exploratory "things to think about" logged as EV-107..110 and triggered owner/decision questions — fixed via exploratory-thinking hold (no EV/DEC/COM); guarded by `test_exploratory_thinking_forbids_ev_and_owner_questions` and `test_parked_marker_honored`.
-- [x] 2026-10-15 kit: ordinary phrases ("end-to-end evals", "Airo supported features matrix") added to glossary — fixed via acronyms-only rule; guarded by `test_glossary_limited_to_acronyms`.
+- [x] 2026-10-15 kit: ordinary phrases ("end-to-end evals", "AI supported features matrix") added to glossary — fixed via acronyms-only rule; guarded by `test_glossary_limited_to_acronyms`.
 - [x] 2026-10-15 kit: process-inbox / propose queued "confirm/decide/what does X mean" as to-dos — fixed via action-only filter in `todo-worker` propose + meeting-closeout / process-inbox / context-reconcile; guarded by `tests/test_todo_propose_rules.py`.
 - [x] 2026-10-15 kit: promises I own only lived in commitments.csv, so they never showed on my to-do list — fixed via `todo_register.py ensure-from-commitment` + closeout/quick-close/reconcile/fan-out wiring; guarded by `test_ensure_from_commitment_*` and `test_pm_owned_commitment_twins_a_todo`.
 - [x] 2026-10-15 kit: Claude Code still prompted for Atlassian MCP after allow changes — root cause was invalid `mcp__*` (skipped); fixed via server-scoped `mcp__plugin_atlassian_atlassian__*` in kit + user settings; guarded by `tests/test_settings_profiles.py`.
 - [x] 2026-10-16 live: Impeccable installed for internal design outputs only (user Claude Code + pm-live Cursor skills); documented as optional in SETUP / NEW-USER-SETUP §2b; scoped away from prototypes via live PRODUCT.md / DESIGN.md + CLAUDE.local.
 
+- [ ] 2026-11-03 process-inbox: Encrypted xlsx (sensitivity label): process-inbox asks for the browser link first, and for a re-export or paste when that link is not possible. A file store search still needs a tool named in CLAUDE.local.md.

@@ -161,6 +161,11 @@
             "type": "command",
             "command": "PY=$(command -v python3 || command -v python); \"$PY\" \"$CLAUDE_PROJECT_DIR/.claude/hooks/check_external_artifact.py\"",
             "timeout": 20
+          },
+          {
+            "type": "command",
+            "command": "PY=$(command -v python3 || command -v python); \"$PY\" \"$CLAUDE_PROJECT_DIR/.claude/hooks/check_kit_generic.py\"",
+            "timeout": 20
           }
         ]
       }

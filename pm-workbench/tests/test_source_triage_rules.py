@@ -21,7 +21,7 @@ class SourceTriageRulesTests(unittest.TestCase):
 
     def test_engineering_keep_list_present(self):
         for phrase in (
-            "merchant-visible behavior",
+            "customer-visible behavior",
             "launch readiness",
             "instrumentation",
             "cost or capacity",

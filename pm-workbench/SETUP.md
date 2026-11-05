@@ -52,8 +52,9 @@ company policy allows, install from the Claude Code panel (exact IDs):
 
 **Optional — Impeccable** ([impeccable.style](https://impeccable.style/#downloads)): design
 vocabulary for **internal** HTML / presentations in the live folder — not for
-merchant-facing `prototypes/` (those stay on company the company UX checker +
-`frontend-design` / prototype-build). Install is user/live-only (not kit git):
+customer-facing `prototypes/` (those stay on your company's UX checker, if
+you have one, named in `.claude/CLAUDE.local.md`, + `frontend-design` /
+prototype-build). Install is user/live-only (not kit git):
 
 ```sh
 # Claude Code (user scope — avoids writing into a symlinked kit .claude/)

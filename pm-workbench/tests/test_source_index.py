@@ -30,8 +30,8 @@ class SourceIndexTests(unittest.TestCase):
             origin="primary",
             outcome="promote",
             reason='Company OKRs, "not" business-level',
-            entities="INIT-004,MAPU",
-            summary="2027 commerce OKRs",
+            entities="INIT-004,MAWU",
+            summary="2027 company OKRs",
             content_hash_value="abc",
             sensitivity="none",
         )
@@ -60,7 +60,7 @@ class SourceIndexTests(unittest.TestCase):
         source_index.append_row(
             self.root,
             source_path="a.md",
-            entities="INIT-004,MAPU",
+            entities="INIT-004,MAWU",
             outcome="hold",
             summary="one",
         )
@@ -71,7 +71,7 @@ class SourceIndexTests(unittest.TestCase):
             outcome="index",
             summary="two",
         )
-        hits = source_index.match_entities(self.root, "MAPU,INIT-009")
+        hits = source_index.match_entities(self.root, "MAWU,INIT-009")
         paths = {row["source_path"] for row in hits}
         self.assertEqual(paths, {"a.md", "b.md"})
         held = source_index.match_entities(self.root, "INIT-004", status="open")

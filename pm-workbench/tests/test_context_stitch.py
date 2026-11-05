@@ -234,7 +234,7 @@ class RepoProfileTests(unittest.TestCase):
             "ReportsHubV2.js",
             "ReportsHubV3.js",
             "Customers.js",
-            "Payouts.js",
+            "Refunds.js",
             "Settings.js",
             "Transactions.js",
             "Inventory.js",
@@ -253,7 +253,7 @@ class RepoProfileTests(unittest.TestCase):
                     "Orders.js",
                     "Catalog.js",
                     "Customers.js",
-                    "Payouts.js",
+                    "Refunds.js",
                     "Settings.js",
                     "Transactions.js",
                     "Inventory.js",
@@ -285,7 +285,7 @@ class RepoProfileTests(unittest.TestCase):
             "export default [\n"
             '  { path: "/orders", label: "Orders" },\n'
             '  { path: "/transactions", label: "Transactions" },\n'
-            '  { path: "/payouts", label: "Payouts" },\n'
+            '  { path: "/refunds", label: "Refunds" },\n'
             '  { path: "/product-sales", label: "Product sales" },\n'
             "];\n",
             encoding="utf-8",

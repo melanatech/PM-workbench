@@ -129,12 +129,12 @@ class ExtractDocumentTests(unittest.TestCase):
         src.write_text(
             """<!doctype html>
 <html>
-<head><title>Commerce OKRs</title><style>.app { display: grid; }</style></head>
+<head><title>Lumenly OKRs</title><style>.app { display: grid; }</style></head>
 <body>
   <main id="app">DOP Q&amp;A prep</main>
   <script>
     const OBJS = [
-      {n: 1, objective: "Grow commerce", krs: ["Increase adoption to 40%"]},
+      {n: 1, objective: "Grow revenue", krs: ["Increase adoption to 40%"]},
       {n: 2, objective: "Improve retention", krs: ["Reduce churn to 5%"]}
     ];
     function render() { return OBJS.map(x => x.objective).join(", "); }
@@ -147,9 +147,9 @@ class ExtractDocumentTests(unittest.TestCase):
         r = self.run_extract(src)
         self.assertEqual(r.returncode, 0, r.stderr)
         text = Path(r.stdout.strip().splitlines()[-1]).read_text(encoding="utf-8")
-        self.assertIn("Commerce OKRs", text)
+        self.assertIn("Lumenly OKRs", text)
         self.assertIn("## Embedded JavaScript data", text)
-        self.assertIn('objective: "Grow commerce"', text)
+        self.assertIn('objective: "Grow revenue"', text)
         self.assertIn('krs: ["Reduce churn to 5%"]', text)
         self.assertNotIn("function render", text)
 

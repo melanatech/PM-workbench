@@ -11,9 +11,9 @@ Context dependencies: soft: none | hard: kr-metric-map
 This is a workflow prompt, not a connected dashboard integration. Use only an
 approved, verified read path, a value/export I provide, or an **internal**
 document that already shows the calculated metric with an as-of date (MBR deck,
-PPP, wiki). If a source or metric definition is missing, ask for it; do not
+status updates, wiki). If a source or metric definition is missing, ask for it; do not
 claim retrieval or automated logging when those have not run. Store metric
-definitions and source links only where company policy permits.
+definitions and source links only where company policy permits. If a live KR note names a baseline source and an atlas status, use that. Do not invent a baseline.
 
 For a first run without metric YAMLs in `reference/metric-definitions/`, ask
 which metrics, their approved sources, the displayed values and as-of dates,

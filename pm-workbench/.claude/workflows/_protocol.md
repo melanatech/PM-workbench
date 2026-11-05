@@ -1,5 +1,7 @@
 # Router protocol — how /capture, /brief, /sync, /discover, /build and /report run a workflow
 
+Standing rules: `.claude/workflows/_operator-rules.md` (operator mode). The numbered rules cited throughout this file live there, not in CLAUDE.md. Companion agents are named in `.claude/CLAUDE.local.md`; the ready-to-paste prompt rule is `_operator-rules.md` § Companion agents.
+
 This file is read by the six cluster commands. It is not a command. The workflow files beside it (`.claude/workflows/<name>.md`) are the original command texts, moved unchanged; `routes.json` lists which cluster owns which workflow and which model it runs on. `prototype-build` is the one workflow that lives as a skill (`.claude/skills/prototype-build/SKILL.md`).
 
 A router has no logic of its own. It picks a workflow, runs the safety steps below, hands the work to the `workflow-runner` subagent on the right model, and relays what comes back. Gates, readiness checks, and approval tiers stay inside the workflow text and in CLAUDE.md. Execution modes are below. Model choice is `.claude/workflows/routes.json`. The router can add a pause but never remove one.

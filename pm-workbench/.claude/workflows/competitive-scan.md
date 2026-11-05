@@ -41,7 +41,7 @@ Competitive findings **must land on disk in the same run**. Asking "Should I cre
 
 ## Scope discipline (do not collapse the log)
 
-Customer evidence (e.g. EV-007 four-line sales/tax/fees/tips) may **prioritize** a section or a comparison table. It must **not** become the only question the competitive log answers when the watchlist or available research covers more (exports, payout reconciliation, pricing gates, mobile vs desktop, AI/analytics, accounting integrations, etc.).
+Customer evidence (for example one EV- row asking for a specific breakdown) may **prioritize** a section or a comparison table. It must **not** become the only question the competitive log answers when the watchlist or available research covers more (exports, reconciliation, pricing gates, mobile vs desktop, AI/analytics, accounting integrations, etc.).
 
 - Structure `outputs/monthly/competitive-log.md` by **watchlist product areas** (and any durable research themes already in `reference/user-research/` or `archive/documents/`).
 - Include the **landscape** role line (direct / adjacent / emerging) per competitor before or beside the summary table.

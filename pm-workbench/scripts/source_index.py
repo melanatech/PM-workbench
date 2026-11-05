@@ -5,9 +5,9 @@ Usage:
   python3 scripts/source_index.py append --root ~/pm-live \\
     --path archive/documents/foo.html --source-role strategy \\
     --temporal-status current --origin primary --outcome hold \\
-    --reason "ideas, no owner" --entities "INIT-004,MAPU" \\
+    --reason "ideas, no owner" --entities "INIT-004,ARR" \\
     --summary "…" [--same-as …] [--sensitivity none] [--unread …]
-  python3 scripts/source_index.py match --root ~/pm-live --entities INIT-004,MAPU
+  python3 scripts/source_index.py match --root ~/pm-live --entities INIT-004,ARR
   python3 scripts/source_index.py promote --root ~/pm-live \\
     --path archive/… --linked-ids EV-001,DEC-002
   python3 scripts/source_index.py find-duplicate --root ~/pm-live --path <file>

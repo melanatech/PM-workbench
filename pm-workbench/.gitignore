@@ -5,6 +5,7 @@
 inbox/**
 archive/**
 state/**
+state/research-cohorts/**
 logs/**
 registers/**
 repos/**
@@ -17,8 +18,9 @@ browser-profiles/
 *.docx
 *.pptx
 .claude/CLAUDE.local.md
-.claude/skills/company-ux-checker/
 .claude/settings.local.json
+.cursor/hooks/pm-identity.json
+.cursor/hooks/dispatch-block.md
 .cursor/skills/impeccable/
 .cursor/agents/impeccable-*.md
 PRODUCT.md
@@ -27,3 +29,4 @@ DESIGN.md
 __pycache__/
 tools/clipboard-capture/SendToPMWorkbench/build/
 # reference/links.csv and roadmap/*.csv are trackable; review for company data before committing.
+.claude/kit-private-terms.txt

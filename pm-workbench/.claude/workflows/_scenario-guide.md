@@ -1,7 +1,7 @@
 # Scenario guide recipe — optional evaluator walkthrough for prototypes
 
 Use when a prototype needs a **scripted demo/QA panel** so someone new can run
-the same story twice. Not merchant onboarding. Not always required.
+the same story twice. Not customer onboarding. Not always required.
 
 Reference: `@pm-live/prototype-kit` `ScenarioGuide` when `prototypes/_shared/` exists;
 feature apps keep scripts local (see `prototypes/[feature]/src/scenarios.js`).

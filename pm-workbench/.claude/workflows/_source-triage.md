@@ -42,7 +42,7 @@ Decisions stay append-only. Conflict with current state → assumptions (rule 8)
 
 ### Engineering
 
-Keep a detail only when it changes one of: merchant-visible behavior;
+Keep a detail only when it changes one of: customer-visible behavior;
 API / event / schema / metric meaning; launch readiness or critical path;
 reliability / performance / data quality; instrumentation; architecture that
 limits future scope; cost or capacity. Otherwise **ignore**, with that reason.
@@ -89,7 +89,7 @@ owner or decision:
 ### Operating model / process
 
 Example: eval-first process (define JTBD and evals → build to threshold →
-add to Airo features matrix → monitor traces → ops alerts).
+add to the AI features matrix → monitor traces → ops alerts).
 
 - Role `operating-model`. Index with status `proposal` | `adopted` | `unknown`.
 - Propose where it could land if adopted (e.g. an eval section in the PRD
@@ -113,7 +113,7 @@ Storyboards, phase playgrounds, capability maps, prototypes, mockups:
 
 ### Other teams' business processes
 
-Examples: commission prep guides, partner payout process docs.
+Examples: commission prep guides, partner commission process docs.
 
 - Role `business-process`.
 - Write a short current-state baseline in the matching `learning/` entity
@@ -122,7 +122,7 @@ Examples: commission prep guides, partner payout process docs.
 
 ### Stakeholder stances
 
-"Pranay prefers the insights path", "Dhruv has no requirement":
+"Alex prefers the insights path", "Sam has no requirement":
 
 - Role / claim type `stakeholder-stance`.
 - Append dated, sourced lines to `reference/context/people.md`, labeled as
@@ -185,8 +185,8 @@ the claim unverified.
 
 ### Sensitivity
 
-Set `sensitivity` from content: merchant/customer names, partner/commercial
-terms (pricing, organizations, payouts), personal data. Data profiles,
+Set `sensitivity` from content: customer names, partner/commercial
+terms (pricing, organizations, revenue shares), personal data. Data profiles,
 summaries, and EV rows must be **redacted before any durable write** (rule 15).
 Profiles list field names and counts, never identifying values.
 
@@ -206,13 +206,13 @@ only partly read.
   notes", mark the question `parked YYYY-MM-DD` in
   `reference/context/assumptions-and-open-questions.md`. Do not raise a parked
   question again unless a new source touches it.
-- **Answers to earlier questions** (e.g. "W+M = web plus marketing"): resolve
+- **Answers to earlier questions** (e.g. "ARR = annual recurring revenue"): resolve
   the open item in place and update the one affected surface. Do not re-run
   the whole fan-out.
 - **Proportion**: writing scales with the source. A short note usually needs
   1–3 surfaces, not every surface a claim type could reach. QC lists what was
   written and why.
-- **Glossary**: acronyms and standing internal names only (W+M, MAPU, AAB).
+- **Glossary**: acronyms and standing internal names only (ARR, SLA, a team codename).
   Ordinary phrases ("end-to-end evals") stay in the learning entry.
 
 ## 5. Cross-source pass
@@ -220,7 +220,7 @@ only partly read.
 After claim fan-out (or after indexing/holding), before the QC report:
 
 ```bash
-python3 scripts/source_index.py match --root <live> --entities "INIT-004,MAPU,…"
+python3 scripts/source_index.py match --root <live> --entities "INIT-004,ARR,…"
 ```
 
 Plus a short read of matching register rows. Then:

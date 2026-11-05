@@ -1,0 +1,4 @@
+#!/bin/sh
+# Reject a commit that puts a person, company, project, or internal system into the public kit.
+root=$(git rev-parse --show-toplevel) || exit 1
+exec python3 "$root/pm-workbench/scripts/check_kit_generic.py" --staged

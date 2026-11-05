@@ -28,14 +28,14 @@ HOOK = KIT / ".claude" / "hooks" / "check_external_artifact.py"
 LINK_HOOK = KIT / ".claude" / "hooks" / "check_md_links.py"
 MEETING = "archive/meetings/2026-10-13-product-sync.md"
 BRIEF = "outputs/briefs/q4-plan.md"
-JIRA_URL = "https://tracker.example/browse/REPORT-2222"
+JIRA_URL = "https://tracker.example/browse/PROJ-2222"
 WIKI_URL = "https://wiki.example/wiki/spaces/T/pages/1/Launch+notes"
 DASHBOARD_URL = "https://dashboard.example/activation"
 
 NEUTRAL = (
     "Product sync, 2026-10-13 (meeting notes)",
     "Uploaded document: Q4 planning deck.pdf",
-    "Jira REPORT-2222",
+    "Jira PROJ-2222",
     "Confluence: Launch notes",
     "Slack #planning, 2026-10-12",
     "Internal dashboard: Activation, as of 2026-10-01",
@@ -297,9 +297,9 @@ class CitationTests(unittest.TestCase):
     def test_jira_links_only_when_the_audience_has_the_tracker(self):
         linked = self.workspace.resolve_id("DEC-016", self.linked)
         plain = self.workspace.resolve_id("DEC-016", self.plain)
-        self.assertEqual(linked.text, "Jira REPORT-2222")
+        self.assertEqual(linked.text, "Jira PROJ-2222")
         self.assertEqual(linked.url, JIRA_URL)
-        self.assertEqual(plain.text, "Jira REPORT-2222")
+        self.assertEqual(plain.text, "Jira PROJ-2222")
         self.assertIsNone(plain.url)
 
     def test_confluence_uses_the_page_title(self):
@@ -407,7 +407,7 @@ class PublishFileTests(unittest.TestCase):
         self.assertNotIn("inbox/", external)
         self.assertNotIn("[hypothesis", external)
         self.assertNotIn("[external::training]", external)
-        self.assertIn(f"[Jira REPORT-2222]({JIRA_URL})", external)
+        self.assertIn(f"[Jira PROJ-2222]({JIRA_URL})", external)
         self.assertIn(f"[Confluence: Launch notes]({WIKI_URL})", external)
         self.assertIn(f"[Internal dashboard: Activation, as of 2026-10-01]({DASHBOARD_URL})", external)
         sidecar = (self.draft.parent / "2026-10-14-update.sources.md").read_text(encoding="utf-8")

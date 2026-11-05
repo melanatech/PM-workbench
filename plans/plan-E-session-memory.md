@@ -76,7 +76,7 @@ Findings from reading the repo on 2026-11-02. Confirm each before relying on it.
 
 `test_generalization.GeneralizationTests.test_tracked_kit_does_not_name_a_company_ux_checker`
 fails on `main` as of commit 74ffd8c, before any Plan E change. The test bans
-the strings "the company UX checker", "company-ux-checker" and "the company UX checker" in tracked
+the company UX checker's name (listed in the private terms file) in tracked
 kit files, and two lines name it:
 
 - `pm-workbench/NEW-USER-SETUP.md` line 185 (the Impeccable row: "use UX

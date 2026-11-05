@@ -263,7 +263,9 @@ def extract_xlsx(src: Path, dest: Path, *, formulas: bool = False) -> int:
     except zipfile.BadZipFile:
         print(
             f"Corrupt or encrypted workbook (not a zip): {src}. "
-            "Re-export as .csv/.pdf without protection, or paste.",
+            "Do not skip it. Ask for the browser link that opens this workbook "
+            "(see process-inbox: exit 3 on .xlsx/.xlsm). "
+            "If that link is not possible, ask for a re-export or paste.",
             file=sys.stderr,
         )
         return 3

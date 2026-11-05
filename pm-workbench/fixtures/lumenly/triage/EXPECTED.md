@@ -5,7 +5,7 @@ Manual / agent check for `_source-triage.md`. Not scored by `score_fixture.py`.
 | File | Role | Outcome | Notes |
 |---|---|---|---|
 | `documents/2027-okr-frame.html` | strategy | promote | `strategy-frame`; surface 5 proposal-only |
-| `documents/glossary-mapu.txt` | semantic-system | promote | acronym → `term` → glossary |
+| `documents/glossary-mawu.txt` | semantic-system | promote | acronym → `term` → glossary |
 | `documents/definitions-frag-1.md` | semantic-system | hold | fragment; wait for siblings |
 | `documents/definitions-frag-2.md` | semantic-system | hold → promote on match | second primary confirms |
 | `documents/definitions-frag-3.md` | semantic-system | hold → promote on match | third; raise INITIATIVE CANDIDATE (≥3 criteria) |

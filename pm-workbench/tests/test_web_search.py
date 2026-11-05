@@ -37,8 +37,8 @@ SAMPLE_STARTPAGE = """
   <p class="description">Sales and custom reports in the Square Dashboard.</p>
 </div>
 <div class="result">
-  <a class="result-title result-link" href="https://www.merriam-webster.com/dictionary/merchant">
-    <h2>Merchant Definition</h2>
+  <a class="result-title result-link" href="https://www.merriam-webster.com/dictionary/customer">
+    <h2>Customer Definition</h2>
   </a>
   <p class="description">Dictionary junk should be filtered.</p>
 </div>
@@ -83,7 +83,7 @@ class WebSearchUnitTests(unittest.TestCase):
         with mock.patch.object(ws, "search_duckduckgo", return_value=[]):
             with mock.patch.object(ws, "search_startpage", return_value=good):
                 with mock.patch.object(ws, "search_bing", return_value=[]) as bing:
-                    hits = ws.search("merchant analytics explanations", max_results=3)
+                    hits = ws.search("customer analytics explanations", max_results=3)
                     bing.assert_not_called()
         self.assertEqual(hits[0]["provider"], "startpage")
         self.assertIn("shopify.com", hits[0]["url"])
@@ -172,7 +172,7 @@ class WebSearchLiveTests(unittest.TestCase):
                 "--json",
                 "--max",
                 "5",
-                "merchant analytics explanations why numbers changed",
+                "customer analytics explanations why numbers changed",
             ],
             capture_output=True,
             text=True,

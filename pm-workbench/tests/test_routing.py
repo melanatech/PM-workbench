@@ -12,10 +12,13 @@ import unittest
 
 
 WORKBENCH = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(WORKBENCH / "scripts"))
+import check_kit_generic  # noqa: E402
 ROUTES = WORKBENCH / ".claude" / "workflows" / "routes.json"
 PROTOCOL = WORKBENCH / ".claude" / "workflows" / "_protocol.md"
 COMMANDS = WORKBENCH / ".claude" / "commands"
 RUNNER = WORKBENCH / ".claude" / "agents" / "workflow-runner.md"
+OPERATOR_RULES = WORKBENCH / ".claude" / "workflows" / "_operator-rules.md"
 LOG_HOOK = WORKBENCH / ".claude" / "hooks" / "log_run.py"
 HEALTH = WORKBENCH / "scripts" / "workbench_health.py"
 STANDALONE = {"quick-close", "todo"}
@@ -70,7 +73,7 @@ class RoutesTableTests(unittest.TestCase):
         self.assertIn("~/pm-live", text)
         skill = (WORKBENCH / ".claude" / "skills" / "get-started" / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn("/brief get-started", skill)
-        claude = (WORKBENCH / "CLAUDE.md").read_text(encoding="utf-8")
+        claude = OPERATOR_RULES.read_text(encoding="utf-8")
         self.assertIn("/brief get-started", claude)
         self.assertIn("how do i get started", claude.lower())
 
@@ -105,7 +108,7 @@ class RoutesTableTests(unittest.TestCase):
         index = (WORKBENCH / "reference" / "templates" / "found-templates-index.md").read_text(encoding="utf-8")
         self.assertIn("Index row ≠ template", index)
         self.assertIn("index-only", index)
-        claude = (WORKBENCH / "CLAUDE.md").read_text(encoding="utf-8")
+        claude = OPERATOR_RULES.read_text(encoding="utf-8")
         self.assertIn("found-templates-index.md", claude)
         self.assertIn("PROPOSE creating the `.md`", claude)
 
@@ -128,7 +131,7 @@ class RoutesTableTests(unittest.TestCase):
         explore = (
             WORKBENCH / ".claude" / "workflows" / "explore-brief.md"
         ).read_text(encoding="utf-8")
-        claude = (WORKBENCH / "CLAUDE.md").read_text(encoding="utf-8")
+        claude = OPERATOR_RULES.read_text(encoding="utf-8")
         self.assertIn("context_preflight", gatherer)
         self.assertIn("consume preflight", gatherer.lower())
         self.assertIn("Prior workspace analysis", gatherer)
@@ -190,7 +193,7 @@ class RoutesTableTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("/discover explore-brief", skill)
-        claude = (WORKBENCH / "CLAUDE.md").read_text(encoding="utf-8")
+        claude = OPERATOR_RULES.read_text(encoding="utf-8")
         self.assertIn("/discover explore-brief", claude)
         self.assertIn("check-in brief", claude.lower())
         plain = (WORKBENCH / ".claude" / "workflows" / "_plain-language.md").read_text(
@@ -296,9 +299,8 @@ class RoutesTableTests(unittest.TestCase):
         self.assertIn("repos/", setup)
         self.assertIn("private npm registry", setup)
         self.assertIn("re-clone", setup)
-        self.assertNotIn("example-commerce", setup)
-        self.assertNotIn("pm-ch-mockup", setup)
-        claude = (WORKBENCH / "CLAUDE.md").read_text(encoding="utf-8")
+        self.assertEqual(check_kit_generic.scan([WORKBENCH / "NEW-USER-SETUP.md"]), [])
+        claude = OPERATOR_RULES.read_text(encoding="utf-8")
         self.assertIn("product UI base", claude)
         self.assertIn("NEW-USER-SETUP §2a", claude)
         dive = (WORKBENCH / ".claude" / "workflows" / "code-dive.md").read_text(encoding="utf-8")
@@ -318,8 +320,7 @@ class RoutesTableTests(unittest.TestCase):
                        "Link related tickets formally", "Verify Jira field values"):
             self.assertIn(phrase, text)
         # Org project keys and product-area examples stay out of the kit template
-        for banned in ("REPORT", "CP-", "all saved reports", "the reporting area"):
-            self.assertNotIn(banned, text)
+        self.assertEqual(check_kit_generic.scan([path]), [])
         closeout = (WORKBENCH / ".claude" / "workflows" / "meeting-closeout.md").read_text(encoding="utf-8")
         self.assertIn("reference/templates/jira-ticket-draft.md", closeout)
         self.assertIn("Related tickets", closeout)
@@ -369,7 +370,7 @@ class RouterFileTests(unittest.TestCase):
     def test_compact_output_is_required_of_protocol_and_runner(self):
         protocol = PROTOCOL.read_text(encoding="utf-8")
         runner = RUNNER.read_text(encoding="utf-8")
-        claude = (WORKBENCH / "CLAUDE.md").read_text(encoding="utf-8")
+        claude = OPERATOR_RULES.read_text(encoding="utf-8")
         self.assertIn("Compact output", protocol)
         self.assertIn("Do not paraphrase", protocol)
         self.assertIn("Relay = paste, then stop", protocol)

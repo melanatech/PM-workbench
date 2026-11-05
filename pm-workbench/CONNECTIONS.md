@@ -59,7 +59,7 @@ The first column is the workflow name. Run it through its cluster command: `/cap
 
 **Automatic, baked into a command's own steps** — most of the table above. When you run `/capture meeting-closeout`, it doesn't just file the decision; it checks whether that decision touches something already in motion and tells you.
 
-**On-demand, when something happened outside the normal flow** — `/sync ripple-check`. Use it after a hallway conversation, a decision made over Slack DM that never became a formal meeting, or news that arrived some other way. It's the same cross-checking logic, invoked manually instead of triggered by a specific command's normal work. Mid-chat facts the PM drops after a freeform answer should still write-back in that turn (CLAUDE.md rule 24); ripple-check is for a full cross-surface pass, not a prerequisite for logging one clear fact.
+**On-demand, when something happened outside the normal flow** — `/sync ripple-check`. Use it after a hallway conversation, a decision made over Slack DM that never became a formal meeting, or news that arrived some other way. It's the same cross-checking logic, invoked manually instead of triggered by a specific command's normal work. Mid-chat, a line goes into `reference/context/pm-brain.md` only when the PM literally says to remember it, and into every current-state register row that still states the old fact, in that turn (CLAUDE.md rule 24). The rule is at the top of `reference/context/pm-brain.md`. Ripple-check is for a full cross-surface pass, not a prerequisite for logging one clear fact.
 
 ## Where this can still fall short (be honest with yourself about it)
 

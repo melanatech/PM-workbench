@@ -5,7 +5,7 @@ argument-hint: [paste notes/transcript, or filename in inbox/meetings/]
 
 Execution mode: **fast** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
-Context dependencies: soft: people, current-priorities | hard: none
+Context dependencies: soft: people, current-priorities, writing-style | hard: none
 
 Meeting input: $ARGUMENTS
 
@@ -31,7 +31,7 @@ When `action` is `ask` (a summary or excerpt that would create a decision, commi
    - Sprint housekeeping already owned end-to-end by eng with no product decision or PM follow-up
    - Someone else's task the PM only overheard and will not chase
 
-   Same spirit for **decisions** and **risks**: keep product / process / launch / stakeholder items; skip routine infra unless it hits the keep-list (merchant-visible behavior, API/schema/metric meaning, launch readiness, reliability/data quality, instrumentation, architecture that limits scope, cost/capacity) — then log the *product* impact, not the chore. When unsure, prefer a short QUESTIONS item over inventing a COM- row (except exploratory-thinking: never ask owners/decisions).
+   Same spirit for **decisions** and **risks**: keep product / process / launch / stakeholder items; skip routine infra unless it hits the keep-list (customer-visible behavior, API/schema/metric meaning, launch readiness, reliability/data quality, instrumentation, architecture that limits scope, cost/capacity) — then log the *product* impact, not the chore. When unsure, prefer a short QUESTIONS item over inventing a COM- row (except exploratory-thinking: never ask owners/decisions).
 
 2b. **Source triage (required).** Apply `.claude/workflows/_source-triage.md` to the meeting source before register writes. Ideas / "things to think about" with no owner or decision → role `exploratory-thinking`, outcome `hold` (dated Ideas entry in learning + source-index row; **no EV/DEC/COM**; **no questions about owners or decisions**). Multiple transcripts of the same meeting → fullest is primary; others `duplicate` with `same_as`. Stakeholder preferences → `stakeholder-stance` into `reference/context/people.md`. Append the triage row via `scripts/source_index.py append`.
 
@@ -42,7 +42,7 @@ When `action` is `ask` (a summary or excerpt that would create a decision, commi
    - **Create a row** if none matches (same name / obvious alias). IDs: `INIT-nnn` next unused. Stages (descriptive, not a pipeline): `discovery` | `building` | `prd` | `prototype` | `experiment` | `launched` | `killed` | `iterating`. Prefer `discovery` / `building` / `iterating` when no PRD/prototype path exists yet. Link `related_decisions` / `related_risks` to IDs from this closeout when they apply. Put source meeting path and open enhancement bullets in `notes`. Set `last_updated` to today.
    - **Update in place** (same id, same row order) when the meeting advances stage, adds a decision/risk link, or adds concrete enhancement items — append to `notes`, do not invent a second row for the same feature.
    - **One row per initiative**, not per ticket. Smaller enhancements (date selector, lock column, table total row, status labels, etc.) go in that initiative's `notes` (and evidence rows when discovery material), not as separate INIT- rows — unless the meeting treats them as their own epic/release slice (e.g. cash discount for 14 Oct).
-   - **Engineering keep-list** (from `_source-triage.md`): keep engineering detail only when it changes merchant-visible behavior, API/event/schema/metric meaning, launch readiness, reliability/data quality, instrumentation, architecture that limits scope, or cost/capacity. Routine infra (SSL/certs, DB vacuum/index cleanup, cluster cutovers, on-call) → ignore with that reason; never create INIT-/COM- rows for it.
+   - **Engineering keep-list** (from `_source-triage.md`): keep engineering detail only when it changes customer-visible behavior, API/event/schema/metric meaning, launch readiness, reliability/data quality, instrumentation, architecture that limits scope, or cost/capacity. Routine infra (SSL/certs, DB vacuum/index cleanup, cluster cutovers, on-call) → ignore with that reason; never create INIT-/COM- rows for it.
    - **Initiative candidate gate:** when ≥3 criteria in `_source-triage.md` §6 hold for a topic that was folded into a parent, raise `INITIATIVE CANDIDATE` (Tier 3 proposal) — do not create the row silently.
    - If a decision/commitment touches an initiative, name it explicitly — "this affects [INIT-nnn name], currently at [stage]" — and note whether it implies re-running `/build prd-package`, `/build prototype-build`, or `/build experiment-package`.
 
@@ -55,9 +55,9 @@ When `action` is `ask` (a summary or excerpt that would create a decision, commi
 
 6c. **Product knowledge → `learning/`.** If the meeting taught something durable about how the product works (a Figma walkthrough, report behavior, status labels, export limits), update or create `learning/[area].md` (e.g. `learning/billing.md`) with dated bullets and source paths. Skip one-off scheduling trivia.
 
-7. Draft (do not send) follow-up messages or Jira text only when the meeting implies one. Do not write a "no drafts / only attendee / no Jira" section. Do not draft Jira for keep-list-skipped chores unless I ask.
+7. Draft (do not send) follow-up messages or Jira text only when the meeting implies one. Do not write a "no drafts / only attendee / no Jira" section. Do not draft Jira for keep-list-skipped chores unless I ask. Slack / teammate follow-ups and Jira paste blocks are external: include the External writing section from `reference/context/writing-style.md` in the writing instructions. The Write gate in `reference/context/pm-brain.md` is the edit constraint.
 
-   **When drafting Jira tickets**, match `reference/templates/jira-ticket-draft.md` exactly — paste block **and** its quality checklist (confirm project, verify epic in Jira, search duplicates/conventions, concrete before/after, named surfaces, actionable `[NEEDS INPUT]`, verifiable ACs, formal related links, design links, target-project field values):
+   **When drafting Jira tickets**, match `reference/templates/jira-ticket-draft.md` exactly — paste block **and** its quality checklist (confirm project, verify epic in Jira, search duplicates/conventions, concrete before/after, product surfaces, no code or prescribed fix, acceptance criteria without a repeated Done line, actionable `[NEEDS INPUT]`, formal related links, design links, target-project field values):
    - **Summary** must be descriptive enough that someone who was not in the meeting understands the change and the product reason (not a short label).
    - Always include **Project**, **Initiative/Epic**, **Priority**, and **Target date** (use `[NEEDS INPUT]` or `provisional` + why — never omit). Priority/type values must match the **target** project (see CLAUDE.local).
    - **Related tickets** = other Jira keys (or sibling drafts by number) only. Never put workbench paths, COM-/DEC-/RISK-/TODO- ids, meeting titles, or Stream URLs in Related / Source fields that would be pasted into Jira — nobody else can open those. Keep workbench citations in an optional "Workbench notes (do not paste into Jira)" footer of the drafts file only.

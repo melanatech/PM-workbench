@@ -27,7 +27,7 @@ Look for: explicit follow-ups assigned to the PM ("I'll look into…", "send X",
 - naming `/report strategy-refresh` as a *separate* candidate when the only content is "include idea X in the refresh" — fold that into Excluded as `next consumer: /report strategy-refresh` unless the source asks the PM to run the refresh as their action,
 - a promise already covered by an open COM- the PM owns — those are twinned via `ensure-from-commitment` in capture/reconcile, not re-proposed here (name the COM id under Excluded).
 
-**Action test:** if the line cannot be finished without a product/scope/owner/date judgment from the PM or a stakeholder, it is not a to-do candidate. Prefer one real chase ("Follow up with Dhruv on the 10-19 blockers") over five "confirm/decide" lines.
+**Action test:** if the line cannot be finished without a product/scope/owner/date judgment from the PM or a stakeholder, it is not a to-do candidate. Prefer one real chase ("Follow up with the eng lead on Friday's blockers") over five "confirm/decide" lines.
 
 Return at most **10** candidates, strongest first, as a table:
 

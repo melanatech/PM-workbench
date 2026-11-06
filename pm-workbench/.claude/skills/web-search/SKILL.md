@@ -13,7 +13,7 @@ description: >
 Plain-language entry for the shared **web search recipe**.
 
 1. Read `.claude/workflows/_plain-language.md` (do not improvise a lighter path that skips durable capture).
-2. Execute `.claude/workflows/_web-search.md` in full: `python3 scripts/web_search.py` first, then WebFetch, then write `state/web-search/YYYY-MM-DD-<slug>.md` with the Problems / Market / Users / Solutions heading order.
+2. Execute `.claude/workflows/_web-search.md` in full: `python3 scripts/web_search.py` first, then WebFetch. When WebFetch is refused or blocked on a public doc, help article, launch post, or vendor page, read that same URL with the browser bridge (navigate, then snapshot, read only). Then write `state/web-search/YYYY-MM-DD-<slug>.md` with the Problems / Market / Users / Solutions heading order.
 3. For a full competitor landscape, route to `/discover competitive-scan` instead (that workflow owns `state/competitive/` + the monthly log).
 4. When the ask is part of a brief or PRD, prefer running `/discover explore-brief` or `/build prd-package` so Step 1.5 / 0.5 runs inside the workflow — do not invent a third parallel path.
 

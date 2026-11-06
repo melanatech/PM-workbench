@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -440,6 +442,30 @@ class MetricsUsageRowsTests(unittest.TestCase):
         self.assertEqual(metrics["usage_output_tokens_30d"], 20)
         self.assertEqual(metrics["usage_cache_read_tokens_30d"], 50)
         self.assertEqual(metrics["usage_l2a_labeled_pct_30d"], 100.0)
+
+
+class ClassifierCallTests(unittest.TestCase):
+    def test_the_classifier_call_is_lean(self):
+        tmp = Path(tempfile.mkdtemp(prefix="pmwb-cls-"))
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        record = tmp / "argv.txt"
+        fake = tmp / "fake_claude.py"
+        fake.write_text(
+            "#!/usr/bin/env python3\nimport json, os, sys\n"
+            "json.dump({'argv': sys.argv[1:], 'cwd': os.getcwd(), "
+            "'internal': os.environ.get('SESSION_MEMORY_INTERNAL', '')}, "
+            f"open({str(record)!r}, 'w'))\n"
+            "print('1\\tother')\n"
+        )
+        fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
+        labeled = session_usage.classify_l2b_bulk(tmp, [("u1", "what is the status of the report")], {}, claude_bin=str(fake))
+        self.assertEqual(labeled, 1)
+        recorded = json.loads(record.read_text())
+        for flag in ("--no-session-persistence", "--tools", "--strict-mcp-config",
+                     "--disable-slash-commands", "--system-prompt"):
+            self.assertIn(flag, recorded["argv"])
+        self.assertIn("claude-lean-call", recorded["cwd"])
+        self.assertEqual(recorded["internal"], "1")
 
 
 if __name__ == "__main__":

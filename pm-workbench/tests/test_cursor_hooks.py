@@ -113,6 +113,37 @@ class DispatchBlock(HookBase):
                                                       "tool_input": {**self.TASK, "prompt": prompt}})
         self.assertNotIn("updated_input", again)
 
+    def write_brain(self, text):
+        brain = self.root / "reference" / "context" / "pm-brain.md"
+        brain.parent.mkdir(parents=True, exist_ok=True)
+        brain.write_text(text, encoding="utf-8")
+
+    def dispatch(self):
+        out = self.run_hook("dispatch_inject.py", {"hook_event_name": "preToolUse", "tool_name": "Task",
+                                                    "tool_input": self.TASK})
+        return out["updated_input"]["prompt"]
+
+    def test_saved_rules_reach_the_worker_without_anyone_wiring_them(self):
+        self.write_brain("## Roadmap rules\n\n- Status is blockers only.\n")
+        self.assertIn("Status is blockers only.", self.dispatch())
+        self.write_brain("## Roadmap rules\n\n- Status is blockers only.\n- Every card names its owner.\n")
+        self.assertIn("Every card names its owner.", self.dispatch())
+
+    def test_dispatch_records_which_rules_version_the_worker_got(self):
+        self.write_brain("- One rule.\n")
+        self.dispatch()
+        rows = [json.loads(l) for l in (self.root / "state" / "hooks" / "hook-log.jsonl").read_text().splitlines()]
+        injected = [r for r in rows if r.get("decision") == "inject"]
+        self.assertEqual(len(injected[-1]["standing_rules_version"]), 12)
+
+    def test_rendered_block_tells_the_worker_to_read_the_file(self):
+        self.write_brain("- One rule.\n")
+        subprocess.run(["python3", str(self.root / ".cursor/hooks/dispatch_inject.py"), "--write-block"],
+                       capture_output=True, text=True, cwd=self.root, check=True)
+        text = (self.root / ".cursor/hooks/dispatch-block.md").read_text()
+        self.assertIn("reference/context/pm-brain.md", text)
+        self.assertNotIn("One rule.", text)
+
     def test_other_tools_untouched(self):
         self.assertEqual(self.run_hook("dispatch_inject.py", {"tool_name": "Read", "tool_input": {"path": "x"}}), {})
         wrapped = {"namespace": "cursor", "toolName": "Task", "arguments": self.TASK}

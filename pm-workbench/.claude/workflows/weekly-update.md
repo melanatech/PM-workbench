@@ -21,7 +21,7 @@ Then batch:
 - `reference/context/current-priorities.md`
 - latest `outputs/weekly/*-jira-reconcile.md`
 - `registers/commitments.csv`
-- `registers/decisions.csv` and `registers/risks.csv`
+- the active decisions (`python3 scripts/register_view.py active decisions`; superseded rows are hidden) and `registers/risks.csv`
 - latest `outputs/weekly/*-discovery.md`
 - latest `/report okr-refresh` output and `state/okr-history.csv` (displayed values only)
 - last week's update in `outputs/weekly/`
@@ -34,7 +34,7 @@ Then read maintained state — this update is generated, not recalled:
 - `reference/context/current-priorities.md` — frame the update against my stated priorities, and flag if the week's actual activity diverged from them (that divergence is itself worth a line to leadership)
 - Latest `outputs/weekly/*-jira-reconcile.md` (what moved, what's stale)
 - `registers/commitments.csv` — due, completed, or missed since last update
-- `registers/decisions.csv` and `registers/risks.csv` — new or changed entries
+- the active decisions (`python3 scripts/register_view.py active decisions`; superseded rows are hidden) and `registers/risks.csv` — new or changed entries (a decision changed this week is a new row whose `supersedes` names the old one; report the new wording only)
 - Latest `outputs/weekly/*-discovery.md`
 - Latest OKR narrative from `/report okr-refresh` outputs
 - Last week's update in `outputs/weekly/` (style + continuity reference)
@@ -50,7 +50,7 @@ Structure — leading with change, never repeating background (shape: `reference
 
 Then two checks against last week's update: strip any repeated background, and **flag any commitment mentioned last week that this draft doesn't address** — silently dropped promises are exactly what this system exists to prevent.
 
-Produce an email version and a wiki-format version. Save to `outputs/weekly/[date]-leadership-update.md`. If browser drafting is available and I approve interactively, pre-fill the email draft or wiki page — and stop before send/publish.
+Produce an email version and a wiki-format version. Save to `outputs/weekly/[date]-leadership-update.md`. Run the voice check (`_protocol.md` § Voice check) on that file before the PM sees it. If browser drafting is available and I approve interactively, pre-fill the email draft or wiki page — and stop before send/publish.
 
 **Recurring-format weeks.** If `reference/context/workflow-notes.md` § weekly-update names a recurring status format (for example a biweekly KR update), follow it: its cadence, template, output path, and live page live there. Draft it alongside the leadership update, not instead of it, with the same Step 0 reconciliation, and say at the top whether this is one of those weeks. Build it from maintained state only: KR values from `state/okr-history.csv` with the as-of date (CLAUDE.md rule 5), never recomputed; work and dates from `registers/initiatives.csv` and the latest Jira reconcile (Jira wins); problems from `registers/risks.csv` and `registers/commitments.csv`. Sections no register holds (team health, support for other teams) stay `[NEEDS INPUT]`. Status colors are "proposed" with the evidence; the PM confirms them. Read the live page the notes name; do not ask the PM to export it. This workflow still stops at the saved draft: do not publish, post, or pre-fill the wiki or chat.
 

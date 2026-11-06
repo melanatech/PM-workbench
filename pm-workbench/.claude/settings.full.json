@@ -1,6 +1,6 @@
 {
   "permissions": {
-    "defaultMode": "dontAsk",
+    "defaultMode": "acceptEdits",
     "additionalDirectories": [
       "~/Downloads/pm-workbench-inbox"
     ],
@@ -124,6 +124,26 @@
             "type": "command",
             "command": "PY=$(command -v python3 || command -v python); \"$PY\" \"$CLAUDE_PROJECT_DIR/.claude/hooks/validate_register_write.py\"",
             "timeout": 20
+          },
+          {
+            "type": "command",
+            "command": "PY=$(command -v python3 || command -v python); \"$PY\" \"$CLAUDE_PROJECT_DIR/.claude/hooks/require_guardrails_auth_for_prototypes.py\"",
+            "timeout": 20
+          },
+          {
+            "type": "command",
+            "command": "PY=$(command -v python3 || command -v python); \"$PY\" \"$CLAUDE_PROJECT_DIR/.claude/hooks/check_voice.py\"",
+            "timeout": 180
+          }
+        ]
+      },
+      {
+        "matcher": "Task|Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PY=$(command -v python3 || command -v python); \"$PY\" \"$CLAUDE_PROJECT_DIR/.claude/hooks/inject_standing_rules.py\"",
+            "timeout": 10
           }
         ]
       },
@@ -181,5 +201,8 @@
         ]
       }
     ]
+  },
+  "env": {
+    "ENABLE_TOOL_SEARCH": "true"
   }
 }

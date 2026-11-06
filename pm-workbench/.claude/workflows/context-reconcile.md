@@ -24,7 +24,7 @@ This is **not** `/sync jira-reconcile` (board) and **not** `/sync ripple-check` 
 ## Step 1 — load the system of record (always)
 
 Read (relevant rows / recent sections only):
-- `registers/todos.csv`, `registers/initiatives.csv`, `registers/commitments.csv`, `registers/risks.csv`, `registers/decisions.csv`
+- `registers/todos.csv`, `registers/initiatives.csv`, `registers/commitments.csv`, `registers/risks.csv`, and the active decisions (`python3 scripts/register_view.py active decisions`)
 - Recent `registers/evidence.csv` (last 60–90 days or topic filter)
 - `reference/context/assumptions-and-open-questions.md` (full Open section)
 - `reference/context/current-priorities.md`

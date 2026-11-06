@@ -19,6 +19,10 @@ sys.path.insert(0, str(WORKBENCH / "scripts"))
 FAKE = """#!/usr/bin/env python3
 import json, os, sys
 prompt = sys.argv[2]
+if os.environ.get('FAKE_ARGV'):
+    open(os.environ['FAKE_ARGV'], 'a').write(
+        ' '.join(sys.argv[3:]) + '\\nCWD ' + os.getcwd()
+        + '\\nINTERNAL ' + os.environ.get('SESSION_MEMORY_INTERNAL', '') + '\\n')
 open(os.environ['FAKE_CALLS'], 'a').write(prompt.split('# Task: ')[-1][:80].replace('\\n', ' ') + '\\n')
 replies = json.load(open(os.environ['FAKE_REPLIES']))
 for key, reply in replies.items():
@@ -45,6 +49,8 @@ def assistant(text, minutes_ago=1, tokens=1000):
 
 class Base(unittest.TestCase):
     def setUp(self):
+        # The project key follows CLAUDE_PROJECT_DIR; a runner started inside Claude Code has it set.
+        self._project_dir = os.environ.pop("CLAUDE_PROJECT_DIR", None)
         self._tmp = tempfile.TemporaryDirectory()
         self.tmp = Path(self._tmp.name)
         self.home = self.tmp / "sm-home"
@@ -59,6 +65,8 @@ class Base(unittest.TestCase):
 
     def tearDown(self):
         self._tmp.cleanup()
+        if self._project_dir is not None:
+            os.environ["CLAUDE_PROJECT_DIR"] = self._project_dir
 
     def write_transcript(self, rows):
         self.transcript.write_text("".join(json.dumps(r) + "\n" for r in rows))
@@ -69,16 +77,18 @@ class Base(unittest.TestCase):
                "SESSION_MEMORY_SYNC": "1", "FAKE_CALLS": str(self.calls),
                "FAKE_REPLIES": str(self.tmp / "replies.json")}
         env.pop("SESSION_MEMORY_INTERNAL", None)
+        env.pop("CLAUDE_PROJECT_DIR", None)
         env.update(extra)
         return env
 
     def payload(self, **kw):
         return {"session_id": "s1", "cwd": str(self.cwd), "transcript_path": str(self.transcript), **kw}
 
-    def run_hook(self, name, payload, raw=None, **env):
+    def run_hook(self, name, payload, raw=None, expect=0, **env):
         p = subprocess.run([sys.executable, str(HOOKS / name)], input=raw if raw is not None else json.dumps(payload),
                            capture_output=True, text=True, env=self.env(**env))
-        self.assertEqual(p.returncode, 0, p.stderr)
+        self.last_hook = p
+        self.assertEqual(p.returncode, expect, p.stderr)
         return json.loads(p.stdout) if p.stdout.strip() else None
 
     def register(self, sid="s1"):
@@ -142,14 +152,17 @@ class Keeper(Base):
         self.assertEqual([(e["section"], e["text"]) for e in self.active()], [("Decisions", "Export as CSV, not PDF")])
         self.assertEqual(len(self.call_log()), 1)
 
-    def test_reversal_supersedes_and_goal_is_a_snapshot(self):
+    def test_reversal_supersedes_and_a_later_goal_add_does_not_replace_the_subject(self):
         self.replies = {"first goal": '{"ops": [{"op": "add", "section": "Goal", "text": "Pick a vendor"}, '
                                       '{"op": "add", "section": "Decisions", "text": "Vendor A"}]}'}
         self.capture("The first goal: pick a vendor, and we go with vendor A.")
         self.replies = {"vendor B": '{"ops": [{"op": "supersede", "ids": ["e2"], "section": "Decisions", "text": "Vendor B"}, '
                                     '{"op": "add", "section": "Goal", "text": "Contract vendor B"}]}'}
         self.capture("Actually go with vendor B, A cannot do SSO.")
-        self.assertEqual(sorted(e["text"] for e in self.active()), ["Contract vendor B", "Vendor B"])
+        active = self.active()
+        self.assertEqual([e["text"] for e in active if e["section"] == "Goal"], ["Pick a vendor"])
+        self.assertEqual([e["text"] for e in active if e["section"] == "Where it stands"], ["Contract vendor B"])
+        self.assertEqual([e["text"] for e in active if e["section"] == "Decisions"], ["Vendor B"])
         self.assertIn("correction signal", self.call_log()[-1])
         self.assertNotIn("correction signal", self.call_log()[0])
 
@@ -171,6 +184,62 @@ class Keeper(Base):
         self.assertEqual(len(self.call_log()), 1)
         log = (next(self.home.glob("*/log.jsonl"))).read_text()
         self.assertIn("capture-failed", log)
+
+
+class HeadlessCalls(Base):
+    def test_hook_model_calls_are_not_saved_as_sessions(self):
+        self.replies = {"Task: capture": '{"ops": []}'}
+        self.write_transcript([user("A decision worth keeping, long enough to count"), assistant("ok")])
+        argv = self.tmp / "argv.txt"
+        self.run_hook("keeper.py", self.payload(), FAKE_ARGV=str(argv))
+        self.assertTrue(argv.exists(), "the model was never called")
+        lines = argv.read_text().splitlines()
+        flags = lines[0].split()
+        for flag in ("--no-session-persistence", "--tools", "--strict-mcp-config",
+                     "--disable-slash-commands", "--system-prompt"):
+            self.assertIn(flag, flags)
+        self.assertIn("claude-lean-call", lines[1])
+        self.assertEqual(lines[2], "INTERNAL 1")
+
+
+class ProjectKey(Base):
+    def test_register_follows_the_project_not_the_folder_the_agent_moved_into(self):
+        import common
+        sub = self.cwd / "outputs" / "v3"
+        sub.mkdir(parents=True)
+        self.replies = {"use CSV": '{"ops": [{"op": "add", "section": "Decisions", "text": "Export as CSV"}]}'}
+        self.write_transcript([user("Let's use CSV for the export, final answer."), assistant("ok")])
+        self.run_hook("keeper.py", self.payload(cwd=str(sub)), CLAUDE_PROJECT_DIR=str(self.cwd))
+        key = common.slug(str(self.cwd))
+        self.assertTrue((self.home / key / "s1.jsonl").exists())
+        self.assertEqual([p.name for p in self.home.iterdir() if p.is_dir()], [key])
+
+    def test_without_the_env_var_the_nearest_claude_folder_is_the_project(self):
+        import common
+        (self.cwd / ".claude").mkdir()
+        sub = self.cwd / "drafts" / "deep"
+        sub.mkdir(parents=True)
+        self.assertEqual(common.project_root(str(sub)), str(self.cwd))
+        self.assertEqual(common.project_root(str(self.cwd)), str(self.cwd))
+
+    def test_a_folder_with_no_claude_parent_is_its_own_project(self):
+        import common
+        self.assertEqual(common.project_root(str(self.cwd)), str(self.cwd))
+
+    def test_pickup_from_a_subfolder_finds_the_projects_registers(self):
+        import common
+        sub = self.cwd / "outputs"
+        sub.mkdir()
+        os.environ["SESSION_MEMORY_HOME"] = str(self.home)
+        os.environ["CLAUDE_PROJECT_DIR"] = str(self.cwd)
+        try:
+            common.update_index({"cwd": str(sub), "session_id": "old1"}, goal="Parser rewrite")
+        finally:
+            os.environ.pop("SESSION_MEMORY_HOME", None)
+            os.environ.pop("CLAUDE_PROJECT_DIR", None)
+        found = subprocess.run([sys.executable, str(MODULE / "pickup.py"), "--cwd", str(self.cwd), "parser"],
+                               capture_output=True, text=True, env=self.env(CLAUDE_PROJECT_DIR=str(self.cwd)))
+        self.assertIn("old1", found.stdout)
 
 
 class Restore(Base):
@@ -209,15 +278,40 @@ class Prompt(Base):
         self.assertIn("partner skill", ctx)
         self.assertNotIn("systemMessage", out)
 
-    def test_stale_large_session_gets_notice_not_block(self):
+    def test_nudge_is_included_once(self):
+        self.home.mkdir(parents=True)
+        (self.home / "nudge.txt").write_text("Use the browser bridge when WebFetch is blocked.")
+        self.write_transcript([user("hi"), assistant("hello")])
+        first = self.run_hook("prompt.py", self.payload(prompt="search the web"))
+        self.assertIn("browser bridge", first["hookSpecificOutput"]["additionalContext"])
+        self.assertFalse((self.home / "nudge.txt").exists())
+        second = self.run_hook("prompt.py", self.payload(prompt="search again"))
+        self.assertNotIn("browser bridge", second["hookSpecificOutput"]["additionalContext"])
+
+    def test_stale_large_session_is_blocked_until_force(self):
         self.replies = {"Task: snapshot": '{"ops": [{"op": "add", "section": "Where it stands", "text": "Draft 2 done"}]}'}
         self.write_transcript([user("write the doc"), assistant("done", minutes_ago=120, tokens=150000)])
-        out = self.run_hook("prompt.py", self.payload(prompt="what next"))
-        self.assertIn("idle 2.0 h", out["systemMessage"])
-        self.assertIn("Where it stands is saved", out["systemMessage"])
+        out = self.run_hook("prompt.py", self.payload(prompt="what next"), expect=2,
+                            SESSION_MEMORY_FLOOR_TOKENS="0")
+        self.assertIsNone(out)
+        self.assertIn("idle 2.0 h", self.last_hook.stderr)
+        self.assertIn("was not sent", self.last_hook.stderr)
+        self.assertIn("what next", self.last_hook.stderr)
         self.assertEqual([e["text"] for e in self.active()], ["Draft 2 done"])
-        forced = self.run_hook("prompt.py", self.payload(prompt="!force what next"))
-        self.assertNotIn("systemMessage", forced)
+        forced = self.run_hook("prompt.py", self.payload(prompt="!force what next"),
+                               SESSION_MEMORY_FLOOR_TOKENS="0")
+        self.assertNotIn("was not sent", forced["hookSpecificOutput"]["additionalContext"])
+
+    def test_growth_within_a_new_chat_is_not_blocked(self):
+        self.write_transcript([user("write the doc"), assistant("done", minutes_ago=120, tokens=150000)])
+        out = self.run_hook("prompt.py", self.payload(prompt="what next"), SESSION_MEMORY_FLOOR_TOKENS="100000")
+        self.assertNotIn("was not sent", out["hookSpecificOutput"]["additionalContext"])
+
+    def test_growth_above_a_new_chat_names_the_saving(self):
+        self.replies = {"Task: snapshot": '{"ops": []}'}
+        self.write_transcript([user("write the doc"), assistant("done", minutes_ago=120, tokens=200000)])
+        self.run_hook("prompt.py", self.payload(prompt="what next"), expect=2, SESSION_MEMORY_FLOOR_TOKENS="100000")
+        self.assertIn("100k tokens more than a new chat", self.last_hook.stderr)
 
     def test_small_or_recent_session_no_notice(self):
         self.write_transcript([user("x"), assistant("y", minutes_ago=120, tokens=5000)])
@@ -318,6 +412,23 @@ class Pickup(Base):
                                "--keep", "e2", "--session", "new1"], capture_output=True, text=True, env=env)
         self.assertEqual(done.returncode, 0, done.stderr)
         self.assertEqual([(e["text"], e["source"]) for e in self.active("new1")], [("Regex parser failed", "old1:e2")])
+
+    def test_a_todo_goal_still_matches_words_in_the_register(self):
+        import common
+        os.environ["SESSION_MEMORY_HOME"] = str(self.home)
+        try:
+            payload = {"cwd": str(self.cwd), "session_id": "old1"}
+            common.append_entries(common.register_path(payload), [
+                {"id": "e1", "section": "Goal", "text": "Get approval on the definitions table", "supersedes": []},
+                {"id": "e2", "section": "Where it stands", "text": "Reseller commission explorer and the plan are drafted", "supersedes": []}])
+            common.update_index(payload, goal="Get approval on the definitions table")
+        finally:
+            os.environ.pop("SESSION_MEMORY_HOME", None)
+        found = subprocess.run([sys.executable, str(MODULE / "pickup.py"), "--cwd", str(self.cwd),
+                                "reseller", "commission", "report", "planning"],
+                               capture_output=True, text=True, env=self.env())
+        self.assertIn("old1", found.stdout)
+        self.assertIn("reseller", found.stdout)
 
 
 if __name__ == "__main__":

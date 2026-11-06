@@ -1,12 +1,12 @@
 # AGENTS.md — subagent index
 
-Subagents are one-directional: dispatch, isolated work, a result comes back. They are not a multi-agent team that assigns work to each other. Use one when a step needs isolation (an unbiased verdict, or a heavy read that should not stay in the main session). Runner behavior, pauses, and execution modes live in `.claude/workflows/_protocol.md`. Standing rules live in CLAUDE.md — do not restate them here.
+Subagents are one-directional: dispatch, isolated work, a result comes back. They are not a multi-agent team that assigns work to each other. Use one when a step needs isolation (an unbiased verdict, or a heavy read that should not stay in the main session). Runner behavior, pauses, and execution modes live in `.claude/workflows/_protocol.md`. Standing rules live in `.claude/workflows/_operator-rules.md` — do not restate them here.
 
 | Mechanism | Where | What it is |
 |---|---|---|
 | **Command** | `.claude/commands/*.md` | What you type. Six thin routers (`/capture`, `/brief`, `/sync`, `/discover`, `/build`, `/report`) plus `/quick-close` and `/todo`. |
 | **Workflow** | `.claude/workflows/*.md` | The step text. A router reads one; `workflow-runner` carries it out. |
-| **Skill** | `.claude/skills/*/SKILL.md` | Same job, auto-invoked from plain language (see SKILLS.md). |
+| **Skill** | `.claude/skills/*/SKILL.md` | Same job, auto-invoked from plain language (see SKILLS.md). `source-scout` finds whether a question could be answered before anyone marks it blocked. It is a skill, not a subagent. |
 | **Subagent** | `.claude/agents/*.md` | A separate context window, spawned mid-task. |
 
 | Agent | Kind | Used by |
@@ -23,7 +23,7 @@ Subagents are one-directional: dispatch, isolated work, a result comes back. The
 | `return-window-scanner` | Heavy read | `/brief return-brief` |
 | `strategy-synthesizer` | Heavy read | `/report strategy-refresh` (refresh path; not the from-scratch discovery phase) |
 | `strategy-red-team-reviewer` | Blind review | `/report strategy-refresh` and `/report roadmap-build` (Standard: one pass). Sees the draft and its cited sources only. Findings become Anticipated objections. Optional single pass on `/report weekly-update` when the PM asks; not the Fast default. |
-| `external-readiness-reviewer` | Blind review | Publish step in Standard or Deep (`.claude/workflows/_protocol.md`). Sees the rendered file and one audience line only. Fast skips it. |
+| `external-readiness-reviewer` | Blind review | Publish step in Standard or Deep (`.claude/workflows/_protocol.md`). Sees the rendered file, audience line, and (when provided) the number ledger + source readout for cross-artifact number contradictions. Fast may skip the reviewer; the Publish number-consistency gate and `scripts/check_number_consistency.py` are required in every mode. |
 | `code-repo-explorer` | Heavy read | `/discover code-dive`; reused by `/build prototype-build` |
 | `todo-worker` | Heavy read | `/todo propose` and `/todo work` (read-only). Returns `[NEEDS INPUT: …]`; the main session asks. |
 | `internal-docs-reader` | Heavy read | Alongside another agent for research, wiki, and shared-drive docs: discovery, prd-package, explore-brief, research-plan, strategy-refresh, competitive-scan, research-package, learn-product-flow. Checks `reference/user-research/` first. |
@@ -32,9 +32,17 @@ Subagents are one-directional: dispatch, isolated work, a result comes back. The
 
 Context pressure is a dispatch signal (`_protocol.md` execution modes). Do not thin a deliverable because the session feels full.
 
+## Dispatch header — paste into every worker prompt that touches an existing artifact
+
+Workers do not see the chat. Any dispatch (router, Task, or ad-hoc) that adds to, updates, or extends an existing file pastes this block verbatim and does not word the ask as "write a new one" or "build the new page":
+
+> Edit `<path>` in place. Keep its design, CSS, markup structure, layout, components, and copy voice; change only the content asked for. A new design, template, or rebuild needs the PM's explicit ask; if the structure cannot hold the new content, stop and return the question. For HTML, run `python3 scripts/check_design_preserved.py <path> --git HEAD` (or `--before <old copy>`) before saving over, committing, or pushing; a FAIL means restore the previous design.
+
 ## Keeping this fast — context/token guardrails
 
-- Register files (`registers/*.csv`) grow every week. Default to reading **only recent or relevant rows** (last 60–90 days, or filtered by id or metric) unless the ask is for full history (CLAUDE.md rule 13).
+**Operator mode only.** Partner mode (`.claude/skills/partner/SKILL.md`) reads its chosen sources in full, in the main session.
+
+- Register files (`registers/*.csv`) grow every week. Default to reading **only recent or relevant rows** (last 60–90 days, or filtered by id or metric) unless the ask is for full history (operator rule 13).
 - If a register or state file is large enough that a full read would be wasteful, say so and suggest `/sync rotate-registers`.
 - In a long session, `/compact` or `/clear` is available. This workspace has no automatic retrieval over growing files.
-- Heavy reads (many discovery sources, a leave window, a strategy refresh, a code repo, multi-page decks) **dispatch the matching subagent above** so the main session gets a brief, not a skim. Bounded sources (max 12) choose which files; each chosen file still gets a full pass.
+- Heavy reads in **operator** work (many discovery sources, a leave window, a code repo, multi-page decks) **dispatch the matching subagent above** so the main session gets a brief, not a skim. Bounded sources (max 12) choose which files; each chosen file still gets a full pass. Do **not** use a heavy-read subagent for partner-mode synthesis — strategy, vision, roadmap, and narrative are written from the source text read in full in the main session, never from a subagent brief.

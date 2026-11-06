@@ -37,7 +37,8 @@ LINK_ENTRIES = (
     ".claude", "scripts", "tests", "tools", "fixtures",
     "AGENTS.md", "CLAUDE.md", "CONNECTIONS.md", "EVOLVING.md", "SCHEDULING.md",
     "SETUP.md", "SKILLS.md", "SOURCE-POLICY.md", "START HERE.md", "STATE-BACKUP.md",
-    "BACKLOG.md", "NEW-USER-SETUP.md",
+    "BACKLOG.md", "NEW-USER-SETUP.md", "IDE-PARITY.md",
+    ".cursor", ".github", ".codex",
     "Capture Clipboard.command", "Run PM Workflow.command", ".gitignore",
 )
 
@@ -49,7 +50,7 @@ ALWAYS_IGNORE = {
 }
 
 REGISTER_HEADERS = {
-    "decisions.csv": "id,date,decision,made_by,source_link,affects",
+    "decisions.csv": "id,date,decision,made_by,source_link,affects,supersedes",
     "commitments.csv": "id,description,owner,due_date,audience,source,status,last_updated",
     "risks.csv": "id,date_raised,risk,severity,mitigation,status,source",
     "todos.csv": (
@@ -245,6 +246,7 @@ def seed_reference_starter(destination, kit_root=None, dry_run=False):
 
 # Kit example → live filename. Copied only when the live file is absent.
 CONTEXT_EXAMPLE_SEEDS = (
+    ("reference/context/pm-brain.example.md", "reference/context/pm-brain.md"),
     ("reference/context/people.example.md", "reference/context/people.md"),
     ("reference/context/systems-map.example.md", "reference/context/systems-map.md"),
     ("reference/context/audiences.example.md", "reference/context/audiences.md"),

@@ -104,7 +104,7 @@ Plain language that matches a row **is** an instruction to run that workflow. Co
 | "Draft my weekly update" / "leadership update" | `/report weekly-update` |
 | "Ship signal" / "did this release move the needle" / "advance the release loop" / "release readout" | `/report ship-signal` |
 | "Find people to talk to about X" / "plan research" (criteria only — never names) | `/discover research-plan` |
-| "Product brief" / "explore brief" / "check-in brief" / "options for INIT-/COM-" / "alternatives before a PRD" | `/discover explore-brief` |
+| "Product brief" / "explore brief" / "check-in brief" / "what is this and what does it do" / "what should the requirements focus on" / "how do I explain this to the team" / "how do I sell this" / "options for INIT-/COM-" / "alternatives before a PRD" | `/discover explore-brief` |
 | "Spec out X" / "write a PRD for X" | `/build prd-package` |
 | "Build a prototype of X" / "mock this up" | `/build prototype-build` |
 | "Do the PRD and prototype for X still match" | `/build prd-prototype-sync` |

@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Helper for /pickup: find an earlier session by goal words, or copy kept entries into the current session.
+"""Helper for /pickup: find an earlier session by words, or copy kept entries into the current session.
 
-  python3 pickup.py --cwd "$PWD" words from the goal
+  python3 pickup.py --cwd "$PWD" words from the work
   python3 pickup.py --cwd "$PWD" --adopt <old-session-id> --keep e3 e7 [--session <current-id>]
 
+Search covers the stored goal and every register line, including a goal a later to-do replaced.
+One or two words must all match. Three or more match when at least half of them appear.
 The current session id comes from --session, else the newest register in this project.
+--cwd can be any folder inside the project: registers are keyed by the project (CLAUDE_PROJECT_DIR,
+else the nearest parent holding .claude), not by the folder a session happened to be in.
 """
 import argparse
 import glob
@@ -13,6 +17,9 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "hooks"))
 import common as c  # noqa: E402
+
+STOP = {"the", "a", "an", "of", "to", "and", "for", "in", "on", "is", "it", "its", "how", "this", "that",
+        "with", "from", "be", "or", "at", "by", "as"}
 
 
 def main(argv=None):
@@ -26,11 +33,20 @@ def main(argv=None):
     payload = {"cwd": args.cwd, "session_id": args.session or "unknown"}
     index = c.read_index(payload)
     if not args.adopt:
-        words = [w.lower() for w in args.words]
-        hits = sorted(((rec.get("last", ""), sid, rec) for sid, rec in index.items()
-                       if rec.get("goal") and all(w in rec["goal"].lower() for w in words)), reverse=True)
-        for last, sid, rec in hits[:8]:
-            print(f"{sid}\tlast={last}\tgoal={rec['goal'][:160]}\tregister={c.register_path(payload, sid)}")
+        words = [w.lower() for w in args.words if w.lower() not in STOP]
+        if not words:
+            words = [w.lower() for w in args.words]
+        need = len(words) if len(words) <= 2 else (len(words) + 1) // 2
+        hits = []
+        for sid, rec in index.items():
+            blob = "\n".join([rec.get("goal") or "", *(rec.get("goals") or [])] +
+                             [e.get("text") or "" for e in c.load_entries(c.register_path(payload, sid))]).lower()
+            matched = [w for w in words if w in blob]
+            if words and len(matched) >= need:
+                hits.append((len(matched), rec.get("last", ""), sid, rec, matched))
+        for _score, last, sid, rec, matched in sorted(hits, reverse=True)[:8]:
+            print(f"{sid}\tlast={last}\tmatched={','.join(matched)}\tgoal={(rec.get('goal') or '')[:160]}"
+                  f"\tregister={c.register_path(payload, sid)}")
         if not hits:
             print("no matching session")
         return 0

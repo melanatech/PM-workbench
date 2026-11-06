@@ -8,8 +8,8 @@ accepted them. Keep the user's wording. Recording nothing is the right answer fo
 strategy, research, writing or code.
 
 Sections:
-- Goal — what this session is for (snapshot: a new one replaces the old).
-- Where it stands — current state of the work (snapshot).
+- Goal — the subject of the session: the work the user came to do, in their words. Set it once it is clear. Do not replace it with a next step, a to-do, or something to do after the session. Supersede it only when the user corrects what the session is about.
+- Where it stands — current state of the work, including the next step (snapshot: a new one replaces the old).
 - Decisions — choices the user made or accepted.
 - Constraints — limits the user set ("don't touch X", "no new dependencies").
 - Corrections — instructions the user gave after Claude got something wrong.

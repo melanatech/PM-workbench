@@ -20,7 +20,7 @@ The roadmap lives in more than one place, and a change that lands in only one of
    - Slack `#product-updates` draft: a short human announcement of what moved and why (draft only)
    - The leadership deck: the replacement bullet(s) for the roadmap slide, matching the deck's existing phrasing style
 3. **Present one grouped diff across all surfaces** for batched review; date/priority/scope changes still called out individually. On approval: apply what's applicable (Jira via the established path), hand over paste-ready text for the surfaces only you can touch (spreadsheet, deck), and verify applied changes by re-reading them.
-4. Log the change to `registers/decisions.csv` if it reflects a decision (with source), and update each affected initiative's row.
+4. Log the change to `registers/decisions.csv` if it reflects a decision (with source; If a new decision overrides an active one, put the old id (or ids, `;`-separated) in the new row's `supersedes` column instead of describing the reversal in text; never edit the old row. Do this only when the source states the override explicitly; when it is ambiguous, ask in the output instead of guessing.), and update each affected initiative's row.
 
 **Required input:** the change and its reason. If the reason is missing ("scorecards slips" — why?), ask — a roadmap change without a stated reason becomes an unanswerable question in three weeks.
 

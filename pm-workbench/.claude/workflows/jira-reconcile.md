@@ -14,7 +14,7 @@ Independent (batch together):
 
 - `reference/links.csv` (the board bookmark and which fields mean delivery stage)
 - the previous file in `state/jira-snapshots/`
-- `registers/decisions.csv`, `registers/commitments.csv`, `registers/initiatives.csv`, `registers/evidence.csv` (recent rows only)
+- the active decisions (`python3 scripts/register_view.py active decisions`; superseded rows are hidden), `registers/commitments.csv`, `registers/initiatives.csv`, `registers/evidence.csv` (recent rows only)
 - recent `outputs/daily/*-meeting.md`
 - `reference/context/systems-map.md` (key prefixes, repo mapping, link conventions). If that file is still the template, say so and skip key parsing — do not invent a prefix.
 - the latest file in `state/repo-activity/` when one exists (the code-vs-board step refreshes it)
@@ -35,7 +35,7 @@ Then write `state/jira-snapshots/[date].json` and the diff in `outputs/weekly/[d
 
 2. **Diff against the previous snapshot** in `state/jira-snapshots/` — what changed, what didn't move. If the only prior artifact is an export CSV, materialize a baseline snapshot from it first, then diff.
 
-3. **Cross-reference** against `registers/decisions.csv`, `registers/commitments.csv`, recent `outputs/daily/*-meeting.md`, recent evidence in `registers/evidence.csv`, and — if a specific discrepancy needs checking against a decision doc that lives outside Jira/Confluence — dispatch `internal-docs-reader` for the shared drive or file-browser sources rather than reading them inline.
+3. **Cross-reference** against the active decisions (`python3 scripts/register_view.py active decisions`; superseded rows are hidden), `registers/commitments.csv`, recent `outputs/daily/*-meeting.md`, recent evidence in `registers/evidence.csv`, and — if a specific discrepancy needs checking against a decision doc that lives outside Jira/Confluence — dispatch `internal-docs-reader` for the shared drive or file-browser sources rather than reading them inline.
 
 4. **Cross-check against `registers/initiatives.csv`** — where a ticket maps to a known initiative, use that link to catch PRD-vs-Jira scope drift systematically rather than ad hoc; where it doesn't, that's worth asking whether the ticket should be linked to one.
 

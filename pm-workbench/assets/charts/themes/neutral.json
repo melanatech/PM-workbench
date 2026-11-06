@@ -1,0 +1,48 @@
+{
+  "name": "neutral",
+  "notes": "Categorical colors are the eight published Okabe-Ito hexes, in the usual order. Sequential is ColorBrewer Blues (6). Diverging is ColorBrewer RdBu (7).",
+  "font": "IBM Plex Sans, Helvetica, Arial, sans-serif",
+  "text": "#1A1A1A",
+  "muted": "#595959",
+  "gridline": "#E0E0E0",
+  "axis": "#1A1A1A",
+  "background": "#FFFFFF",
+  "surface": "#F7F7F7",
+  "roles": {
+    "primary": "#0072B2",
+    "comparison": "#E69F00",
+    "baseline": "#000000",
+    "highlight": "#D55E00",
+    "muted": "#767676",
+    "positive": "#009E73",
+    "negative": "#D55E00",
+    "annotation": "#56B4E9"
+  },
+  "categorical": [
+    "#E69F00",
+    "#56B4E9",
+    "#009E73",
+    "#F0E442",
+    "#0072B2",
+    "#D55E00",
+    "#CC79A7",
+    "#000000"
+  ],
+  "sequential": [
+    "#EFF3FF",
+    "#C6DBEF",
+    "#9ECAE1",
+    "#6BAED6",
+    "#3182BD",
+    "#08519C"
+  ],
+  "diverging": [
+    "#B2182B",
+    "#EF8A62",
+    "#FDDBC7",
+    "#F7F7F7",
+    "#D1E5F0",
+    "#67A9CF",
+    "#2166AC"
+  ]
+}

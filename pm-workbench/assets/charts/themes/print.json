@@ -1,0 +1,48 @@
+{
+  "name": "print",
+  "notes": "Same Okabe-Ito categorical set as neutral, for color printing. Text and axes are black on white. A gray ramp cannot hold eight steps at the 80 RGB distance, so print does not replace the categorical set with grays. Sequential is ColorBrewer Greys (6). Diverging is ColorBrewer RdGy (7).",
+  "font": "IBM Plex Sans, Helvetica, Arial, sans-serif",
+  "text": "#000000",
+  "muted": "#333333",
+  "gridline": "#6B6B6B",
+  "axis": "#000000",
+  "background": "#FFFFFF",
+  "surface": "#FFFFFF",
+  "roles": {
+    "primary": "#0072B2",
+    "comparison": "#E69F00",
+    "baseline": "#000000",
+    "highlight": "#D55E00",
+    "muted": "#333333",
+    "positive": "#009E73",
+    "negative": "#D55E00",
+    "annotation": "#56B4E9"
+  },
+  "categorical": [
+    "#E69F00",
+    "#56B4E9",
+    "#009E73",
+    "#F0E442",
+    "#0072B2",
+    "#D55E00",
+    "#CC79A7",
+    "#000000"
+  ],
+  "sequential": [
+    "#F7F7F7",
+    "#D9D9D9",
+    "#BDBDBD",
+    "#969696",
+    "#636363",
+    "#252525"
+  ],
+  "diverging": [
+    "#B2182B",
+    "#EF8A62",
+    "#FDDBC7",
+    "#FFFFFF",
+    "#E0E0E0",
+    "#999999",
+    "#4D4D4D"
+  ]
+}

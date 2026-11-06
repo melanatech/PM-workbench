@@ -136,7 +136,7 @@ def run_workers(
         output.parent.mkdir(parents=True, exist_ok=True)
         prompt = worker_prompt(item, notes.get(item.get("id") or "", {}), today)
         proc = subprocess.Popen(
-            [claude, "-p", prompt, "--permission-mode", "dontAsk"],
+            [claude, "-p", prompt, "-n", f"todo: {item.get('id') or 'work'}", "--permission-mode", "dontAsk"],
             cwd=str(root),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

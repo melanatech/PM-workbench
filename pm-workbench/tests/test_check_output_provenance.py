@@ -86,6 +86,30 @@ class ProvenanceRegisterTests(unittest.TestCase):
         self.assertEqual(r.returncode, 2, r.stderr)
         self.assertIn("COM-777", r.stderr)
 
+    def test_a_second_run_rereads_only_changed_files(self):
+        risks = self.tmp / "registers" / "risks.csv"
+        risks.write_text(
+            "id,date_raised,risk,severity,mitigation,status,source\n"
+            'RISK-001,2026-10-12,board hygiene,medium,"Track via COM-001",open,test\n',
+            encoding="utf-8",
+        )
+        self.assertEqual(self.run_hook(risks).returncode, 0)
+        cache = json.loads((self.tmp / "state" / "hooks" / "provenance-cache.json").read_text())
+        first = {path: rec["read_at"] for path, rec in cache["files"].items()}
+        commitments = self.tmp / "registers" / "commitments.csv"
+        commitments.write_text(
+            commitments.read_text() + "COM-002,also,me,2026-10-02,self,test,open,2026-10-02\n",
+            encoding="utf-8",
+        )
+        self.assertEqual(self.run_hook(risks).returncode, 0)
+        again = json.loads((self.tmp / "state" / "hooks" / "provenance-cache.json").read_text())
+        changed = "registers/commitments.csv"
+        self.assertGreater(again["files"][changed]["read_at"], first[changed])
+        for path, read_at in first.items():
+            if path != changed:
+                self.assertEqual(again["files"][path]["read_at"], read_at)
+        self.assertIn("COM-002", again["files"][changed]["ids"])
+
 
 if __name__ == "__main__":
     unittest.main()

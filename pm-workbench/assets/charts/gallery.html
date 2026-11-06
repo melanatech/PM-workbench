@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chart theme gallery</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", Helvetica, Arial, sans-serif;
+      color: #1a1a1a;
+      background: #fff;
+    }
+    main { max-width: 880px; margin: 0 auto; padding: 24px 16px 64px; }
+    h1 { font-size: 1.5rem; font-weight: 650; margin: 0 0 8px; }
+    h2 { font-size: 1.15rem; margin: 2rem 0 4px; }
+    h3 { font-size: 0.95rem; font-weight: 600; margin: 16px 0 4px; }
+    p { max-width: 68ch; line-height: 1.45; }
+    .chart { width: 100%; height: 240px; }
+    .wb-chart-caption { margin: 4px 0 8px; font-size: 0.85rem; color: #333; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Chart theme gallery</h1>
+    <p>Sample letters A to D. Local files only. Each caption names the population, the window, and the denominator.</p>
+
+    <section id="neutral">
+      <h2>neutral</h2>
+      <h3>Bars</h3><div id="neutral-bar" class="chart"></div>
+      <h3>Line</h3><div id="neutral-line" class="chart"></div>
+      <h3>Funnel</h3><div id="neutral-funnel" class="chart"></div>
+      <h3>Heatmap</h3><div id="neutral-heat" class="chart"></div>
+      <h3>Distribution</h3><div id="neutral-box" class="chart"></div>
+      <h3>Flow</h3><div id="neutral-sankey" class="chart"></div>
+    </section>
+
+    <section id="high-contrast">
+      <h2>high-contrast</h2>
+      <h3>Bars</h3><div id="high-contrast-bar" class="chart"></div>
+      <h3>Line</h3><div id="high-contrast-line" class="chart"></div>
+      <h3>Funnel</h3><div id="high-contrast-funnel" class="chart"></div>
+      <h3>Heatmap</h3><div id="high-contrast-heat" class="chart"></div>
+      <h3>Distribution</h3><div id="high-contrast-box" class="chart"></div>
+      <h3>Flow</h3><div id="high-contrast-sankey" class="chart"></div>
+    </section>
+
+    <section id="print">
+      <h2>print</h2>
+      <h3>Bars</h3><div id="print-bar" class="chart"></div>
+      <h3>Line</h3><div id="print-line" class="chart"></div>
+      <h3>Funnel</h3><div id="print-funnel" class="chart"></div>
+      <h3>Heatmap</h3><div id="print-heat" class="chart"></div>
+      <h3>Distribution</h3><div id="print-box" class="chart"></div>
+      <h3>Flow</h3><div id="print-sankey" class="chart"></div>
+    </section>
+
+    <section id="dark">
+      <h2>dark</h2>
+      <h3>Bars</h3><div id="dark-bar" class="chart"></div>
+      <h3>Line</h3><div id="dark-line" class="chart"></div>
+      <h3>Funnel</h3><div id="dark-funnel" class="chart"></div>
+      <h3>Heatmap</h3><div id="dark-heat" class="chart"></div>
+      <h3>Distribution</h3><div id="dark-box" class="chart"></div>
+      <h3>Flow</h3><div id="dark-sankey" class="chart"></div>
+    </section>
+  </main>
+
+  <script src="echarts.min.js"></script>
+  <script src="generated/neutral.theme.js"></script>
+  <script src="generated/high-contrast.theme.js"></script>
+  <script src="generated/print.theme.js"></script>
+  <script src="generated/dark.theme.js"></script>
+  <script src="wb-charts.js"></script>
+  <script>
+    var caption = {
+      population: "letters A to D",
+      window: "sample window",
+      denominator: "count of letters"
+    };
+    var bars = {
+      categories: ["A", "B", "C", "D"],
+      series: [
+        { name: "P", role: "primary", values: [12, 18, 9, 15] },
+        { name: "Q", role: "comparison", values: [8, 11, 14, 7] }
+      ]
+    };
+    var lines = {
+      x: ["A", "B", "C", "D"],
+      series: [
+        { name: "P", role: "primary", values: [4, 6, 5, 9] },
+        { name: "Q", role: "comparison", values: [3, 4, 7, 6] }
+      ],
+      bands: [{ from: "B", to: "C", label: "span" }]
+    };
+    var stages = {
+      stages: [
+        { name: "A", value: 40 },
+        { name: "B", value: 24 },
+        { name: "C", value: 14 },
+        { name: "D", value: 6 }
+      ]
+    };
+    var heat = {
+      x: ["A", "B", "C", "D"],
+      y: ["A", "B", "C", "D"],
+      values: [
+        [1, 3, 2, 4],
+        [2, 2, 5, 1],
+        [4, 1, 3, 2],
+        [1, 4, 2, 3]
+      ]
+    };
+    var boxes = {
+      categories: ["A", "B", "C", "D"],
+      series: [
+        { name: "P", role: "primary", values: [[1, 2, 3, 5, 8], [2, 3, 4, 6, 7], [1, 2, 2, 4, 6], [3, 4, 5, 6, 9]] }
+      ]
+    };
+    var flow = {
+      nodes: [{ name: "A" }, { name: "B" }, { name: "C" }, { name: "D" }],
+      links: [
+        { source: "A", target: "C", value: 8 },
+        { source: "A", target: "D", value: 3 },
+        { source: "B", target: "C", value: 2 },
+        { source: "B", target: "D", value: 7 }
+      ]
+    };
+    ["neutral", "high-contrast", "print", "dark"].forEach(function (name) {
+      wbCharts.barCompare(name + "-bar", bars, name, caption);
+      wbCharts.lineSeries(name + "-line", lines, name, caption);
+      wbCharts.funnel(name + "-funnel", stages, name, caption);
+      wbCharts.heatmap(name + "-heat", heat, name, caption);
+      wbCharts.distribution(name + "-box", boxes, name, caption);
+      wbCharts.sankey(name + "-sankey", flow, name, caption);
+    });
+  </script>
+</body>
+</html>

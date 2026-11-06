@@ -36,6 +36,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -424,15 +425,25 @@ def classify_l2b_bulk(
             claude,
             "-p",
             prompt,
+            "--tools",
+            "",
+            "--strict-mcp-config",
+            "--disable-slash-commands",
+            "--system-prompt",
+            "Answer the prompt. Reply with JSON only.",
+            "--no-session-persistence",
             "--model",
             "haiku",
             "--permission-mode",
             "dontAsk",
         ]
+        lean = os.path.join(tempfile.gettempdir(), "claude-lean-call")
+        os.makedirs(lean, exist_ok=True)
         try:
             result = subprocess.run(
                 cmd,
-                cwd=str(root),
+                cwd=lean,
+                env={**os.environ, "SESSION_MEMORY_INTERNAL": "1"},
                 text=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,

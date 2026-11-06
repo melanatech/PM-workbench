@@ -44,6 +44,22 @@ Exact line form (alone on its line):
 
 Plus: `Pre-registered direction: …` and `Causal note: …` per `reference/templates/ship-signal/readout.md`.
 
+## Release readout method
+
+Before a readout, reuse existing dashboards and analyses for this release if the workspace already has them. Then the readout covers, when the data exists:
+
+- return after first use (later weeks against a pre-change cohort)
+- a conversion funnel with step rates and drop-off
+- engagement per person and per session, as a distribution (median and upper percentiles), not only a mean
+- support contacts before and after
+- device split
+- a qualitative replay sample
+- the number-consistency gate, the design check, and (when the mode runs it) the external-readiness reviewer with the number ledger
+
+Do not claim a treatment-versus-control result until an exposure event exists. Label descriptive movement as descriptive.
+
+Charts in a readout, when one is asked for, use `assets/charts/` and `reference/templates/chart-usage.md`. Do not load that library in a user-facing prototype.
+
 ## RESULT
 
 Name release-id, which state row matched, what was written (paths), open GATEs/HALTs, Surfaces if any fan-out to INIT-/learning. Link artifacts under `outputs/releases/…`.

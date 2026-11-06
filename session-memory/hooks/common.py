@@ -11,6 +11,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import time
 from contextlib import contextmanager
 
@@ -57,8 +58,32 @@ def slug(cwd):
     return (cwd or "unknown").replace("/", "-")
 
 
+def project_root(cwd=None):
+    """The project a session belongs to, not the folder the agent last moved into.
+
+    The hook payload's cwd follows the agent into subfolders, so keying by it filed one chat's
+    register under many folders and /pickup, which looks under the project, found none of them.
+    Claude Code sets CLAUDE_PROJECT_DIR to the folder the session started in. Without it, use the
+    nearest parent that holds a .claude folder (a symlink counts), stopping before the home folder.
+    """
+    env = os.environ.get("CLAUDE_PROJECT_DIR")
+    if env:
+        return os.path.abspath(os.path.expanduser(env))
+    start = os.path.abspath(cwd or os.getcwd())
+    home = os.path.abspath(os.path.expanduser("~"))
+    here = start
+    while here not in ("/", home):
+        if os.path.lexists(os.path.join(here, ".claude")):
+            return here
+        parent = os.path.dirname(here)
+        if parent == here:
+            break
+        here = parent
+    return start
+
+
 def project_dir(payload):
-    path = os.path.join(data_home(), slug(payload.get("cwd") or os.getcwd()))
+    path = os.path.join(data_home(), slug(project_root(payload.get("cwd"))))
     os.makedirs(path, exist_ok=True)
     return path
 
@@ -165,9 +190,13 @@ def apply_ops(entries, ops, turn=None):
             continue
         if kind not in ("add", "supersede") or section not in SECTIONS or not text:
             continue
-        if section in SNAPSHOT_SECTIONS:
+        if section == "Goal" and kind == "add" and any(e.get("section") == "Goal" for e in active):
+            # A second Goal is a next step the model misfiled. The subject stays; the text goes to Where it stands.
+            section = "Where it stands"
+            ids = [e["id"] for e in active if e.get("section") == "Where it stands"]
+        if section == "Where it stands":
             ids = sorted(set(ids) | {e["id"] for e in active if e.get("section") == section})
-        if kind == "add" and section not in SNAPSHOT_SECTIONS:
+        if kind == "add" and section != "Where it stands":
             ids = []
         new.append({"id": next_id(entries + new), "section": section, "text": text[:1200], "date": now_iso(),
                     "turn": turn, "supersedes": ids, "dropped": False})
@@ -324,6 +353,22 @@ def call_budget_ok(record=True):
     return True
 
 
+LEAN_SYSTEM = "Answer the prompt. Reply with JSON only."
+
+
+def lean_cwd():
+    """A folder with no CLAUDE.md and no project hooks, so a question-only call stays small."""
+    path = os.path.join(tempfile.gettempdir(), "claude-lean-call")
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def lean_args():
+    """A question-only call: no tools, no MCP, no skills, no default system prompt, not saved."""
+    return ["--tools", "", "--strict-mcp-config", "--disable-slash-commands",
+            "--system-prompt", LEAN_SYSTEM, "--no-session-persistence"]
+
+
 def ask_model(prompt, timeout=60, model=None):
     """Run the headless model once. Returns the text reply, or None (over cap, timeout, error)."""
     if not call_budget_ok():
@@ -331,8 +376,9 @@ def ask_model(prompt, timeout=60, model=None):
     claude = os.environ.get("SESSION_MEMORY_CLAUDE") or "claude"
     env = {**os.environ, "SESSION_MEMORY_INTERNAL": "1"}
     try:
-        result = subprocess.run([claude, "-p", prompt, "--model", model or os.environ.get("SESSION_MEMORY_MODEL", "haiku")],
-                                capture_output=True, text=True, timeout=timeout, env=env)
+        result = subprocess.run([claude, "-p", prompt, *lean_args(), "--permission-mode", "dontAsk",
+                                 "--model", model or os.environ.get("SESSION_MEMORY_MODEL", "haiku")],
+                                capture_output=True, text=True, timeout=timeout, env=env, cwd=lean_cwd())
     except (OSError, subprocess.TimeoutExpired):
         return None
     return result.stdout if result.returncode == 0 else None

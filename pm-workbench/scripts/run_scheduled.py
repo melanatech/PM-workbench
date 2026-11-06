@@ -244,10 +244,12 @@ def drop_lock(lock=LOCK):
         pass
 
 
-def build_command(claude, prompt):
+def build_command(claude, prompt, task=""):
     # dontAsk: unattended runs must not hang on permission prompts. Claude Code 2.1+
     # rejects the older --permission-prompts flag (unknown option).
-    return [claude, "-p", prompt, "--permission-mode", "dontAsk",
+    # -n names the saved session so a scheduled run reads as a job in the resume list.
+    name = ["-n", f"scheduled: {task}"] if task else []
+    return [claude, "-p", prompt, *name, "--permission-mode", "dontAsk",
             "--allowedTools", ",".join(ALLOWED_TOOLS), "--append-system-prompt", UNATTENDED_NOTE]
 
 
@@ -307,7 +309,7 @@ def main(argv=None):
     prompts = TASKS[args.task]
     if args.dry_run:
         for prompt in prompts:
-            print(" ".join(repr(x) if " " in x else x for x in build_command(args.claude, prompt)))
+            print(" ".join(repr(x) if " " in x else x for x in build_command(args.claude, prompt, args.task)))
         return 0
     os.chdir(ROOT)
     if os.path.exists(p(PAUSE)):
@@ -338,7 +340,7 @@ def main(argv=None):
     try:
         for prompt in prompts:
             try:
-                result = subprocess.run(build_command(args.claude, prompt), cwd=ROOT, text=True, timeout=timeout,
+                result = subprocess.run(build_command(args.claude, prompt, args.task), cwd=ROOT, text=True, timeout=timeout,
                                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
             except subprocess.TimeoutExpired:
                 worst = 124

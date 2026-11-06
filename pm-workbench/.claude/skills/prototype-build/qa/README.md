@@ -16,33 +16,38 @@ so; it does not fake a visual pass.
 
 ## Run it
 ```
-# static (single HTML file)
+# brief-stage (default): populated screen only
 node .claude/skills/prototype-build/qa/qa-prototype.mjs \
   --type static --path prototypes/manager-scorecards \
-  --states "loaded,empty,error,denied,compare"
+  --states "loaded"
 
-# web (React/Vite/etc.) — installs, builds, boots dev server, tests localhost
+# PRD-stage, or when the PM asked to flesh out the states
 node .claude/skills/prototype-build/qa/qa-prototype.mjs \
   --type web --path prototypes/scorecards-app \
   --run "npm run dev" --url http://localhost:5173 \
-  --states "loaded,empty,error,denied"
+  --states "loaded,empty,zero,loading,error,setup,denied"
 
 # mobile (Expo) — uses the Expo *web* render so no simulator is needed
 node .claude/skills/prototype-build/qa/qa-prototype.mjs \
   --type mobile --path prototypes/scorecards-mobile \
-  --states "loaded,empty,error,denied"
+  --states "loaded"
 ```
+
+Omitting `--states` walks `loaded` only. That is the brief-stage default.
 
 ## How states are reached
 The harness clicks a control matching each state name — either
 `[data-state="empty"]` / `[data-st="empty"]`, or a button whose visible text
-matches (e.g. an "Empty" toggle). **So build your prototype's state switcher with
-`data-state` attributes** and the walk is automatic. If a state can't be reached,
-the report flags it `reached: NO` rather than pretending.
+matches (e.g. an "Empty" toggle). `loaded` with no such control is the initial
+page, so a brief-stage prototype does not need a state switcher. On a PRD-stage
+prototype, put `data-state` on the controls for the states you built. If one of
+those states can't be reached, the report flags it `reached: NO`.
 
 ## What a pass means (and doesn't)
-- PASS = it booted, every declared state rendered, controls clicked without
-  console errors, instrumentation labels were visible. A real render happened.
+- PASS = it booted, every state this stage builds rendered, controls clicked
+  without console errors, instrumentation labels were visible. A real render
+  happened. Brief-stage does not fail for missing empty, error, loading, setup,
+  or permission screens.
 - It does **not** verify pixel-perfect design or business correctness — that's
   what the stakeholder reviewers and your own eyes on the screenshots are for.
 - Native mobile beyond Expo-web (true simulator testing) is out of scope here;

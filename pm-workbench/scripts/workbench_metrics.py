@@ -73,7 +73,7 @@ METRICS = [
     ("decisions_30d", "Decision quality", "Decisions logged in the last 30 days", "info"),
     ("decisions_no_source_30d", "Decision quality", "Of those, with no source_link", "down"),
     ("decisions_no_owner_30d", "Decision quality", "Of those, with no made_by", "down"),
-    ("decisions_reversed", "Decision quality", f"Decisions a later row supersedes within {REVERSAL_WINDOW_DAYS} days (text match)", "down"),
+    ("decisions_reversed", "Decision quality", f"Decisions a later row supersedes within {REVERSAL_WINDOW_DAYS} days (supersedes column; text match before it exists)", "down"),
     ("stage_without_decision", "Decision quality", "Initiatives at launched/killed/iterating with no linked decision", "down"),
     ("runs_30d", "Rework", "Workflow runs logged in the last 30 days", "info"),
     ("repeat_runs_30d", "Rework", f"Same workflow run again within {REDO_WINDOW_DAYS} days (cadence workflows excluded)", "down"),
@@ -182,7 +182,15 @@ def compute(today):
         m["decisions_no_source_30d"] = sum(1 for r in recent if not (r.get("source_link") or "").strip())
         m["decisions_no_owner_30d"] = sum(1 for r in recent if not (r.get("made_by") or "").strip())
         reversed_ids = set()
-        for r in decisions:
+        has_column = bool(decisions) and "supersedes" in decisions[0]
+        by_id = {(r.get("id") or "").strip(): r for r in decisions}
+        for r in decisions if has_column else []:
+            for eid in [x.strip() for x in (r.get("supersedes") or "").split(";") if x.strip()]:
+                d_new, d_old = parse_day(r.get("date")), parse_day((by_id.get(eid) or {}).get("date"))
+                if eid != (r.get("id") or "").strip() and d_new and d_old \
+                        and 0 <= (d_new - d_old).days <= REVERSAL_WINDOW_DAYS:
+                    reversed_ids.add(eid)
+        for r in [] if has_column else decisions:
             text = (r.get("decision") or "").lower()
             if any(word in text for word in ("supersede", "reverse", "replaces", "overrule", "overrides")):
                 for earlier in decisions:

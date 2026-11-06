@@ -42,6 +42,33 @@ print(f"\n## Blocked scheduled runs: {len(blocked)}")
 for r in blocked[-10:]: print(" -", r.get('timestamp', '')[:16], r.get('workflow'), '—', r.get('note', ''))
 print(f"\n## Failed runs: {len(failed)}")
 for r in failed[-10:]: print(" -", r.get('timestamp', '')[:16], r.get('workflow'), '—', r.get('note', ''))
+# Installed LaunchAgents: last successful run, stale when a weekday job has no success in 72h or a weekly/monthly
+# job is more than a day past its own slot. A schedule that silently stopped is the same as no schedule.
+import plistlib
+agents_dir = os.environ.get('PM_LAUNCH_AGENTS_DIR') or os.path.expanduser('~/Library/LaunchAgents')
+jobs = {}
+for path in sorted(glob.glob(os.path.join(agents_dir, 'com.pm-workbench.*.plist'))):
+    task = os.path.basename(path)[len('com.pm-workbench.'):-len('.plist')]
+    try:
+        with open(path, 'rb') as fh: cal = plistlib.load(fh).get('StartCalendarInterval')
+    except Exception:
+        cal = None
+    cal = cal if isinstance(cal, list) else [cal] if isinstance(cal, dict) else []
+    if not cal: continue  # file-watch agents (clip-watcher) do not log to scheduled-runs.csv
+    days = {c.get('Weekday') for c in cal if 'Weekday' in c}
+    jobs[task] = (31 + 1) * 24 if any('Day' in c for c in cal) else (7 + 1) * 24 if len(days) == 1 else 72
+last_ok = {}
+if os.path.exists('logs/scheduled-runs.csv'):
+    for r in csv.DictReader(open('logs/scheduled-runs.csv', encoding='utf-8', errors='replace')):
+        if r.get('status') in ('ok', 'skipped-nothing-new'):
+            try: last_ok[r.get('task')] = datetime.datetime.fromisoformat(f"{r['date']}T{r['time']}")
+            except (KeyError, ValueError): pass
+stale = [t for t, hours in jobs.items() if t not in last_ok or (now - last_ok[t]).total_seconds() > hours * 3600]
+print(f"\n## Scheduled jobs: {len(jobs)} installed, {len(stale)} stale")
+for t in jobs:
+    when = last_ok[t].strftime('%Y-%m-%d %H:%M') if t in last_ok else 'never'
+    print(f" - {t}: last success {when}" + ("  **STALE**" if t in stale else ""))
+
 print("\n## Registers")
 for p in sorted(glob.glob('registers/*.csv')):
     n = max(0, sum(1 for l in open(p, encoding='utf-8', errors='replace') if l.strip()) - 1)

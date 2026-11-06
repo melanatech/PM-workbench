@@ -52,6 +52,14 @@ proxy that cannot reach the API, `claude -p` will fail there even when the
 Claude Code panel works after `/login`. That is an environment issue, not proof
 the kit is broken — verify slash commands in the panel first.
 
+The same shell check covers tool loading. `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1`
+in a shell startup file or in `~/.claude/settings.json` sends every MCP tool
+schema on the first request. `ENABLE_TOOL_SEARCH=true` does not override it, and
+`ENABLE_TOOL_SEARCH=force` overrides it only against Anthropic's own API. The kit
+profiles set `ENABLE_TOOL_SEARCH` to `true` and leave the disable switch unset.
+Remove the disable switch from both places, then start a new chat. Details:
+[SETUP.md](SETUP.md) § Deferred tool loading.
+
 **Amazon Bedrock and native WebSearch:** Bedrock does not implement Claude's
 server-side `web_search` tool (errors like "Bedrock does not support the
 web_search tool"). The kit always prefers `python3 scripts/web_search.py`
@@ -312,6 +320,10 @@ Do these on non-sensitive data. Record pass/fail in `logs/setup-findings.md`.
    standard library; Excel and PowerPoint still exit with a message.
    `extract_document.sh` is live for common formats; on failure re-export
    or paste rather than retrying inventively.
+
+## 7b. Company tools
+
+The kit does not name company systems. After the live workspace exists, open the live playbook your team keeps beside this file (often `reference/context/` in the live folder) and install only what that playbook lists. Then run `python3 scripts/tool_inventory.py` and write the names into the live tool inventory. Do not copy tokens into the kit.
 
 ## 8. Read next
 

@@ -29,6 +29,8 @@ Independent (batch together):
 - `inbox/meetings/` and living context, for meetings that need prep
 - `python3 scripts/recurring_corrections.py --root <live>` when `state/usage-history.csv` exists
 
+**Session-start catch-up (before the brief).** Read the PM's own turns from the most recent previous session with `scripts/transcripts.py` (`iter_user_turns`; human turns only, so compaction summaries, tool results, and system notes are skipped). Add a line to `reference/context/pm-brain.md` only when her own turn literally says to remember it (rule 24; the rule is at the top of that file). Do not infer a remember-ask. Do not write an answer, a bug confirmation, or an investigation into the brain. This is judgment, not the keyword filter in `chat_harvest.py`. Do not condense the brain to hit a word count. About 750 words is fine. Drop a chat answer or a one-off decision, merge a duplicate into the file that already holds it, and mark a line a newer one supersedes as `(replaced <date>)`.
+
 Then write the brief from those results. Do not run the suggested commands.
 
 Summarize what's new since the last brief (check `state/last-brief-date.txt`; create it if absent), reading counts and deltas only — this is a digest, not a deep dive:
@@ -40,7 +42,7 @@ Summarize what's new since the last brief (check `state/last-brief-date.txt`; cr
 - New files in `inbox/` awaiting processing (count by type)
 - Latest jira-reconcile output — open flags not yet resolved
 - `reference/context/current-priorities.md` — restate my stated priorities for the week so the brief is framed against them
-- Overnight work (from the scheduled routines): drafts in `outputs/todo-drafts/` and queued proposals in `outputs/todo-proposals/` that I have not reviewed (names and counts only), and any `failed` or `skipped-paused` rows in `logs/scheduled-runs.csv` since the last brief. Offer `/todo propose` for a queue and `/todo work TODO-nnn` for a draft. Skip the line if none.
+- Overnight work (from the scheduled routines): drafts in `outputs/todo-drafts/` and queued proposals in `outputs/todo-proposals/` that I have not reviewed (names and counts only), and any `failed` or `skipped-paused` rows in `logs/scheduled-runs.csv` since the last brief, plus any job `python3 scripts/workbench_health.py` marks `STALE` under "Scheduled jobs" (no success in 72 hours; weekly or monthly jobs more than a day past their slot). Offer `/todo propose` for a queue and `/todo work TODO-nnn` for a draft. Skip the line if none.
 - Calendar-relevant: if I've noted meetings in `inbox/meetings/` or the living context, flag any needing prep
 
 Then present choices, not actions:

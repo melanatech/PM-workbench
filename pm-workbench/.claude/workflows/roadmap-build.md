@@ -10,6 +10,8 @@ Execution mode: **standard** (fast=0 reviewers, standard=1–2, deep=full panel 
 
 Context dependencies: soft: current-priorities, product-areas, kr-metric-map, audiences, people, systems-map | hard: none
 
+If the question bank has an outcome-alignment lens, use those questions when a bet needs a measure. Do not add a metric that only describes one surface.
+
 This builds a roadmap. A change to a roadmap that already exists on a tracker, a sheet, or a deck is `/sync roadmap-update`, not this workflow.
 
 Roadmap: $ARGUMENTS
@@ -62,4 +64,4 @@ Not in the default flow. Not in Fast or Standard. Only when the PM opts in and t
 
 These are role lenses, not impersonation. Build each lens from recurring concerns in `reference/context/people.md` that have a dated source. Drop a concern with no date. One blind pass per lens: the draft and its cited sources only. Keep the concerns, never transcripts. Findings join **Anticipated objections**. Do not add reviewer agents for this.
 
-**Publish.** Defaults: `audience: internal`, `formats: [md]`. The roadmap draft stays the internal source. Produce an external version only when the PM asks, then follow Audience and formats and Publish in `.claude/workflows/_protocol.md`. When an external version is written, dispatch `external-readiness-reviewer` once on the rendered file and the audience line, unless this workflow's execution mode is Fast (Fast does not dispatch it). Publishing or sending is Tier 3 and waits for an explicit yes. Do not call a wiki create API or a chat send API from this step.
+**Publish.** Defaults: `audience: internal`, `formats: [md]`. The roadmap draft stays the internal source. Produce an external version only when the PM asks, then follow Audience and formats and Publish in `.claude/workflows/_protocol.md`. Before writing `outputs/external/…roadmap…`, read `reference/context/settled-facts.md` and `state/requirements/roadmap.md` when those files exist. The write hooks block a draft that reopens a pin, drops an accepted ledger row, or fails the exec bar (mixed granularity, changelog voice, unprioritized Now). When an external version is written, dispatch `external-readiness-reviewer` once on the rendered file and the audience line, unless this workflow's execution mode is Fast (Fast does not dispatch it). Publishing or sending is Tier 3 and waits for an explicit yes. Do not call a wiki create API or a chat send API from this step.

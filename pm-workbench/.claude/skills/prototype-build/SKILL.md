@@ -9,7 +9,11 @@ Execution mode: **standard** (fast=0 reviewers, standard=1–2, deep=full panel 
 
 Build: $ARGUMENTS
 
-A prototype is the one artifact this system produces that a stakeholder will *see and click*, so "the code looks right" is not enough — it has to actually render and behave. This skill scaffolds the right kind of project for the job and then verifies it at runtime, not just on paper.
+A prototype is the one artifact this system produces that a stakeholder will *see and click*, so "the code looks right" is not enough — it has to actually render and behave. This skill scaffolds the right kind of project for the job and then verifies it at runtime, not just on paper. Do not load `assets/charts/` here. User-facing prototypes stay on the company component system.
+
+## First step — confirm Guardrails tools
+
+Before any other step, confirm the Guardrails tools are visible. If they are not, stop and tell the PM: Guardrails is not signed in; run `/mcp` in Claude Code, choose `ux_guardrails`, sign in (VPN on), then reconnect or start a new session. Prototype work stops until then. Do not note a skipped check and keep going. Exception: if `~/.claude/guardrails-skip` exists, she has turned the save check off. Continue the build, say Guardrails was skipped, and do not claim a Guardrails pass. Do not create that file yourself.
 
 ## Models — which step runs on what
 
@@ -39,7 +43,7 @@ Following the same routing discipline as the rest of the system (haiku=trivial, 
 Then decide type / complexity / design source. Infer what you can from the flow and Feature Contract; ask only what's genuinely ambiguous.
 
 **Type** — how will this run?
-- **static** — HTML/CSS/JS, opens as a file, no build. Right for a single screen or a quick clickable flow.
+- **static** — HTML/CSS/JS, opens as a file, no build. Right for a single screen or a quick clickable flow. The file the PM sends is one HTML file that renders when opened directly (`file://`), with no server and no setup. Do not use `<script type="module">` or any other pattern Chrome blocks on `file://`. A local multi-file version is only for building it. A brief-stage prototype is not done until that single file exists.
 - **web** — React/Vue/Svelte/etc. Needs `npm install` and a dev server. Right for multi-screen, stateful, or component-driven prototypes.
 - **mobile** — Expo / React Native (or Flutter). Right when the interaction is fundamentally a phone experience. Prefer **Expo** because it can also render to web, which makes real QA possible without a simulator.
 
@@ -59,7 +63,7 @@ Check `learning/` for this area. If `outputs/prds/[feature]/contract.md` exists,
 
 ## Step 2 — scaffold to match the type
 
-Every prototype, whatever the type, must include the states that make a test honest — **empty, loading, error, permission-denied** — not just the happy path, plus variants behind a toggle, **visible instrumentation labels** showing which events would fire, and a reset control for repeated sessions.
+**States by stage.** A brief-stage prototype shows the main idea with sample data in the normal, populated state only. Name the states you are not building in one line: empty, zero, error, loading, setup, and permission. Do not build empty, zero, error, loading, setup, or permission variants unless the PM asks for one of them. A PRD-stage prototype — built in `/build prd-package`, or when the PM asks to flesh out the states — still includes those states. If you cannot tell brief from PRD, default to brief: the populated state only. Keep **visible instrumentation labels** showing which events would fire, and a reset control for repeated sessions.
 
 - **static / loose:** `prototypes/[name]/index.html` (+ optional css/js). README with "open index.html in a browser."
 - **web / repo:** a real project (e.g. Vite + React) with `package.json`, lockfile, `src/`, a `.gitignore`, and a README stating the exact run command (`npm install && npm run dev`). `git init` locally. Structure it so imported components have a home (`src/components/`, `src/theme/`).
@@ -69,7 +73,7 @@ If a **component library** is the design source, install/link it and build scree
 
 **Catalog update.** When this build creates a reusable piece (shell, shared table pattern, state kit) worth stealing later, append a row to `reference/design/prototype-components.md` (date, name, path, reuse-when, status, notes) in the same run — do not wait for a later cleanup pass. If it belongs in `_shared`, prefer promoting there (ask PM when ≥2 prior copies).
 
-**Prototype preflight.** Before inventing controls, read `reference/design/prototype-preflight.md` and apply every **Standing preflight** item that fits. After a UX failure on a shared control, fix it in `_shared` and **append a lesson row** in the same run before claiming done. A company UX checker, if one exists, is named in `.claude/CLAUDE.local.md`, not in this skill.
+**Prototype preflight.** Before inventing controls, read `reference/design/prototype-preflight.md` and apply every **Standing preflight** item that fits. After a UX failure on a shared control, fix it in `_shared` and **append a lesson row** in the same run before claiming done.
 
 **Handoff paths (document in README).** (1) **Static** — single `index.html`, open in a browser. (2) **React** — `npm run build` → zip/`preview`; optional `npm run share` (single-file HTML via e.g. `vite-plugin-singlefile`) so stakeholders need not `npm install`. Do not require every concept test to be static.
 
@@ -146,7 +150,7 @@ This is the step that distinguishes a real prototype from a plausible-looking on
 **Grounded-numbers check.** When the prototype shows quantities, run `python3 scripts/check_prototype_data.py prototypes/[name]` before the browser harness, and again after a QA auto-fix that touched displayed numbers. Nonzero exit fails QA. The script flags quantity-like literals in `src/**/*.{js,jsx,tsx,html}` outside `src/data/` (and in a root `index.html` when that file exists), runs `node src/data/invariants.js` when that file exists, and flags a `data-metric` rendered in more than one component from different selectors or local copies. A `quantity-ok` comment allows a real constant. If `node` is missing, the script skips only the invariant run and says so — that skip is not a pass of the invariants. Append the script's stdout to `qa-report.md`. Put quantity-bearing static markup under `src/` (a root `index.html` is scanned too) so the check can see it.
 
 **What the harness does, per type:**
-- **static:** open the file, walk to every declared state, screenshot each, click every interactive element once, assert the DOM changes and no console error fires, confirm instrumentation labels are actually visible in each state.
+- **static:** open the file, walk every state this stage builds, screenshot each, click every interactive element once, assert the DOM changes and no console error fires, confirm instrumentation labels are actually visible in each state. Brief-stage: the populated screen only (`--states loaded`). The initial page is that state; do not add empty, zero, error, loading, setup, or permission screens so a control exists to click. PRD-stage: also walk those states (`--states loaded,empty,zero,loading,error,setup,denied`), and fail QA if one of them cannot be reached.
 - **web:** `npm install`, then `npm run build` (a build failure is a real failure a demo would hit — catch it here), boot the dev server, wait until ready, then run the same state-walk / click / screenshot / console-error pass against `localhost`.
 - **mobile (Expo):** `expo start --web`, then the same browser pass against the web render. Note in the report that this is the web render, not a true native simulator.
 
@@ -157,7 +161,7 @@ This is the step that distinguishes a real prototype from a plausible-looking on
 **Honest environment fallback.** Real rendering needs local execution (i.e. Claude Code on a machine with a browser, and network to `npm install`). 
 - In Claude Code with those available → run the full harness above.
 - In a chat-only / no-local-exec environment → you **cannot** truly render it. Run structural checks (build config sanity, referenced files exist, state handlers wired) and **say explicitly**: "structural checks only — not visually verified; run `qa/` in Claude Code for a real render." Never claim a visual pass that didn't happen.
-- Native-mobile without a simulator → build check + a written manual QA checklist for the states, clearly labeled as needing a device/simulator. Not a fake pass.
+- Native-mobile without a simulator → build check + a written manual QA checklist for the states this stage builds, clearly labeled as needing a device/simulator. Not a fake pass. Brief-stage lists only the populated state.
 
 ### Bounded QA auto-fix loop (objective failures only)
 

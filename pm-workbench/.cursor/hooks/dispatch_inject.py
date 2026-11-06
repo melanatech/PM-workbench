@@ -10,6 +10,7 @@ inner Task preToolUse still fires.
 """
 from __future__ import annotations
 
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -88,7 +89,45 @@ def workflow_line(root: Path, prompt: str) -> str:
     )
 
 
-def build_block(root: Path, prompt: str) -> str:
+PM_BRAIN = "reference/context/pm-brain.md"
+MAX_RULES_CHARS = 9000
+
+
+def read_standing_rules(root: Path) -> tuple[str, str]:
+    """The PM's saved rules, read from the file now. Returns (text, version)."""
+    try:
+        text = (root / PM_BRAIN).read_text(encoding="utf-8").strip()
+    except OSError:
+        return "", ""
+    if not text:
+        return "", ""
+    return text[:MAX_RULES_CHARS], hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
+
+
+def standing_rules_lines(root: Path, embed: bool) -> list[str]:
+    conflict = (
+        "If the task brief conflicts with one of these rules, do not choose silently: "
+        "follow the rule and name the conflict in your result."
+    )
+    text, version = read_standing_rules(root)
+    if not text:
+        return []
+    if embed:
+        return [
+            f"Standing rules ({PM_BRAIN}, read at dispatch, version {version}). These are the PM's "
+            "saved rules. Apply each one that governs the file you write or the text you draft. "
+            + conflict,
+            text,
+            "",
+        ]
+    return [
+        f"Standing rules: read `{PM_BRAIN}` in full before you write anything, and apply each rule "
+        "that governs the file you write or the text you draft. " + conflict,
+        "",
+    ]
+
+
+def build_block(root: Path, prompt: str, embed: bool = True) -> str:
     ident = load_identity(root)
     if ident.get("name") and ident.get("email"):
         account = f"; Jira accountId {ident['jira_account_id']}" if ident.get("jira_account_id") else ""
@@ -110,6 +149,7 @@ def build_block(root: Path, prompt: str) -> str:
             "",
             workflow_line(root, prompt),
             "",
+            *standing_rules_lines(root, embed),
             "Dispatch header (AGENTS.md) — applies whenever you add to, update, or extend an existing file:",
             dispatch_header(root),
             "",
@@ -134,7 +174,7 @@ def build_block(root: Path, prompt: str) -> str:
 def main() -> int:
     if "--write-block" in sys.argv:
         out = DEFAULT_ROOT / DISPATCH_BLOCK_REF
-        out.write_text(build_block(DEFAULT_ROOT, ""), encoding="utf-8")
+        out.write_text(build_block(DEFAULT_ROOT, "", embed=False), encoding="utf-8")
         print(f"wrote {out}")
         return 0
     payload = read_stdin_json()
@@ -199,6 +239,7 @@ def main() -> int:
             **base,
             "decision": "inject",
             "block_chars": len(block),
+            "standing_rules_version": read_standing_rules(root)[1],
             "needs_input": "[NEEDS INPUT" in block,
             "prompt_preview": prompt[:160],
         },

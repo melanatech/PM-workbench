@@ -28,7 +28,7 @@ Use these unless the Feature Contract explicitly forbids them:
 6. **Live updates** (mode on, answer revealed): `role="status"` or `aria-live` as appropriate.
 7. **Contrast**: body text and controls meet contrast on surface/background tokens; don’t put muted gray on muted gray for primary actions.
 8. **Touch / narrow**: primary controls ≥ ~32–44px hit target; no critical UI only in hover; test ~390px width.
-9. **States**: empty / loading / error / denied are real screens with roles (`alert` where needed), not blank pages.
+9. **States**: a brief-stage prototype shows the populated state only. Name the states you are not building in one line (empty, zero, error, loading, setup, permission). Do not build those screens unless the PM asks for one. A PRD-stage prototype (`/build prd-package`, or an explicit "flesh out the states" ask) makes empty / loading / error / setup / denied real screens with roles (`alert` where needed), not blank pages. If you cannot tell the stage, treat it as brief.
 10. **Prototype chrome** (variant switcher, Guide, Reset) is **out of product scope** for an accessibility check — render product DOM without that bar when checking (see `qa/render-snapshots.mjs` pattern).
 
 ## Lesson log (append-only)

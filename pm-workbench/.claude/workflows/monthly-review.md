@@ -4,7 +4,7 @@ description: "Monthly look at whether the workbench is helping: dropped balls an
 
 Execution mode: **standard** (fast=0 reviewers, standard=1–2, deep=full panel — see CLAUDE.md). Override inline if I say so.
 
-This is the monthly check on the workbench itself. It measures two things first: **fewer dropped balls** (things promised, owed or blocked that slipped) and **decision quality** (decisions with an owner and a source, few reversals). Time saved is secondary and is not estimated here. See `reference/workbench-metrics.md` for what each number means and what it cannot tell you.
+This is the monthly check on the workbench itself. It measures two things first: **fewer dropped balls** (things promised, owed or blocked that slipped) and **decision quality** (decisions with an owner and a source, few reversals). Time saved is secondary and is not estimated here. See `reference/workbench-metrics.md` for what each number means and what it cannot tell you. Product KR baselines, when this review mentions them, come from the live KR note and its atlas status, not from a new estimate.
 
 Input: $ARGUMENTS (optional: a month, e.g. `2026-10`; default is today)
 
@@ -22,7 +22,7 @@ Input: $ARGUMENTS (optional: a month, e.g. `2026-10`; default is today)
    - Any decision this month you would now make differently, and was the reason missing from the register?
 6. **Write the review** to `outputs/monthly/[date]-workbench-review.md`, under 400 words, in this order:
    - **Dropped balls**: the Dropped balls table rows, with change since the last snapshot and the one or two that moved most.
-   - **Decision quality**: the Decision quality rows; name any decision with no source or no owner by ID (read them from `registers/decisions.csv`, do not guess).
+   - **Decision quality**: the Decision quality rows; name any decision with no source or no owner by ID (read them from `registers/decisions.csv`, the full history, do not guess).
    - **Rework and to-dos**: one short paragraph. Repeat runs and edited outputs point at workflows to tighten; say that, and say that edited outputs are a heuristic.
    - **Session tokens (info only)**: one short paragraph from the Session tokens rows + optional `--summary` top categories. Never claim dollars or "tokens saved."
    - **What the numbers cannot tell you**: one sentence, always. These counts show a trend for one person's use; they do not show the kit caused it.

@@ -26,14 +26,21 @@ failure; fall through to `web_search.py` immediately.
 1. Seeds / prior capture URLs if the workflow already has them (accelerators).
 2. `python3 scripts/web_search.py --json …` — primary discovery.
 3. WebFetch (or Read of a prior clip) **only** those URLs.
-4. If `web_search.py` fails (network exit 2): write a BLOCKED stub under the
+4. If WebFetch is refused, blocked, empty, 403, or a bot wall on a public help
+   doc, launch post, or vendor page that search or a seed already returned:
+   open that same URL in the browser bridge. `browser_navigate`, then
+   `browser_snapshot`. Read only. No click, type, or form. Record the access
+   path as browser bridge. If the bridge is not connected, mark that URL
+   UNVERIFIED and try the next hit.
+5. Leave login, account, checkout, and the PM's own product off the bridge.
+   Product UI stays on a clipper walkthrough.
+6. If `web_search.py` fails (network exit 2): write a BLOCKED stub under the
    durable path below; do not guess URLs.
-5. If fetch is empty / 403 / homepage stub: try another hit; mark UNVERIFIED.
-6. Never treat unaudited model knowledge as a dated capture — label
+7. Never treat unaudited model knowledge as a dated capture — label
    `[external::training]` instead.
 
 Name the access path in any output that used the web (CLAUDE.md rule 21):
-e.g. "via `scripts/web_search.py` then WebFetch (URL)".
+e.g. "via `scripts/web_search.py`, then WebFetch or browser bridge (URL)".
 
 ## Durable captures — `state/web-search/`
 

@@ -18,6 +18,7 @@ that local file too. This manifest does not add a second OKR file:
 |---|---|---|---|---|---|
 | current-priorities | reference/context/current-priorities.md | optional | 7 | daily-brief;weekly-update;strategy-refresh;roadmap-build;competitive-scan;meeting-closeout;context-reconcile;return-brief | This week's priorities, leadership pressure, and top risks |
 | assumptions | reference/context/assumptions-and-open-questions.md | optional | 0 | meeting-closeout;context-reconcile;ripple-check | Open questions and unresolved conflicts. An empty Open section is valid |
+| settled-facts | reference/context/settled-facts.md | optional | 0 | roadmap-build;strategy-refresh | Pinned product truths. A missing file skips the check. Example status rows are ignored |
 | pm-brain | reference/context/pm-brain.md | optional | 14 | daily-brief;partner | Standing facts the PM stated in chat so they are not re-asked. Not where answers or investigations are logged. A missing file is reported; the example is not the live file |
 | glossary | reference/context/glossary.md | optional | 0 |  | Standing acronyms for chat. Not metric definitions |
 | workspace-aliases | reference/context/workspace-aliases.md | optional | 0 |  | Name the PM uses, mapped to a path, before guessing a file. external_treatment classifies publishing |

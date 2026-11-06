@@ -11,6 +11,8 @@ Research package for: $ARGUMENTS
 
 **Before designing anything, dispatch `internal-docs-reader`** to check `reference/user-research/` and the shared drive/wiki for prior research on this same question — no point re-running a study that already exists, and prior findings sharpen the screener and moderator guide. Then → `outputs/research/[name]/`:
 
+Cohort sizing, when a warehouse lane is connected, follows `.claude/workflows/research-plan.md` and the live research-cohort note. IDs go to a private gitignored file. Never output names, emails, or contact details.
+
 Objective; participant criteria + screener; moderator guide (tasks in order, what each is meant to learn, follow-up probes); survey variant for scale; consent placeholder; observation sheet; analysis framework; **decision rules written before any session runs**.
 
 After sessions: drop transcripts/notes in `inbox/research/`, rerun with the same name. Synthesis: findings by task, success/failure rates, severity, segment differences, repeated misunderstandings, requested-solution vs. underlying-problem, **evidence contradicting our hypothesis** (look for it actively), prototype changes, recommended decision. Preserve participants' actual wording. New evidence → `registers/evidence.csv`; shareable findings report included.

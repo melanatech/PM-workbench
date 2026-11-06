@@ -33,7 +33,7 @@ Pick the authoritative surface for the question type, read it first, then second
 |---|---|---|
 | Promises / due / "didn't I commit" / meeting action items | `registers/commitments.csv` (open/overdue; filter owner/due/topic); for work I still owe, also open `TODO-` rows with `links` containing that `COM-` (`origin=commitment`) | digests → specific meeting files |
 | My action list / TODO-nnn | `registers/todos.csv` via `scripts/todo_register.py` | digests / source links on the row |
-| What did we decide | `registers/decisions.csv` | digests → transcript for exact wording |
+| What did we decide | `python3 scripts/register_view.py active decisions` (why it changed: `history decisions --id DEC-nnn`) | digests → transcript for exact wording |
 | Initiative / feature status and links | `registers/initiatives.csv` | linked PRD/outputs; the tracker if delivery dates are disputed |
 | Risks | `registers/risks.csv` | digests |
 | Metric value / trend | `state/okr-history.csv` (+ metric YAML if present) | dashboard or deck only to refresh or resolve a conflict |
@@ -48,7 +48,7 @@ Pick the authoritative surface for the question type, read it first, then second
 
 **Name resolution:** if a phrase names a surface and the path is unclear, read `workspace-aliases.md`, then Glob/Grep/`context_preflight`. Do not map an unfamiliar name onto the nearest file.
 
-**Worked example (commitments):** do not start in `archive/meetings/`. Order: `commitments.csv` → `todos.csv` → `decisions.csv` if relevant → recent `outputs/daily/` digests → a specific meeting file only to fill a gap or verify wording.
+**Worked example (commitments):** do not start in `archive/meetings/`. Order: `commitments.csv` → `todos.csv` → active decisions (`register_view.py active decisions`) if relevant → recent `outputs/daily/` digests → a specific meeting file only to fill a gap or verify wording.
 
 **Worked example (instrumentation):** do not start in `repos/`. Order: `context_preflight --topic instrumentation events` → cite the digest and its primary commit → clone only if preflight says refresh or investigate.
 

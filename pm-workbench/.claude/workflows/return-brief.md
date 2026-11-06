@@ -26,4 +26,4 @@ Context dependencies: soft: current-priorities | hard: none
 
 Also produce `outputs/return-brief-manager-onepager.md` — a one-page version titled "What changed, what I'm validating, my immediate priorities" to share with my manager in week one. It should read as rapid reorientation, not as pretending I already know everything.
 
-Seed the registers: any decisions found → `registers/decisions.csv`; live risks → `registers/risks.csv`; standing commitments → `registers/commitments.csv`. The system starts populated, not empty.
+Seed the registers: any decisions found → `registers/decisions.csv` (a decision found to reverse an earlier one in the window lists it in `supersedes` when the source says so); live risks → `registers/risks.csv`; standing commitments → `registers/commitments.csv`. The system starts populated, not empty.

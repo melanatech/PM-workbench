@@ -12,7 +12,7 @@ Lead measures: **dropped balls**, then **decision quality**. Time saved is secon
 | Inbox files older than 3 days | files in `inbox/` last modified over 3 days ago | whether they matter |
 | Runs that logged BLOCKED | run-log rows in the last 30 days with BLOCKED | what was owed; read the note |
 | Decisions in 30 days, no source, no owner | `decisions.csv` rows by date; empty `source_link` / `made_by` | whether the decision was good, only whether it is traceable |
-| Decisions superseded within 60 days | a later row's text says supersede/reverse/replaces/overrule/overrides and names an earlier ID | reversals phrased any other way; this is a text match and under-counts |
+| Decisions superseded within 60 days | earlier rows a later row lists in its `supersedes` column, dated within 60 days of it. Before the column exists, the old text match (supersede/reverse/replaces/overrule/overrides plus an earlier ID) | reversals nobody linked; the column is only as complete as the writers make it (`python3 scripts/register_view.py integrity decisions` lists same-`affects` pairs with no link) |
 | Final-stage initiatives with no linked decision | stage launched/killed/iterating with empty `related_decisions` | whether a decision was made but never linked |
 | Workflow runs / repeat runs | run-log rows; same workflow within 7 days, cadence workflows excluded | whether a repeat was rework or a legitimate second pass |
 | Outputs tracked / edited | hash recorded when Claude wrote a file under `outputs/` or `drafts/`; edited if the file differs now | whether you edited because it was wrong or just changed your mind; edits made inside Claude's own later write are replaced, not counted |

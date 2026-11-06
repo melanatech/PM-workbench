@@ -11,7 +11,7 @@ This is for anything that happened outside the normal command flow — a hallway
 
 1. Check `registers/initiatives.csv` — does this touch anything at prd/prototype/experiment/launched stage? Name it and its current stage explicitly.
 2. Check `registers/evidence.csv` — does this confirm, contradict, or add to existing evidence on this topic?
-3. Check `registers/decisions.csv` and `registers/risks.csv` — does this conflict with a prior decision, or introduce a new risk?
+3. Check the active decisions (`python3 scripts/register_view.py active decisions`; superseded rows are hidden) and `registers/risks.csv` — does this conflict with a prior decision, or introduce a new risk? If the change overrides an active decision, the decision row that records it lists the old id in `supersedes` (propose it; ask when the override is not explicit).
 4. Check `state/okr-history.csv` — does this affect a metric or target?
 5. Read and apply `.claude/workflows/_fan-out.md` — update every durable surface that applies (assumptions, learning, priorities, competitive, INIT notes, todo-proposals). Tier 3 changes still need explicit approval.
 

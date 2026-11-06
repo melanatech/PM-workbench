@@ -50,6 +50,15 @@ class SettingsDenyParityTests(unittest.TestCase):
         self.assertEqual(deny_list(home), deny_list(KIT / "settings.json"))
 
 
+class SettingsToolSearchTests(unittest.TestCase):
+    def test_profiles_enable_tool_search_and_leave_deferred_loading_on(self):
+        for name in PROFILES:
+            env = load(KIT / name).get("env") or {}
+            with self.subTest(profile=name):
+                self.assertEqual(env.get("ENABLE_TOOL_SEARCH"), "true")
+                self.assertNotIn("CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS", env)
+
+
 class SettingsMcpAllowTests(unittest.TestCase):
     def test_kit_profiles_allow_atlassian_server_wildcard(self):
         for name in PROFILES:

@@ -15,11 +15,13 @@ Standard library only. Every hook fails open.
   the CLAUDE.md block tell Claude to save durable corrections the project's way.
 - **Precedence.** Within a session, the newer statement wins. Between a session entry and the project's
   durable memory file, the newer of the two wins, and Claude brings the file up to date by the project's rule.
-- **Notice-first.** Nothing blocks or erases a prompt. The stale-session check and the reading budget add a
-  one-line notice. The reading notice is off once the partner skill is used in a session: judgment work reads
-  its sources in full in the main conversation.
+- **Stale-session guard.** A prompt in a chat idle at least 60 minutes, and holding at least 80k tokens
+  above a new chat's starting context, is not sent (exit 2). Where it stands is saved first. `!force` at
+  the start sends it anyway. The reading reminder does not block, and it is off once the partner skill is
+  used in a session: judgment work reads its sources in full in the main conversation.
 - **Cost cap.** Headless model calls (`claude -p --model haiku`) are capped per day across all projects:
-  `SESSION_MEMORY_DAILY_CALLS` (default 200). Over the cap, captures are skipped and logged.
+  `SESSION_MEMORY_DAILY_CALLS` (default 200). Over the cap, captures are skipped and logged. A question-only
+  call runs with no tools, no MCP, no skills, and no project context.
 
 ## Pieces
 
@@ -27,7 +29,7 @@ Standard library only. Every hook fails open.
 |---|---|---|
 | `hooks/keeper.py` | Stop | Starts a detached worker that captures the latest exchange; audits every 10 captures; consolidates past ~1,500 words |
 | `hooks/restore.py` | SessionStart | `compact`: prints the preface plus active entries. `startup`: offers a waiting weekly review once |
-| `hooks/prompt.py` | UserPromptSubmit | Stale-session notice (idle ≥ 60 min and ≥ 80k tokens; `!force` skips), related-work detector on a session's first prompt, the one-line reading reminder, reading-tally reset |
+| `hooks/prompt.py` | UserPromptSubmit | Stale-session guard (idle ≥ 60 min and ≥ 80k tokens blocks; `!force` sends it), related-work detector on a session's first prompt, the one-line reading reminder, reading-tally reset |
 | `hooks/reading.py` | PostToolUse (reads, Skill) | Reading-budget notice past 25k tokens or 4 sources in one turn |
 | `agents/session-reader.md` | — | Sonnet reader that returns a cited answer under 800 words |
 | `commands/pickup.md`, `pickup.py` | — | `/pickup <goal words>` manual fallback |

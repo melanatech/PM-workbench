@@ -95,7 +95,8 @@ def worker(job):
     if new is None:
         c.log_event(payload, "capture-failed", reason="no model reply (cap, timeout or error)")
         return
-    goal = next((e["text"] for e in reversed(c.active_entries(c.load_entries(path))) if e["section"] == "Goal"), None)
+    goals = [e["text"] for e in c.active_entries(c.load_entries(path)) if e["section"] == "Goal"]
+    goal = goals[0] if goals else None
     rec = c.update_index(payload, captures_add=1, **({"goal": goal} if goal else {})) or {}
     c.log_event(payload, "capture", added=len(new), superseded=sum(len(e["supersedes"]) for e in new))
     if rec.get("captures", 0) % AUDIT_EVERY == 0:

@@ -1,7 +1,7 @@
 ---
 name: competitive-capture-agent
 description: Use when reading and diffing competitor pages for /discover competitive-scan. Discovers official pages via client-side web_search.py (Bedrock-safe) or WebSearch, fetches them, writes state/competitive/ capture files, returns only the path + change report.
-tools: Read, Bash, Edit, WebFetch, WebSearch
+tools: Read, Bash, Edit, WebFetch, WebSearch, mcp__browser-bridge__browser_navigate, mcp__browser-bridge__browser_snapshot
 model: sonnet
 ---
 
@@ -28,9 +28,10 @@ This runs on the local machine (DuckDuckGo → Bing fallback), independent of Be
 1. **If the entry already lists URLs** — fetch those first. Still run `web_search.py` for scope gaps (missing release notes, pricing, etc.).
 2. **Discover URLs with `python3 scripts/web_search.py --json …`** (primary).
 3. **WebFetch** (or Read of a prior clip) **only URLs that search or the watchlist returned.** Never invent URL paths.
-4. **If `web_search.py` itself fails** (network exit 2): write a BLOCKED stub file (below) and return. Do not guess URLs.
-5. **If search returns good URLs but WebFetch is empty / 403 / homepage stub:** say so per URL; try another hit from the same search results. Mark UNVERIFIED rather than inventing content from training memory.
-6. **Never use unaudited background knowledge as a dated capture.** Inference goes in a separate labeled section.
+4. **If WebFetch is refused, blocked, empty, 403, or a bot wall** on a public help doc, launch post, or vendor page: open that same URL with `mcp__browser-bridge__browser_navigate`, then `mcp__browser-bridge__browser_snapshot`. Read only. No click, type, or form. If the bridge is not connected, mark that URL UNVERIFIED and try the next hit.
+5. **Leave login, account, checkout, and the PM's own product off the bridge.** Product UI stays on a clipper walkthrough.
+6. **If `web_search.py` itself fails** (network exit 2): write a BLOCKED stub file (below) and return. Do not guess URLs.
+7. **Never use unaudited background knowledge as a dated capture.** Inference goes in a separate labeled section.
 
 ## Persist before you return (mandatory — Tier 1, no asking)
 

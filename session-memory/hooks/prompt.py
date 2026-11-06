@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""UserPromptSubmit hook: stale-session notice, related-work detector, reading reminder, reading-tally reset.
+"""UserPromptSubmit hook: stale-session guard, related-work detector, reading reminder, reading-tally reset.
 
-One script so two hooks never race on the same prompt. Notice-first: nothing here blocks or erases a
-prompt. The stale-session check saves a "Where it stands" snapshot and tells the user, in one line, that a
-fresh chat can pick the work up. `!force` at the start of a prompt suppresses the notice (logged).
+One script so two hooks never race on the same prompt. The stale-session guard saves a "Where it stands"
+snapshot and exits 2, so the prompt is not sent and the chat is not re-read at full price. `!force` at the
+start of a prompt sends it anyway (logged). The reading reminder does not block.
 """
 import datetime
 import json
@@ -12,6 +12,11 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import common as c  # noqa: E402
+
+# Interactive pm-live first request on 2026-11-05 was about 235k. The project Atlassian
+# server (15k, measured) is turned off. Headless hello calls start lower and are not
+# what this guard reads. Override with SESSION_MEMORY_FLOOR_TOKENS.
+DEFAULT_FLOOR = 220000
 
 REMINDER = (
     "Session memory: send reading-heavy fact-finding (long documents, many sources, web research) to the "
@@ -45,7 +50,10 @@ def stale_notice(payload, rows, prompt):
     if not when:
         return None
     idle = (datetime.datetime.now(datetime.timezone.utc) - when.astimezone(datetime.timezone.utc)).total_seconds() / 60
-    if idle < c.env_int("SESSION_MEMORY_IDLE_MINUTES", 60) or tokens < c.env_int("SESSION_MEMORY_MIN_TOKENS", 80000):
+    # A new chat already costs the floor. Block only on the tokens above that.
+    floor = c.env_int("SESSION_MEMORY_FLOOR_TOKENS", DEFAULT_FLOOR)
+    above = tokens - floor
+    if idle < c.env_int("SESSION_MEMORY_IDLE_MINUTES", 60) or above < c.env_int("SESSION_MEMORY_MIN_TOKENS", 80000):
         return None
     path = c.register_path(payload)
     turns = c.exchanges(rows)[-10:]
@@ -63,9 +71,13 @@ def stale_notice(payload, rows, prompt):
     c.update_index(payload, held_prompt=prompt[:4000])
     c.log_event(payload, "guard-notice", idle_minutes=int(idle), context_tokens=tokens, snapshot=saved)
     hours = f"{idle / 60:.1f} h" if idle >= 90 else f"{int(idle)} min"
-    return (f"This chat was idle {hours} and holds about {tokens // 1000}k tokens, so this prompt re-reads all of it "
-            f"at full price. {'Where it stands is saved; ' if saved else ''}a new chat will offer to pick this work up. "
-            "Start the next prompt with !force to skip this notice.")
+    if floor > 0:
+        size = f"about {max(above, 0) // 1000}k tokens more than a new chat"
+    else:
+        size = f"about {tokens // 1000}k tokens"
+    return (f"This chat was idle {hours} and holds {size}, so this prompt was not sent. "
+            f"{'Where it stands is saved. ' if saved else ''}"
+            "A new chat can pick this work up. To continue here, send the prompt again with !force at the start.")
 
 
 def detect(payload, prompt):
@@ -101,6 +113,20 @@ def detect(payload, prompt):
             "entries so the user can drop stale ones, and carry the kept ones forward. If no: ignore this note.")
 
 
+def once_nudge():
+    """One instruction for the next prompt, then the file is gone."""
+    path = os.path.join(c.data_home(), "nudge.txt")
+    try:
+        text = open(path, encoding="utf-8").read().strip()
+    except OSError:
+        return None
+    try:
+        os.remove(path)
+    except OSError:
+        pass
+    return text or None
+
+
 def main():
     payload = c.read_payload()
     if payload is None:
@@ -108,7 +134,10 @@ def main():
     prompt = payload.get("prompt") or ""
     reset_tally(payload)
     rows = c.transcript_entries(payload.get("transcript_path"))
-    parts, user_line = [REMINDER], None
+    parts = [REMINDER]
+    nudge = once_nudge()
+    if nudge:
+        parts.insert(0, nudge)
     first = not any(r.get("type") == "assistant" for r in rows)
     if first and len(prompt) >= 30 and not c.read_index(payload).get(payload["session_id"], {}).get("offered"):
         note = detect(payload, prompt)
@@ -117,9 +146,9 @@ def main():
     elif not first:
         notice = stale_notice(payload, rows, prompt)
         if notice:
-            user_line = notice
-            parts.insert(0, "Tell the user this in one line, then answer their prompt: " + notice)
-    c.emit_context("UserPromptSubmit", "\n\n".join(parts), user_line)
+            sys.stderr.write(notice + "\n\nPrompt held:\n" + prompt[:500] + "\n")
+            return 2
+    c.emit_context("UserPromptSubmit", "\n\n".join(parts))
     return 0
 
 

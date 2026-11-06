@@ -218,6 +218,9 @@ class RoutesTableTests(unittest.TestCase):
         self.assertIn("state/competitive", scan)
         self.assertIn("web_search.py", scan)
         self.assertIn("_web-search.md", scan)
+        recipe = (WORKBENCH / ".claude" / "workflows" / "_web-search.md").read_text(encoding="utf-8")
+        self.assertIn("browser_snapshot", recipe)
+        self.assertIn("browser bridge", recipe)
         self.assertIn('Should I create the competitive-log?', scan)
         capture = (WORKBENCH / ".claude" / "agents" / "competitive-capture-agent.md").read_text(
             encoding="utf-8"

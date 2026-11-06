@@ -11,6 +11,10 @@
           {
             "type": "command",
             "command": "python3 .codex/hooks/require_guardrails_auth_for_prototypes.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 .codex/hooks/check_voice.py"
           }
         ]
       }

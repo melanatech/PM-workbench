@@ -115,6 +115,19 @@ cover that one tool; a new tool name prompts again. Kit profiles ship the
 server-scoped rules; copy them into `~/.claude/settings.json` if you edited that
 file by hand.
 
+**Deferred tool loading.** Claude Code can leave MCP tool schemas out of a chat
+until that chat needs them. The kit profiles set `ENABLE_TOOL_SEARCH` to `true`
+in `.claude/settings.json`, `.claude/settings.core.json`, and
+`.claude/settings.full.json`. `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1` turns
+deferred loading off and sends every tool schema on the first request.
+`ENABLE_TOOL_SEARCH=true` does not override that switch. `ENABLE_TOOL_SEARCH=force`
+overrides it only when the client talks to Anthropic's own API. On a model
+gateway, remove `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS` from the shell startup
+file and from the `env` block in `~/.claude/settings.json`. A value left in
+either place is enough to keep every schema in the prompt. Quit Claude Code and
+start a new chat after changing either file. An open chat keeps the tool list
+it started with.
+
 File path allows must use `Edit(./…)` — Claude Code 2.1+ rejects `Write(./…)` in permissions.allow (scheduled `claude -p` exits 1 immediately).
 
 ```json

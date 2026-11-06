@@ -15,8 +15,10 @@
  *   node qa-prototype.mjs --type web    --path prototypes/scorecards-app --run "npm run dev" --url http://localhost:5173
  *   node qa-prototype.mjs --type mobile --path prototypes/scorecards-mobile   (uses expo web)
  *
- * --states "loaded,empty,error,denied,compare"  states to walk (buttons whose
- *          text or data-state matches are clicked to reach each state).
+ * --states "loaded"   brief-stage default: the populated screen only.
+ *          PRD-stage passes "loaded,empty,zero,loading,error,setup,denied".
+ *          A control whose text or data-state matches is clicked. "loaded"
+ *          with no control is the initial page.
  */
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -32,7 +34,7 @@ const args = Object.fromEntries(
 const type = args.type || 'static';
 const proto = args.path;
 if (!proto) { console.error('ERROR: --path required'); process.exit(2); }
-const states = (args.states || 'loaded,empty,error,denied').split(',').map(s => s.trim()).filter(Boolean);
+const states = (args.states || 'loaded').split(',').map(s => s.trim()).filter(Boolean);
 const shotsDir = path.join(proto, 'qa-screenshots');
 fs.mkdirSync(shotsDir, { recursive: true });
 
@@ -130,6 +132,8 @@ async function main() {
       const byText = page.getByRole('button', { name: new RegExp(st, 'i') });
       if (await byText.count()) { await byText.first().click().catch(() => {}); reached = true; }
     }
+    // Brief-stage default: the populated screen is the page that loaded.
+    if (!reached && /^(loaded|populated)$/i.test(st)) reached = true;
     await sleep(300);
     const shot = path.join(shotsDir, `state-${st}.png`);
     await page.screenshot({ path: shot }).catch(() => {});

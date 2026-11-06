@@ -1,0 +1,14 @@
+session_id,message_uuid,timestamp,user_uuid,user_excerpt,category,category_source,input_tokens,output_tokens,cache_creation_input_tokens,cache_read_input_tokens,model,is_sidechain,project,indexed_date,surface
+s-a,m01,2026-07-06T09:00:00Z,u01,process the inbox,workflow:process-inbox,l2a,20000,2000,10000,50000,claude-sonnet-4-5-20250929,no,sample,2026-07-15,panel
+s-a,m02,2026-07-06T09:20:00Z,u02,you missed the support export as a source,rework_correction,l2b,5000,1000,0,60000,claude-sonnet-4-5-20250929,no,sample,2026-07-15,panel
+s-b,m03,2026-07-07T10:00:00Z,u03,close out the roadmap review,workflow:meeting-closeout,l2a,20000,3000,10000,40000,claude-sonnet-4-5-20250929,no,sample,2026-07-15,panel
+s-b,m04,2026-07-07T10:15:00Z,u04,"the risk is secondhand, not a fact",rework_correction,l2b,5000,1000,0,50000,claude-sonnet-4-5-20250929,no,sample,2026-07-15,panel
+s-b,m05,2026-07-07T10:30:00Z,u05,what did we decide on per-location,lookup,l2b,5000,1000,0,50000,claude-sonnet-4-5-20250929,no,sample,2026-07-15,panel
+s-c,m06,2026-07-09T14:00:00Z,u06,draft the weekly update,workflow:weekly-update,l2a,20000,4000,10000,40000,claude-sonnet-4-5-20250929,no,sample,2026-07-15,panel
+s-c,m07,2026-07-09T14:20:00Z,u07,"wrong template, use last week's layout",rework_correction,l2b,5000,2000,0,50000,claude-sonnet-4-5-20250929,no,sample,2026-07-15,panel
+s-c,m08,2026-07-09T14:40:00Z,u08,<task-notification> <result>RESULT</result>,rework_correction,l2b,5000,1000,0,50000,claude-sonnet-4-5-20250929,no,sample,2026-07-15,panel
+s-d,m09,2026-07-13T09:00:00Z,u09,close out the design sync,workflow:meeting-closeout,l2a,20000,3000,10000,40000,claude-sonnet-4-5-20250929,no,sample,2026-07-15,terminal
+s-d,m10,2026-07-13T09:20:00Z,u10,who owns the export retry work,lookup,l2b,5000,1000,0,50000,claude-sonnet-4-5-20250929,no,sample,2026-07-15,terminal
+s-e,m11,2026-07-14T11:00:00Z,u11,process the inbox,workflow:process-inbox,l2a,20000,2000,10000,40000,claude-sonnet-4-5-20250929,no,sample,2026-07-15,panel
+s-e,m12,2026-07-14T11:20:00Z,u12,you missed the capture file,rework_correction,l2b,5000,1000,0,50000,claude-sonnet-4-5-20250929,no,sample,2026-07-15,panel
+s-e,m13,2026-07-14T11:40:00Z,u13,capture this hallway estimate,capture,l2b,5000,1000,0,50000,claude-sonnet-4-5-20250929,no,sample,2026-07-15,panel

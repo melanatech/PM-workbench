@@ -1,0 +1,4 @@
+id,description,owner,due_date,priority,status,initiative,blocks,links,origin,source,created,last_updated,note
+TODO-001,Confirm the build estimate,me,,P2,done,,,,meeting,inbox/meetings/sample-roadmap-review.txt,2026-07-07,2026-07-09,
+TODO-002,Research silent export failures before the PRD,me,2026-07-16,P1,open,,PRD,,capture,inbox/captures/sample-capture.md,2026-07-09,2026-07-09,
+TODO-003,Ask support whether export retries exist,me,,P3,open,,,,meeting,inbox/meetings/sample-design-sync.txt,2026-07-13,2026-07-13,

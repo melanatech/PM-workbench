@@ -1,0 +1,3 @@
+id,date,decision,made_by,source_link,affects,supersedes
+DEC-001,2026-07-07,Phase 1 is admin-only; per-location moves to phase 2,the team,inbox/meetings/sample-roadmap-review.txt,roadmap,
+DEC-002,2026-07-13,Export retries are scoped before the PRD,the team,inbox/meetings/sample-design-sync.txt,roadmap,

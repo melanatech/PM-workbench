@@ -1,0 +1,3 @@
+date,change,category,commit
+2026-07-10,Closeout marks a secondhand risk as unconfirmed,workflow,sample01
+2026-07-15,Process-inbox lists every inbox file it read and skipped,workflow,sample02

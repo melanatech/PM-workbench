@@ -48,3 +48,21 @@ Rules for the story:
 - Subagent results returning to the session are not my corrections. The script already separates them.
 - Association, not causation, for anything lined up against a kit change.
 - Do not add a separate workflow for this.
+
+## Postmortem
+
+In the same pass, when the health read or the usage story shows a failed job (a run I said went badly, a job I abandoned or redid, or a correction theme that kept one job from landing), write `outputs/monthly/[date]-[slug]-postmortem.md` for that job. One file per failed job. I do not draft it. It answers: **what the job was, why it failed, and what to change next.** A fictional example of the output is [fixtures/postmortem/sample-postmortem.md](fixtures/postmortem/sample-postmortem.md).
+
+1. Use the numbers and correction turns from `usage_story.py data` that belong to the failed job. Read that job's transcripts and the artifacts it wrote. Count nothing yourself.
+2. State the job and its pass bar from my asks before judging the run.
+3. Write it in this order, using these headings: `Executive verdict`, `Intended job and success criteria`, `Lean progression`, `Artifact lineage and quality retention`, `What went well`, `What went wrong`, `Root causes`, `Lessons`, `Prioritized improvements (propose only)`, `Proposed next test`, `Sources and limitations`, `Review gate (calibration)`. When an earlier postmortem covers the same job, add `How the last postmortem's improvements fared` before the improvements.
+4. Each root cause cites its evidence: a transcript turn, a correction theme, or an artifact path. Mark which causes I raised and which came only from the audit.
+5. Run `python3 scripts/usage_story.py check-postmortem --root <live> outputs/monthly/[date]-[slug]-postmortem.md`. Fix every problem it reports.
+
+Rules for the postmortem:
+
+- Association, not causation, for anything lined up against a kit change, unless a transcript turn or an artifact shows the cause.
+- Improvements are proposals. Change nothing in the kit, and append nothing to `logs/review-notes.csv`, until I approve.
+- A postmortem that carries numbers and is shared needs a number ledger.
+- Quiet month: if no job failed, say "no postmortem this month" in the reply (and in the story's `Next run should check` when there is a story). Do not invent one.
+- A postmortem about real work stays in the live workspace. Only a fictional example goes in this kit.

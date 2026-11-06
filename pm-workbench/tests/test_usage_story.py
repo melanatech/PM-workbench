@@ -5,10 +5,12 @@ from __future__ import annotations
 import contextlib
 import csv
 import io
+import os
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 WORKBENCH = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(WORKBENCH / "scripts"))
@@ -122,6 +124,50 @@ class DataTests(unittest.TestCase):
         self.assertIn("Done: 1 of 2", out)
         self.assertNotIn("$", out)
 
+    def test_corrections_per_pm_message_with_coverage(self):
+        rows = [
+            _row(0, "2026-10-05", "rework_correction", "that's wrong"),
+            _row(1, "2026-10-05", "rework_correction", "that's wrong"),
+            _row(2, "2026-10-05", "other"),
+            _row(3, "2026-10-05", "rework_correction", "<task-notification> x", user="n"),
+            {**_row(4, "2026-10-05", "rework_correction", "wrong"), "user_uuid": ""},
+        ]
+        out = _data(_live(rows))
+        self.assertIn(
+            "Week of 2026-10-05: corrections 1 of 2 PM messages (50%); coverage 1 of 2 (50%); "
+            "among labeled 1 of 1 (100%)",
+            out,
+        )
+
+    def test_returns_past_the_stale_session_line(self):
+        first = _row(0, "2026-10-05", "lookup", tokens=90000)
+        cold = _row(2, "2026-10-05", "lookup", tokens=1000)
+        cold["timestamp"] = "2026-10-05T11:30:00Z"
+        cold["cache_creation_input_tokens"] = "90000"
+        forced = _row(4, "2026-10-05", "lookup", "!force keep going", tokens=1000)
+        forced["timestamp"] = "2026-10-05T13:00:00Z"
+        forced["cache_read_input_tokens"] = "90000"
+        short = _row(6, "2026-10-05", "lookup", tokens=1000)
+        short["timestamp"] = "2026-10-05T13:30:00Z"
+        env = {"SESSION_MEMORY_IDLE_MINUTES": "60", "SESSION_MEMORY_MIN_TOKENS": "80000"}
+        with mock.patch.dict(os.environ, env):
+            out = _data(_live([first, cold, forced, short]))
+        self.assertIn("Line: 60+ minutes since the previous reply and 80,000+ tokens", out)
+        self.assertIn("!force stays in the median", out)
+        self.assertIn("reply scored is the one in the same chat", out)
+        self.assertNotIn("!force returns left out", out)
+        self.assertNotIn("on the rest", out)
+        self.assertIn(
+            "Week of 2026-10-05: 2 returns in 1 chats; cold 1; started with !force 1; "
+            "median from-scratch tokens: 45,000",
+            out,
+        )
+        self.assertIn(
+            "All rows in this file: 2 eligible returns; started with !force 1; "
+            "median from-scratch tokens: 45,000",
+            out,
+        )
+
     def test_empty_usage_says_how_to_fill(self):
         root = Path(tempfile.mkdtemp(prefix="pmwb-story-empty-"))
         self.assertIn("--backfill", _data(root))
@@ -149,6 +195,25 @@ class CheckTests(unittest.TestCase):
 
     def test_dashboard_rate_per_billion_tokens_is_allowed(self):
         self.assertEqual(us.check_story(GOOD_STORY + "| $10 per billion tokens |\n"), [])
+
+    def test_sample_postmortem_passes(self):
+        text = (WORKBENCH / "fixtures" / "postmortem" / "sample-postmortem.md").read_text()
+        self.assertEqual(us.check_postmortem(text), [])
+
+    def test_postmortem_missing_root_causes_fails(self):
+        text = (WORKBENCH / "fixtures" / "postmortem" / "sample-postmortem.md").read_text()
+        problems = us.check_postmortem(text.replace("## Root causes", "## Causes"))
+        self.assertIn("missing section: root causes", problems)
+
+    def test_postmortem_must_open_with_verdict(self):
+        problems = us.check_postmortem("# T\n\n## Lessons\nx\n")
+        self.assertIn("first section must be the executive verdict", problems)
+
+    def test_workflow_writes_postmortem_itself(self):
+        text = (WORKBENCH / ".claude" / "workflows" / "workbench-health.md").read_text()
+        self.assertIn("scripts/usage_story.py check-postmortem", text)
+        self.assertIn("I do not draft it", text)
+        self.assertIn("no postmortem this month", text)
 
     def test_workflow_points_at_script_and_dashboard(self):
         text = (WORKBENCH / ".claude" / "workflows" / "workbench-health.md").read_text()
